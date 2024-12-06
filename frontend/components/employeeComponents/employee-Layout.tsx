@@ -45,7 +45,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
           {/* Subheading */}
           <div className="flex items-center justify-between border-zinc-400 py-5">
             <h2 className="text-xl font-semibold">
-              {layoutProps.activePage} Page
+              "{" + {layoutProps.activePage} + "} " Page
             </h2>
           </div>
           {layoutProps.children}
