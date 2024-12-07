@@ -7,14 +7,12 @@ const  requireAuth = async (allowedRoles: UserRole[], minEmployeeLevel?:Employee
     const {data: userInfo, error: authError} = await supabase.auth.getUser();
     
     if (authError || !userInfo.user) {
-        //Redirect to login if user is not authenticated
-        redirect("/sign-in");
         return {isAuthenticated: false, userRole: null};
     }
 
     //Fetch user details
     const {data: employeeInfo , error: empError} = await supabase.from("Employees").select("*").eq('Employee_id',userInfo.user.id).single();
-    
+
     if (employeeInfo){
         //the user is Employee
         const {level} = employeeInfo as Employee;

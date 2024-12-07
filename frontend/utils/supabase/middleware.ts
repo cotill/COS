@@ -22,17 +22,17 @@ export const updateSession = async (request: NextRequest) => {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
+              request.cookies.set(name, value)
             );
             response = NextResponse.next({
               request,
             });
             cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
+              response.cookies.set(name, value, options)
             );
           },
         },
-      },
+      }
     );
 
     // This will refresh session if expired - required for Server Components
@@ -40,12 +40,27 @@ export const updateSession = async (request: NextRequest) => {
     const user = await supabase.auth.getUser();
 
     // protected routes
-    if (request.nextUrl.pathname.startsWith("/protected") && user.error) {
+    if (user.data.user ===null && !request.nextUrl.pathname.startsWith("/sign-in")) {
+      console.log("redirect user to sign-in page")
+      //if we don't have a user go to sign-in
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
+    
+    //if we have a user and they want to login, take them to dashboard instead
 
-    if (request.nextUrl.pathname === "/" && !user.error) {
-      return NextResponse.redirect(new URL("/protected", request.url));
+
+
+    if ((request.nextUrl.pathname.startsWith("/sign-in") ||request.nextUrl.pathname === "/") && user.data.user) {
+      const { data: employeeInfo, error: empError } = await supabase.from("Employees").select("*").eq("Employee_id", user.data.user?.id).single();
+      const { data: studentInfo, error: stuError } = await supabase.from("Students").select("*").eq("Employee_id", user.data.user?.id).single();
+      if (employeeInfo) {
+        return NextResponse.redirect(new URL("/Employee", request.url)
+        );
+      }if (!studentInfo) {
+        return NextResponse.redirect(
+          new URL("/Employee", request.url)
+        );
+      }
     }
 
     return response;

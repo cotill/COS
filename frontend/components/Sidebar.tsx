@@ -14,7 +14,7 @@ interface SidebarProps {
 export default function Sidebar(sideBarProp: SidebarProps) {
   let links = sideBarProp.userRole === UserRole.EMPLOYEE
       ? [
-          { name: EmployeePages.PROJECTS, path: "/Dashboard" },
+          { name: EmployeePages.PROJECTS, path: "/Employee/Projects" },
           { name: EmployeePages.TRAINING, path: "/Training" },
           ...(sideBarProp.employeeLevel === 3
             ? 
