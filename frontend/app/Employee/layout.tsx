@@ -9,6 +9,8 @@ import {type User} from "@supabase/supabase-js"
 export default async function RootLayout({children,}: {children: React.ReactNode;}) {
     const supabase = await createClient();
     const {data: userInfo, error: authError} = await supabase.auth.getUser();
+    let metadata = userInfo.user?.user_metadata;
+    console.log("metadata is ...", metadata)
     // console.log("user info is...", userInfo)
       
     if (!userInfo.user || authError) {
@@ -16,10 +18,10 @@ export default async function RootLayout({children,}: {children: React.ReactNode
         redirect("/sign-in");
     }
     
-    const {data: employeeInfo , error: empError} = await supabase.from("Employees").select("*").eq('Employee_id',userInfo.user.id).single();
+    const {data: employeeInfo , error: empError} = await supabase.from("Employees").select("*").eq('employee_id',userInfo.user.id).single();
       // console.log("employee info is...", userInfo)
   
-    if(!employeeInfo){
+    if(!employeeInfo || empError){
       return <UnauthorizedPage />;
     }
     const [firstName, lastName] = employeeInfo.full_name.split(" ");

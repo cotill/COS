@@ -40,17 +40,17 @@ export const updateSession = async (request: NextRequest) => {
     const user = await supabase.auth.getUser();
     console.log("user info is ...", user.data.user)
     // protected routes
-    if (user.data.user ===null && !request.nextUrl.pathname.startsWith("/sign-in")) {
+    /*if (user.data.user ===null && !request.nextUrl.pathname.startsWith("/sign-in")) {
       console.log("redirect user to sign-in page")
       //if we don't have a user go to sign-in
       return NextResponse.redirect(new URL("/sign-in", request.url));
-    }
+    }*/
     
     //if we have a user and they want to login, take them to dashboard instead
     
     if ((request.nextUrl.pathname.startsWith("/sign-in") ||request.nextUrl.pathname === "/" || request.nextUrl.pathname ==="/Employee") && user.data.user) {
-      const { data: employeeInfo, error: empError } = await supabase.from("Employees").select("*").eq("Employee_id", user.data.user?.id).single();
-      const { data: studentInfo, error: stuError } = await supabase.from("Students").select("*").eq("Employee_id", user.data.user?.id).single();
+      const { data: employeeInfo, error: empError } = await supabase.from("Employees").select("*").eq("employee_id", user.data.user?.id).single();
+      const { data: studentInfo, error: stuError } = await supabase.from("Students").select("*").eq("student_id", user.data.user?.id).single();
       if (employeeInfo) {
         return NextResponse.redirect(new URL("/Employee/Projects", request.url)
         );
