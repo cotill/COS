@@ -9,5 +9,5 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - .:/app
-      - /app/node_modules
+      - /frontend:/app
+      - /frontend/app/node_modules
