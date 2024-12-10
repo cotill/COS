@@ -12,7 +12,7 @@ COPY /frontend/package-lock.json .
 RUN npm ci
 
 # copy of our code (i.e the src folder)
-COPY . .
+COPY /frontend .
 
 #build the Next JS application
 RUN npm run build
