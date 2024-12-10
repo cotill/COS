@@ -6,9 +6,10 @@ WORKDIR /app
 
 # copy the package.json 
 COPY package.json .
+COPY package-lock.json .
 
 # install the independices from package.json
-RUN npm install
+RUN npm ci
 
 # copy of our code (i.e the src folder)
 COPY . .
