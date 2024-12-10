@@ -2,7 +2,7 @@
 FROM node:latest
 
 # within our image everything is in the app directory
-WORKDIR /app
+WORKDIR /frontend/app
 
 # copy the package.json 
 COPY package.json .
