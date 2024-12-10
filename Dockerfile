@@ -5,8 +5,8 @@ FROM node:latest
 WORKDIR /frontend/app
 
 # copy the package.json 
-COPY package.json .
-COPY package-lock.json .
+COPY /frontend/package.json .
+COPY /frontend/package-lock.json .
 
 # install the independices from package.json
 RUN npm ci
