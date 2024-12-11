@@ -6,9 +6,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { SmtpMessage } from "../smtp-message";
 
-export default async function Signup(props: {
-  searchParams: Promise<Message>;
-}) {
+export default async function Signup(props: {searchParams: Promise<Message>;}) {
   const searchParams = await props.searchParams;
   if ("message" in searchParams) {
     return (

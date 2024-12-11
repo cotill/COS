@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-
+/**Used when connecting with supabase in a server component.
+ * Next Js is server component by default
+ */
 export const createClient = async () => {
   const cookieStore = await cookies();
 
