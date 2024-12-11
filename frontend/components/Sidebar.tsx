@@ -15,10 +15,10 @@ export default function Sidebar(sideBarProp: SidebarProps) {
   let links = sideBarProp.userRole === UserRole.EMPLOYEE
       ? [
           { name: EmployeePages.PROJECTS, path: "/Employee/Projects" },
-          { name: EmployeePages.TRAINING, path: "/Training" },
+          { name: EmployeePages.TRAINING, path: "/Employee/Training" },
           ...(sideBarProp.employeeLevel === 3
             ? 
-            [{ name: EmployeePages.SPONSORED_PROJECTS, path: "/SponsoredProjects" }]
+            [{ name: EmployeePages.SPONSORED_PROJECTS, path: "/Employee/SponsoredProjects" }]
             : 
             []),
         ]
