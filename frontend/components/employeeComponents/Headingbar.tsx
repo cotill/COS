@@ -7,7 +7,7 @@ interface HeadingbarProps {
 const Headingbar: React.FC<HeadingbarProps> = ({ text }) => {
   return (
     <div className="relative w-full h-32 overflow-hidden rounded-xl bg-black flex items-center">
-      <div className="absolute left-0 top-0 w-3/4 h-full bg-gradient-to-r from-black to-transparent flex items-center">
+      <div className="absolute left-0 top-0 w-3/4 h-full bg-gradient-to-r from-green-500 to-transparent flex items-center">
         <p className="text-white text-lg font-semibold ml-6">{text}</p>
       </div>
 

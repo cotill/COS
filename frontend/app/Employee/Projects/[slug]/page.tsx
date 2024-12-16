@@ -1,12 +1,19 @@
 import ProjectDetail from "@/components/employeeComponents/project-detail";
+import Headingbar from "@/components/employeeComponents/Headingbar";
+import {createClient} from '@/utils/supabase/server';
 
 export default async function ProjectPage({params,} : {params : Promise<{slug : string}>}) {
+    const supabase = await createClient();
     const projectId = (await params).slug;
     const project  = await getProjectById(projectId);
-    
+    const {data: projectInfo , error} = await supabase.from("Projects").select("*").eq('projectId',projectId).single();
+    console.log("Project info is: ", projectInfo)
     return (
         <div className="text-purple-300">
             project id is {projectId};
+            <Headingbar
+                text='Some text'
+            />
             <ProjectDetail project={{ id: projectId, name: "none", description: "idk" }}/>
         </div>
     );

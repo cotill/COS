@@ -5,6 +5,7 @@ import Navbar from "../Navbar";
 import { EmployeePages, UserRole } from "@/utils/types";
 import BackButton from "./backbutton";
 import { usePathname } from "next/navigation";
+import Headingbar from "@/components/employeeComponents/Headingbar";
 
 interface EmpLayoutProps {
   children: React.ReactNode;
@@ -17,7 +18,7 @@ interface EmpLayoutProps {
 
 export default function EmpLayout(layoutProps: EmpLayoutProps) {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // true represents collapsed sidebar. false represents expanded sidebar
-  const [subheading, setSubheading] = useState("Loading...");
+
 
   function toggleSidebar() {
     setSidebarCollapsed(!isSidebarCollapsed);
@@ -60,9 +61,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
           <BackButton>← Back</BackButton>
         )}
         {/* Subheading */}
-        <h2 className="text-xl font-semibold">
-          {subheading}
-        </h2>
+        
       </div>
           {layoutProps.children}
         </main>

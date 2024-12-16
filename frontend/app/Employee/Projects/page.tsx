@@ -1,4 +1,5 @@
 import { ProjectsList } from "@/components/employeeComponents/ProjectList";
+import Headingbar from "@/components/employeeComponents/Headingbar";
 
 async function getProject() {
   
@@ -9,7 +10,9 @@ export default async function projectpage(){
     return (
       // <ProjectsList initialProjects={allProjects}/>
       <>
-      // make the suheading its own componet and pass it the name
+      <Headingbar
+        text='Some text'
+      />
       <h2> This is the project page</h2>
       <ProjectsList />
       </>
