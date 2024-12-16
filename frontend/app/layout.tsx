@@ -26,17 +26,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground">
-        <ThemeProvider
-          attribute="class"
-          // defaultTheme="system"
-          // enableSystem
-          forcedTheme="dark"
-          disableTransitionOnChange
-        >
+      <body className="bg-[#1d1b23] text-foreground">
+        
           {" "}
           {children}
-        </ThemeProvider>
       </body>
     </html>
   );
