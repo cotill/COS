@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import Link from "next/link";
 import "./globals.css";
 import { use } from "react";
+import Headingbar from "@/components/Headingbar";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -27,6 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
+        <Headingbar
+          text="Next Random Piece of Text"
+        />
         <ThemeProvider
           attribute="class"
           // defaultTheme="system"
