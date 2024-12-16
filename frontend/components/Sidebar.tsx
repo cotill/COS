@@ -31,12 +31,14 @@ export default function Sidebar(sideBarProp: SidebarProps) {
     >
       <ul className="space-y-2 p-4">
         {links.map((link) => (
+          <Link href={link.path}>
           <li
             key={link.path}
             className={`p-2 rounded ${sideBarProp.activePage === link.name ? "bg-gray-700" : ""}`}
           >
-            <Link href={link.path}>{link.name}</Link>
+            {link.name}
           </li>
+          </Link>
         ))}
       </ul>
       <Button
