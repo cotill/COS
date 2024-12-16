@@ -1,7 +1,18 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
+/**
+ * Since server Componenents can't write cookies, middleware is used to refresh the auth token and store them
+ * middleware: 
+ * - Refreshes the auth token(by calling supabase.auth.getUser())
+ * - Passes the refreshed auth token to the server component, so they don't attempt to refresh the same token (request.cookies.set)
+ * - Passes the refreshed Auth token to the browser, so it replaces the old token (response.cookies.set)
+ * 
+ * @param request 
+ * @returns 
+ */
 
 export async function middleware(request: NextRequest) {
+  console.log("middleware.ts runs on every route")
   return await updateSession(request);
 }
 
