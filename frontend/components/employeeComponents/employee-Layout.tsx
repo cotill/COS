@@ -54,7 +54,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
 
         {/**Main Content */}
         <main
-          className={`bg-[#413F46] flex-1 pl-4 transition-all duration-200 ease-in-out main-content rounded-3xl  ${isSidebarCollapsed ? "ml-0" : "ml-200px"}`}
+          className={`bg-[#413F46] flex-1 p-4 transition-all duration-200 ease-in-out main-content rounded-3xl  ${isSidebarCollapsed ? "ml-0" : "ml-200px"}`}
         >
       <div className="flex items-center gap-4 m">
         {pathname !== "/Employee/Projects" && pathname !== "/Employee/Training" && pathname !== "/Employee/SponsoredProjects" && (

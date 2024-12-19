@@ -11,9 +11,9 @@ export default async function projectpage(){
       // <ProjectsList initialProjects={allProjects}/>
       <>
       <Headingbar
-        text='Some text'
+        text='Projects'
       />
-      <h2> This is the project page</h2>
+      {/* <h2> This is the project page</h2> */}
       <ProjectsList />
       </>
     );

@@ -1,9 +1,14 @@
-
+import Headingbar from "@/components/employeeComponents/Headingbar";
 
 export default async function sponsoredprojectspage(){
     return (
-        <div className="text-purple-300">
-          This is the sponsored projects page
-      </div>
+      <>
+      <Headingbar
+        text='Sponsored Projects'
+      />
+      </>
+      //   <div className="text-purple-300">
+      //     This is the sponsored projects page
+      // </div>
     );
 }
