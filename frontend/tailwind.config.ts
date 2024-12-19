@@ -72,6 +72,12 @@ const config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      scale: {
+        '200': '2',
+        '250': '2.5',
+        '275': '2.75',
+        '300': '3',
+      }
     },
   },
   plugins: [require("tailwindcss-animate")],
