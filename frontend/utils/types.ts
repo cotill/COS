@@ -36,5 +36,6 @@ export enum EmployeePages {
     PROJECTS = "Projects",
     TRAINING = "Training",
     SPONSORED_PROJECTS = "Sponsored Projects",
-    SETTINGS = "Employee Settings"
+    SETTINGS = "Employee Settings",
+    CREATE_PROJECT = "Create Project",
 }

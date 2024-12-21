@@ -31,32 +31,29 @@ const projects = [
   { id: 8, name: 'CyberShield Security', department: 'Cybersecurity', date: '2023-09-01' },
   { id: 9, name: 'BioTech Innovations', department: 'Biotechnology', date: '2023-09-15' },
   { id: 10, name: 'EcoSolutions Initiative', department: 'Environmental Engineering', date: '2023-10-01' },
-  { id: 10, name: 'Bridge Design', department: 'Civil Engineering', date: '2024-10-01' },
-
+  { id: 11, name: 'Bridge Design', department: 'Civil Engineering', date: '2024-10-01' },
 ]
 
-interface Project {
-  id: string
-  name: string
-  department: string
-  createdAt: string
-}
+export function ProjectsList({ searchTerm, filter }: { searchTerm: string, filter: string }) {
+  const [currentPage, setCurrentPage] = useState(1);
 
-interface ProjectsListProps {
-  initialProjects: Project[]
-}
+  const projectsPerPage = 4;
 
-export function ProjectsList() {
-  const [currentPage, setCurrentPage] = useState(1)
-  const projectsPerPage = 5
-  const totalPages = Math.ceil(projects.length / projectsPerPage)
+  const filteredProjects = projects.filter((project) =>
+    project[filter as keyof typeof project]
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
-  const indexOfLastProject = currentPage * projectsPerPage
-  const indexOfFirstProject = indexOfLastProject - projectsPerPage
-  const currentProjects = projects.slice(indexOfFirstProject, indexOfLastProject)
+  const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
+
+  const indexOfLastProject = currentPage * projectsPerPage;
+  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 rounded-3xl mt-4 p-4" style={{ backgroundColor: '#c9c7ce' }}>
       <Table>
         <TableHeader>
           <TableRow>

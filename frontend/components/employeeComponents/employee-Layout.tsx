@@ -31,6 +31,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
     "/Employee/Training": EmployeePages.TRAINING,
     "/Employee/SponsoredProjects": EmployeePages.SPONSORED_PROJECTS,
     "/Employee/Settings": EmployeePages.SETTINGS,
+    "/Employee/CreateProject": EmployeePages.CREATE_PROJECT,
   };
 
   const activePage = pathToPageMap[pathname as keyof typeof pathToPageMap];
