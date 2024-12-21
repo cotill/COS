@@ -35,5 +35,6 @@ export interface AuthResult {
 export enum EmployeePages {
     PROJECTS = "Projects",
     TRAINING = "Training",
-    SPONSORED_PROJECTS = "Sponsored Projects"
+    SPONSORED_PROJECTS = "Sponsored Projects",
+    SETTINGS = "Employee Settings"
 }
