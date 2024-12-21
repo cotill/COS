@@ -6,13 +6,13 @@ interface HeadingbarProps {
 
 const Headingbar: React.FC<HeadingbarProps> = ({ text }) => {
   return (
-    <div className="relative w-full h-28 overflow-hidden rounded-3xl bg-black flex items-center">
+    <div className="relative w-full h-24 overflow-hidden rounded-3xl bg-black flex items-center">
       <div className="absolute left-0 top-0 w-full h-full z-10 flex items-center"
            style={{
              background: "linear-gradient(to right, #1D1B23 55%, rgba(29,27,35,0.5) 75%, transparent 80%)"
            }}
       >
-        <p className="text-white text-2xl font-light tracking-[0.5em] ml-10">{text}</p> {/* Adjusted font size, weight, and letter spacing */}
+        <p className="text-white text-2xl font-light tracking-[0.4em] ml-10">{text}</p> {/* Adjusted font size, weight, and letter spacing */}
       </div>
       <div className="absolute right-0 top-0 w-[45%] h-full overflow-hidden" >
         <iframe
