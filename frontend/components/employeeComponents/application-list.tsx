@@ -93,7 +93,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       const supabase =  createClient();
       const members = selectedTeam?.members as Member[];
       const teamId= uuidv4();
-
+// change signUp to this instead: https://supabase.com/docs/reference/javascript/auth-admin-createuser
       members.map(async (member) => {
         const {data, error} = await supabase.auth.signUp({
           email: member.email,
