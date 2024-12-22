@@ -25,7 +25,7 @@ import {
 import { TeamDetailsDialog } from './team-detail';
 import { Application_Status, Universities, Member,Application, Employee } from '@/utils/types';
 import { UserRole } from "@/utils/types";
-
+import {v4 as uuidv4 } from "uuid"
 interface ApplicationListProps {
   projectId: string,
   employeeInfo: Employee
@@ -66,7 +66,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       }
       return true;
     }
-    const handleApprove = async (application_id: number, project_id: number) => {
+    const handleApprove = async (application_id: number, project_id: number, university: string) => {
       if (!authUserFunctionality()) {
         alert("Approval requires you to be level 2+");
         return;
@@ -84,27 +84,34 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       await fetchApplications();
 
       // create a func to create student accounts
-      await createStudentAccounts(application_id);
+      await createStudentAccounts(application_id, university);
     }
 
-    async function createStudentAccounts(application_id: number){
+    async function createStudentAccounts(application_id: number, uni: string){
       let errorMessage = "";
       console.log("inside createStudentAccount func")
       const supabase =  createClient();
       const members = selectedTeam?.members as Member[];
+      const teamId= uuidv4();
+
       members.map(async (member) => {
         const {data, error} = await supabase.auth.signUp({
           email: member.email,
           password: "teamPasswordIsLong".toString(),
           options: {
             data: {
+              project_id: projectId,
+              team_id: teamId,
               user_role: UserRole.STUDENT,
               full_name: member.full_name,
+              major: member.major,
+              university: uni
             }
-          }
+          },
+          
         })
         if (error) {
-            errorMessage += error.cause + "\n";
+            errorMessage += error.name + "\n";
         };
       });
 

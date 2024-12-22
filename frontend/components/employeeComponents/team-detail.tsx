@@ -11,12 +11,12 @@ import {
   DialogClose
 } from "@/components/ui/dialog"
 import { X } from 'lucide-react'
-import { Application, Member } from '@/utils/types'
+import { Application, Member, Universities } from '@/utils/types'
 import { createClient } from '@/utils/supabase/client'
 
 interface TeamDetailsDialogProps {team : Application | null
   onClose: () => void
-  onApprove: (application_id: number, projectId: number) => void
+  onApprove: (application_id: number, projectId: number, university: string) => void
   onReject: (application_id: number, projectId: number) => void
 }
 async function openResume(resume_filepath: string) {
@@ -77,7 +77,7 @@ export function TeamDetailsDialog({ team, onClose, onApprove, onReject }: TeamDe
                 <Button
                     variant="outline"
                     className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
-                    onClick={() => onApprove(team.application_id, team.project_id)}
+                    onClick={() => onApprove(team.application_id, team.project_id, team?.university)}
                 >
                     Approve
                 </Button>

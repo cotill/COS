@@ -96,7 +96,7 @@ export interface Member {
     application_id: number;
     project_id: number;
     team_name: string;
-    university: string | null; 
+    university: string ; 
     status: Application_Status;
     members: Member[]; // jsonb
     size: number;
