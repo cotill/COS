@@ -74,12 +74,14 @@ export enum Universities{
 
 export enum Project_Status {
     APPROVED,REJECTED,DISPATCH, DRAFT, 
-    UNDER_REVIEW, RETURNED, DISPATCHED, IN_PROGRESS,
-    COMPLETED, CANCELLED
+    UNDER_REVIEW, DISPATCHED, ACTIVE,
+    COMPLETED, CANCELLED, AWARDED, 
 }
 
 export enum Application_Status {
-    PENDING, REJECTED, APPROVED
+    PENDING = "PENDING", 
+    REJECTED = "REJECTED", 
+    APPROVED = "APPROVED"
 }
 
 export interface Member {

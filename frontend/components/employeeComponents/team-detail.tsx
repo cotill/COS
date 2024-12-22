@@ -16,8 +16,8 @@ import { createClient } from '@/utils/supabase/client'
 
 interface TeamDetailsDialogProps {team : Application | null
   onClose: () => void
-  onApprove: (teamId: number) => void
-  onReject: (teamId: number) => void
+  onApprove: (application_id: number, projectId: number) => void
+  onReject: (application_id: number, projectId: number) => void
 }
 async function openResume(resume_filepath: string) {
   const supabase = createClient();
@@ -30,6 +30,7 @@ async function openResume(resume_filepath: string) {
     alert("Unable to fetch the resume. Please try again.");
   }
 }
+
 export function TeamDetailsDialog({ team, onClose, onApprove, onReject }: TeamDetailsDialogProps) {
   if (!team) return null
 
@@ -67,7 +68,7 @@ export function TeamDetailsDialog({ team, onClose, onApprove, onReject }: TeamDe
                 <Button
                     variant="outline"
                     className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                    onClick={() => onReject(team.application_id)}
+                    onClick={() => onReject(team.application_id, team.project_id)}
                 >
                     Reject
                 </Button>
@@ -76,7 +77,7 @@ export function TeamDetailsDialog({ team, onClose, onApprove, onReject }: TeamDe
                 <Button
                     variant="outline"
                     className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
-                    onClick={() => onApprove(team.application_id)}
+                    onClick={() => onApprove(team.application_id, team.project_id)}
                 >
                     Approve
                 </Button>
