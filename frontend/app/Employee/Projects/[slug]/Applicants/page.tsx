@@ -18,8 +18,6 @@ export default async function ApplicantsPage({params,} : {params : Promise<{slug
   const employeeInfo = empInfo as Employee;
   return (
     <div className="p-6">
-      Applicants page
-      <p>Application id {projectId}</p>
       <ApplicationList projectId={projectId} employeeInfo={employeeInfo}/>
     </div>
   )

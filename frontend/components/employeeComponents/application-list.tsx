@@ -31,7 +31,7 @@ interface ApplicationListProps {
   employeeInfo: Employee
 }
 export default function ApplicationList({projectId, employeeInfo}:ApplicationListProps) {
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1)
     const applicationsPerPage = 5
     const [projectApplications, setProjectApplications] = useState<Application[] | null> (null);
@@ -84,41 +84,59 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       await fetchApplications();
 
       // create a func to create student accounts
-      await createStudentAccounts(application_id, university);
+      await createStudentAccounts( university);
     }
 
-    async function createStudentAccounts(application_id: number, uni: string){
-      let errorMessage = "";
+    async function createStudentAccounts( uni: string){
       console.log("inside createStudentAccount func")
-      const supabase =  createClient();
+      let errorMessages: string[] = [];
       const members = selectedTeam?.members as Member[];
       const teamId= uuidv4();
-// change signUp to this instead: https://supabase.com/docs/reference/javascript/auth-admin-createuser
-      members.map(async (member) => {
-        const {data, error} = await supabase.auth.signUp({
-          email: member.email,
-          password: "teamPasswordIsLong".toString(),
-          options: {
-            data: {
-              project_id: projectId,
-              team_id: teamId,
-              user_role: UserRole.STUDENT,
+
+      // intial payload
+      const basePayload ={
+        password: "teamPasswordIsLong".toString(),
+        user_metadata: {
+          project_id: projectId,
+          team_id: teamId,
+          user_role: UserRole.STUDENT,
+          university: uni
+        },
+      }
+      
+      for (const member of members){
+        try{
+          // create payload
+          const payLoad = {
+            email: member.email,
+            ...basePayload,
+            user_metadata: {
+              ...basePayload.user_metadata,
               full_name: member.full_name,
               major: member.major,
-              university: uni
-            }
-          },
-          
-        })
-        if (error) {
-            errorMessage += error.name + "\n";
-        };
-      });
+            },
+          };
 
-      if (errorMessage) {
-        console.log(`Error creating student accounts: ${errorMessage}`);
+          // send the API request
+          const response = await fetch('/create-user',{
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payLoad)
+          });
 
-        alert(`Error creating student accounts: ${errorMessage}`);
+          const result = await response.json();
+          if(!response.ok){
+            errorMessages.push(`Error creating user ${member.email}: ${result.error}`);
+          }
+        } catch(err){
+          errorMessages.push(`Error creating user ${member.email}: ${(err as Error).message}`);
+        }
+      }
+      if (errorMessages.length > 0) {
+        console.error('Errors occurred while creating student accounts:', errorMessages.join('\n'));
+        alert(`Error creating student accounts:\n${errorMessages.join('\n')}`);
       }
     }
     /**
