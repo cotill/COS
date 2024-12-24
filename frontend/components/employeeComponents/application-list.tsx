@@ -1,31 +1,13 @@
 'use client'
 
-import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Trash } from 'lucide-react';
 import { Dialog } from "@/components/ui/dialog"
-import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
 import { TeamDetailsDialog } from './team-detail';
-import { Application_Status, Universities, Member,Application, Employee } from '@/utils/types';
-import { UserRole } from "@/utils/types";
-import {v4 as uuidv4 } from "uuid"
+import { Application_Status, Member,Application, Employee } from '@/utils/types';
+import { fetchApplications, rejectAllExcept, updateApplicationStatus, createStudentAccounts, deleteApplication } from "@/app/user-applications/application";
+import ApplicationTable from "./applicationTable";
+import {ApplicationPagination} from "./applicationPagination";
+
 interface ApplicationListProps {
   projectId: string,
   employeeInfo: Employee
@@ -41,23 +23,25 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
     const indexOfFirstApplication = indexOfLastApplication - applicationsPerPage
     const currentApplications = projectApplications ? projectApplications.slice(indexOfFirstApplication, indexOfLastApplication) : []
 
-    const [selectedTeam, setSelectedTeam] = useState<Application | null>(null)
+    const [selectedTeam, setSelectedTeam] = useState<Application | null>(null);
 
-    const fetchApplications = async() =>{
+    const loadApplications = async() =>{
       setIsLoading(true);
-      const supabase = createClient();
-      const {data, error} = await supabase.from("Applications").select("*").eq('"project_id"',projectId); 
-      if (error) {
-        console.error("Error fetching applicaionts", error.message);
+      try {
+        const application_result = await fetchApplications(projectId);
+        setProjectApplications(application_result);
+      
+      }catch(err){
         setProjectApplications(null);
-      }else{
-        setProjectApplications(data);
+        console.error(err);      
+      
+      }finally{
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     useEffect(() => {
-      fetchApplications();
+      loadApplications();
     }, []);
     
     function authUserFunctionality(): boolean{
@@ -71,86 +55,34 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         alert("Approval requires you to be level 2+");
         return;
       }
+
       // change the team application status to approved
-      const supabase =  createClient();
-      const {error} = await supabase.from('Applications').update({status: Application_Status.APPROVED}).eq('application_id',application_id);
-      if(error){
-        alert(`Error approving ${selectedTeam?.team_name} application! Please contact Admin`)
+      try {
+        await updateApplicationStatus(application_id,Application_Status.APPROVED, selectedTeam?.team_name);
+      } catch (error) {
+        alert(error)
       }
+
       // change the other applications for the same project to rejected
-      await rejectAllExcept(application_id,project_id)
+      try {
+        await rejectAllExcept(application_id,project_id)
+        
+      } catch (error) {
+        alert(error)
+      }
     
-      // fetch the data aftger update
-      await fetchApplications();
+      // fetch the data afger update
+      await loadApplications();
 
       // create a func to create student accounts
-      await createStudentAccounts( university);
-    }
-
-    async function createStudentAccounts( uni: string){
-      console.log("inside createStudentAccount func")
-      let errorMessages: string[] = [];
-      const members = selectedTeam?.members as Member[];
-      const teamId= uuidv4();
-
-      // intial payload
-      const basePayload ={
-        password: "teamPasswordIsLong".toString(),
-        user_metadata: {
-          project_id: projectId,
-          team_id: teamId,
-          user_role: UserRole.STUDENT,
-          university: uni
-        },
+      try {
+        const teamMembers = selectedTeam?.members as Member[];
+        await createStudentAccounts(teamMembers, project_id, university);
+      } catch (error) {
+        console.error(`Error creating student accounts:\n${error}`)
+        alert(`Error creating student accounts:\n${error}`)
       }
-      
-      for (const member of members){
-        try{
-          // create payload
-          const payLoad = {
-            email: member.email,
-            ...basePayload,
-            user_metadata: {
-              ...basePayload.user_metadata,
-              full_name: member.full_name,
-              major: member.major,
-            },
-          };
 
-          // send the API request
-          const response = await fetch('/create-user',{
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payLoad)
-          });
-
-          const result = await response.json();
-          if(!response.ok){
-            errorMessages.push(`Error creating user ${member.email}: ${result.error}`);
-          }
-        } catch(err){
-          errorMessages.push(`Error creating user ${member.email}: ${(err as Error).message}`);
-        }
-      }
-      if (errorMessages.length > 0) {
-        console.error('Errors occurred while creating student accounts:', errorMessages.join('\n'));
-        alert(`Error creating student accounts:\n${errorMessages.join('\n')}`);
-      }
-    }
-    /**
-     * This function will reject all applications for a project except the application id provided
-     */
-    const rejectAllExcept = async (application_id: number, project_id: number) => {
-      const supabase =  createClient();
-      const {error} = await supabase.from('Applications')
-      .update({status: Application_Status.REJECTED})
-      .eq("project_id", project_id)
-      .neq('application_id', application_id);
-      if(error){
-        alert(`Error updating other applications statsus to REJECTED! Please contact Admin`)
-      }
     }
   
     const handleReject = async (application_id: number) => {
@@ -159,15 +91,28 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         alert("Rejection requires you to be level 2+");
         return;
       }
-      console.log('Rejected team:', application_id);
-      const supabase =  createClient();
-      const {error} = await supabase.from('Applications').update({status: Application_Status.REJECTED}).eq('application_id',application_id);
-      if(error){
-        alert(`Error rejecting ${selectedTeam?.team_name} application! Please contact Admin`)
+      try {
+        await updateApplicationStatus(application_id,Application_Status.REJECTED, selectedTeam?.team_name);
+      } catch (error) {
+        alert(error)
       }
 
-      // fetch the data aftger update
-      fetchApplications();
+      // fetch the data after update
+      await loadApplications();
+    }
+    const handleDeleteApplication = async (application_id: number) => {
+      // Handle delete logic
+      if (!authUserFunctionality()) {
+        alert("Deleting an application requires you to be level 2+");
+        return;
+      }
+      // confirmation popup
+
+      // call deletion function
+      await deleteApplication(application_id);
+      
+      // fetch the data after update
+      await loadApplications();
     }
 
   if(isLoading) {
@@ -180,77 +125,17 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
   } 
   return (
     <div className="space-y-4">
-    <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead>Team Name</TableHead>
-        <TableHead>Size</TableHead>
-        <TableHead>Submission Date</TableHead>
-        <TableHead>Status</TableHead>
-        <TableHead>Action</TableHead>
-        <TableHead>{}</TableHead>
+      <ApplicationTable 
+        currentApplications={currentApplications}
+        onViewDetails ={setSelectedTeam}
+        onDeleteApplication={handleDeleteApplication}
+      />
+      <ApplicationPagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page: number) => setCurrentPage(page)}
+      />
 
-      </TableRow>
-      </TableHeader>
-        <TableBody>
-          {currentApplications.map((applicant) => (
-            <TableRow key={applicant.application_id}>
-              <TableCell>{applicant.team_name}</TableCell>
-              <TableCell>{applicant.size}</TableCell>
-              <TableCell>{applicant.submission_date}</TableCell>
-              <TableCell>
-                <Badge
-                  className={`bg-white text-black 
-                    ${applicant.status === Application_Status.APPROVED ? "bg-green-400 text-white" : ""}
-                    ${applicant.status === Application_Status.REJECTED ? "bg-red-400 text-white" : ""}`
-                  }
-                >
-                  {applicant.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Button variant="outline" onClick={() =>setSelectedTeam(applicant)}>
-                    View Detail
-                </Button>
-              </TableCell>
-              <TableCell>
-                <Button variant="ghost">
-                    <Trash/>
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious 
-              href="#" 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-            />
-          </PaginationItem>
-          {[...Array(totalPages)].map((_, index) => (
-            <PaginationItem key={index}>
-              <PaginationLink 
-                href="#" 
-                onClick={() => setCurrentPage(index + 1)}
-                isActive={currentPage === index + 1}
-              >
-                {index + 1}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-          <PaginationItem>
-            <PaginationNext 
-              href="#" 
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
 
       <Dialog open={selectedTeam !== null} onOpenChange={() => setSelectedTeam(null)}>
         <TeamDetailsDialog

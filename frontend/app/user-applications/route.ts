@@ -5,11 +5,12 @@ import { createClient } from "@supabase/supabase-js"
 export async function POST(req:Request) {
     try {
         const reqBody = await req.json();
-        const {email, password, user_metadata} = reqBody;
+        const {email, user_metadata} = reqBody;
 
-        if (!email || !password || !user_metadata) {
+        if (!email || !user_metadata) {
             return NextResponse.json({ error: 'Missing required fields', request: reqBody }, { status: 400 });
         }
+        const pwd = "teamPasswordIsLong".toString();
 
         const supabaseAdmin =  createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +19,7 @@ export async function POST(req:Request) {
         const {data, error} = await supabaseAdmin.auth.admin.createUser({
             email_confirm: true,
             email:email,
-            password: password,
+            password: pwd,
             user_metadata: user_metadata
         })
 
