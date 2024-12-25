@@ -81,5 +81,16 @@ export async function createStudentAccounts(teamMembers: Member[], projectId: nu
 }
 
 export async function deleteApplication(application_id: number){
-    console.log("Handle delete application")
+    // console.log("Handle delete application");
+    const supabase = createClient();
+    const {data, error} = await supabase.from('Applications').delete().eq("application_id",application_id).select();
+    if (error || data === null) throw new Error(`Error deleting application: ${error.message}`);
+
+}
+
+export function confirmEmployeeAuthorization(employeeLevel: number, requiredLevel: number): boolean{
+  if (employeeLevel < requiredLevel) {
+    return false;
+  }
+  return true;
 }

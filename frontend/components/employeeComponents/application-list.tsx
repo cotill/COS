@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { Dialog } from "@/components/ui/dialog"
 import { TeamDetailsDialog } from './team-detail';
-import { Application_Status, Member,Application, Employee } from '@/utils/types';
-import { fetchApplications, rejectAllExcept, updateApplicationStatus, createStudentAccounts, deleteApplication } from "@/app/user-applications/application";
+import { Application_Status, Member,Application, Employee, EmployeeLevel } from '@/utils/types';
+import { fetchApplications, rejectAllExcept, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization } from "@/app/student_applications/application";
 import ApplicationTable from "./applicationTable";
 import {ApplicationPagination} from "./applicationPagination";
 
@@ -44,14 +44,8 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       loadApplications();
     }, []);
     
-    function authUserFunctionality(): boolean{
-      if (employeeInfo.level < 2) {
-        return false;
-      }
-      return true;
-    }
     const handleApprove = async (application_id: number, project_id: number, university: string) => {
-      if (!authUserFunctionality()) {
+      if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
         alert("Approval requires you to be level 2+");
         return;
       }
@@ -87,7 +81,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
   
     const handleReject = async (application_id: number) => {
       // Handle reject logic
-      if (!authUserFunctionality()) {
+      if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
         alert("Rejection requires you to be level 2+");
         return;
       }
@@ -102,14 +96,17 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
     }
     const handleDeleteApplication = async (application_id: number) => {
       // Handle delete logic
-      if (!authUserFunctionality()) {
+      if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
         alert("Deleting an application requires you to be level 2+");
         return;
       }
-      // confirmation popup
-
-      // call deletion function
-      await deleteApplication(application_id);
+      
+      //delete application
+      try {
+        await deleteApplication(application_id);        
+      } catch (error) {
+        alert(error);
+      }
       
       // fetch the data after update
       await loadApplications();
@@ -125,10 +122,11 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
   } 
   return (
     <div className="space-y-4">
-      <ApplicationTable 
+      <ApplicationTable
         currentApplications={currentApplications}
         onViewDetails ={setSelectedTeam}
         onDeleteApplication={handleDeleteApplication}
+        employeeInfo={employeeInfo}
       />
       <ApplicationPagination 
         currentPage={currentPage}
