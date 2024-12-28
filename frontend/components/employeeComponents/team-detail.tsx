@@ -12,12 +12,8 @@ import { createClient } from "@/utils/supabase/client";
 interface TeamDetailsDialogProps {
   team: Application | null;
   onClose: () => void;
-  onApprove: (
-    application_id: number,
-    projectId: number,
-    university: string
-  ) => void;
-  onReject: (application_id: number, projectId: number) => void;
+  onApprove?: ( application_id: number, projectId: number, university: string) => void;
+  onReject?: (application_id: number, projectId: number) => void;
 }
 
 /**
@@ -80,7 +76,8 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject,}: TeamDetail
             <Button
               variant="outline"
               className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
-              onClick={() => onReject(team.application_id, team.project_id)}
+              onClick={() => onReject?.(team.application_id, team.project_id)}
+              disabled={!onReject}
             >
               Reject
             </Button>
@@ -90,12 +87,9 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject,}: TeamDetail
               variant="outline"
               className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
               onClick={() =>
-                onApprove(
-                  team.application_id,
-                  team.project_id,
-                  team?.university
-                )
+                onApprove && onApprove(team.application_id, team.project_id, team?.university)
               }
+              disabled={!onApprove}
             >
               Approve
             </Button>

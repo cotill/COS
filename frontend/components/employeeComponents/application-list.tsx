@@ -24,7 +24,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
     const currentApplications = projectApplications ? projectApplications.slice(indexOfFirstApplication, indexOfLastApplication) : []
 
     const [selectedTeam, setSelectedTeam] = useState<Application | null>(null);
-
+    const isAnyApplicationApproved = projectApplications?.some((application) => application.status === Application_Status.APPROVED);
     /**
      * The function will load all applications for a project
      */
@@ -121,6 +121,10 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         alert("Deleting an application requires you to be level 2+");
         return;
       }
+      if(selectedTeam?.status === Application_Status.APPROVED){
+        alert("Can't delete an application that is already approved");
+        return;
+      }
       
       try {
         await deleteApplication(application_id);
@@ -163,8 +167,8 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         <TeamDetailsDialog
           team={selectedTeam}
           onClose={() => setSelectedTeam(null)}
-          onApprove={handleApprove}
-          onReject={handleReject}
+          onApprove={isAnyApplicationApproved ? undefined : handleApprove}
+          onReject={isAnyApplicationApproved ? undefined : handleReject}
         />
       </Dialog>
     </div>
