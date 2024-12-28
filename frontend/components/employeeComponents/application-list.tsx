@@ -25,6 +25,9 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
 
     const [selectedTeam, setSelectedTeam] = useState<Application | null>(null);
 
+    /**
+     * The function will load all applications for a project
+     */
     const loadApplications = async() =>{
       setIsLoading(true);
       try {
@@ -33,7 +36,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       
       }catch(err){
         setProjectApplications(null);
-        console.error(err);      
+        console.error(err);
       
       }finally{
         setIsLoading(false);
@@ -44,20 +47,25 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       loadApplications();
     }, []);
     
+    /**
+     * 
+     * @param application_id The application id to approve
+     * @param project_id The project id of the application
+     * @param university The university of the team
+     * @returns  void but the function will update the application status to approved, create student accounts for the approved team and reject all other applications for the same project.
+     */
     const handleApprove = async (application_id: number, project_id: number, university: string) => {
       if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
         alert("Approval requires you to be level 2+");
         return;
       }
 
-      // change the team application status to approved
       try {
         await updateApplicationStatus(application_id,Application_Status.APPROVED, selectedTeam?.team_name);
       } catch (error) {
         alert(error)
       }
 
-      // change the other applications for the same project to rejected
       try {
         await rejectAllExcept(application_id,project_id)
         
@@ -65,10 +73,8 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         alert(error)
       }
     
-      // fetch the data afger update
       await loadApplications();
 
-      // create a func to create student accounts
       try {
         const teamMembers = selectedTeam?.members as Member[];
         await createStudentAccounts(teamMembers, project_id, university);
@@ -78,7 +84,12 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       }
 
     }
-  
+
+    /**
+     * 
+     * @param application_id The application id to reject
+     * @returns void but the function will update the application status to rejected and fetch the data after update
+     */
     const handleReject = async (application_id: number) => {
       // Handle reject logic
       if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
@@ -91,9 +102,14 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         alert(error)
       }
 
-      // fetch the data after update
       await loadApplications();
     }
+
+    /**
+     * 
+     * @param application_id The application id to delete
+     * @returns void but the function will delete the application and fetch the data after deletion
+     */
     const handleDeleteApplication = async (application_id: number) => {
       // Handle delete logic
       if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
@@ -101,14 +117,12 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         return;
       }
       
-      //delete application
       try {
-        await deleteApplication(application_id);        
+        await deleteApplication(application_id);
       } catch (error) {
         alert(error);
       }
       
-      // fetch the data after update
       await loadApplications();
     }
 
@@ -116,25 +130,30 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
     return <div className="text-center text-white">Loading...</div>;
   }
   if (projectApplications == null){
-    return     <div className="space-y-4">
-      Error retrieving applications for project with project id {projectId}! Please contact system admin
-    </div>
-  } 
+    return (
+      <div className="space-y-4">
+        Error retrieving applications for project with project id {projectId}! Please contact system admin
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* Displays the application table */}
       <ApplicationTable
         currentApplications={currentApplications}
         onViewDetails ={setSelectedTeam}
         onDeleteApplication={handleDeleteApplication}
         employeeInfo={employeeInfo}
       />
+      {/* Display the pagination */}
       <ApplicationPagination 
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={(page: number) => setCurrentPage(page)}
       />
 
-
+      {/* Display the team application*/}
       <Dialog open={selectedTeam !== null} onOpenChange={() => setSelectedTeam(null)}>
         <TeamDetailsDialog
           team={selectedTeam}
@@ -143,7 +162,6 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
           onReject={handleReject}
         />
       </Dialog>
-      </div>
-
+    </div>
   )
 }

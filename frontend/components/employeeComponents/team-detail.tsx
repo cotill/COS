@@ -1,17 +1,12 @@
-"use client";
+"use client"
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { X } from "lucide-react";
-import { Application, Member, Universities } from "@/utils/types";
+import { Application } from "@/utils/types";
 import { createClient } from "@/utils/supabase/client";
 
 interface TeamDetailsDialogProps {
@@ -24,6 +19,11 @@ interface TeamDetailsDialogProps {
   ) => void;
   onReject: (application_id: number, projectId: number) => void;
 }
+
+/**
+ * Create a signed url for the resume file and open it in a new tab
+ * @param resume_filepath The path to the resume file
+ */
 async function openResume(resume_filepath: string) {
   const supabase = createClient();
   const { data, error } = await supabase.storage
@@ -38,7 +38,7 @@ async function openResume(resume_filepath: string) {
 }
 
 export function TeamDetailsDialog({team,onClose,onApprove,onReject,}: TeamDetailsDialogProps) {
-  if (!team) return null;
+  if (!team ) return null;
 
   return (
     <DialogContent className="bg-gray-900 text-white max-w-md">
