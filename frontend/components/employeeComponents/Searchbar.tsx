@@ -20,11 +20,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       <select
         value={filter}
         onChange={onFilterChange}
-        className="appearance-none bg-transparent border-r px-5 py-2 text-gray-700 outline-none cursor-pointer"
+        className="border-r px-5 py-2 text-gray-700 outline-none cursor-pointer" style={{backgroundColor: 'white', borderTopLeftRadius: 20, borderBottomLeftRadius: 20, color: 'grey' }}
       >
         <option value="name">Name</option>
         <option value="department">Department</option>
         <option value="date">Date</option>
+        <option value="status">Status</option>
       </select>
       <input
         type="text"

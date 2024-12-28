@@ -6,7 +6,6 @@ import Headingbar from '@/components/employeeComponents/Headingbar';
 import { SearchBar } from '@/components/employeeComponents/Searchbar';
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Span } from 'next/dist/trace';
 
 export default function ProjectPage() {
   const [searchTerm, setSearchTerm] = useState('');

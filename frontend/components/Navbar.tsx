@@ -6,7 +6,7 @@ import UserMenu from "./user-menu";
 
 interface NavbarProperities {
   initials: string;
-  signOutButton: string;
+  signOutButton: () => void;
   name: string;
 }
 

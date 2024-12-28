@@ -4,7 +4,7 @@ import Link from "next/link";
 interface UserMenuProps {
   initials: string;
   onClose: () => void;
-  signOutButton: string;
+  signOutButton: () => void;
   name: string;
 }
 
