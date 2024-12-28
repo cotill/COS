@@ -73,9 +73,15 @@ export enum Universities{
 
 
 export enum Project_Status {
-    APPROVED,REJECTED,DISPATCH, DRAFT, 
-    UNDER_REVIEW, DISPATCHED, ACTIVE,
-    COMPLETED, CANCELLED, AWARDED, 
+    APPROVED = "APPROVED",
+    REJECTED = "REJECTED",
+    DRAFT = "DRAFT",
+    UNDER_REVIEW = "UNDER_REVIEW",
+    DISPATCHED = "DISPATCHED",
+    ACTIVE = "ACTIVE",
+    COMPLETED = "COMPLETED",
+    CANCELLED = "CANCELLED",
+    AWARDED = "AWARDED",
 }
 
 export enum Application_Status {

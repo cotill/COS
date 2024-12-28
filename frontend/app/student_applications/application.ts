@@ -1,6 +1,6 @@
 'use client'
 import { createClient } from "@/utils/supabase/client";
-import { Application, Application_Status, Member } from "@/utils/types";
+import { Application, Application_Status, Member, Project_Status } from "@/utils/types";
 import {v4 as uuidv4 } from "uuid"
 import { UserRole } from "@/utils/types";
 
@@ -31,7 +31,7 @@ export const updateApplicationStatus = async (applicationId: number, status: str
 /**
  * This function will reject all applications for a project except the application id provided
  */
-export const rejectAllExcept = async (application_id: number, project_id: number) => {
+export const rejectOtherApplications = async (application_id: number, project_id: number) => {
     const supabase =  createClient();
     const {error} = await supabase.from('Applications')
     .update({status: Application_Status.REJECTED})
@@ -118,4 +118,19 @@ export function confirmEmployeeAuthorization(employeeLevel: number, requiredLeve
     return false;
   }
   return true;
+}
+
+export const updateProjectStatus = async(project_id: string, status: string) => {
+  const supabase = createClient();
+  let error;
+  if(status === Project_Status.AWARDED){
+    // close the project to prevent further applications
+    const {data, error: err } = await supabase.from("Projects").update({status: status, applications_allowed: false}).eq('"project_id"',project_id).select();
+    error = err;
+  }
+  else{
+    const {data, error: err } = await supabase.from("Projects").update({status }).eq('"project_id"',project_id).select();
+    error = err;
+  }
+  if (error) throw new Error(`Error updating project with project id ${project_id} application status! please contact system admin`);
 }

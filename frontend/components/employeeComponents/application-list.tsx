@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { Dialog } from "@/components/ui/dialog"
 import { TeamDetailsDialog } from './team-detail';
-import { Application_Status, Member,Application, Employee, EmployeeLevel } from '@/utils/types';
-import { fetchApplications, rejectAllExcept, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization } from "@/app/student_applications/application";
+import { Application_Status, Member,Application, Employee, EmployeeLevel, Project_Status } from '@/utils/types';
+import { fetchApplications, rejectOtherApplications, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization, updateProjectStatus } from "@/app/student_applications/application";
 import ApplicationTable from "./applicationTable";
 import {ApplicationPagination} from "./applicationPagination";
 
@@ -67,7 +67,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       }
 
       try {
-        await rejectAllExcept(application_id,project_id)
+        await rejectOtherApplications(application_id,project_id)
         
       } catch (error) {
         alert(error)
@@ -80,9 +80,14 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         await createStudentAccounts(teamMembers, project_id, university);
       } catch (error) {
         console.error(`Error creating student accounts:\n${error}`)
-        alert(`Error creating student accounts:\n${error}`)
+        alert(`Error creating student accounts please contact system admin`)
       }
 
+      try {
+        await updateProjectStatus(projectId,Project_Status.AWARDED)
+      } catch (error) {
+        alert(error)
+      }
     }
 
     /**
