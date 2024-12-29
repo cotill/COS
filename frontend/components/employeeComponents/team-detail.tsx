@@ -144,7 +144,6 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
                 </Button>
               )}
             </DialogClose>
-            {/* <DialogClose asChild> */}
             <Button
               variant="outline"
               className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
@@ -160,7 +159,6 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
             >
               Approve
             </Button>
-            {/* </DialogClose> */}
           </div>
         </div>
         {/* Alert Dialog will display when the user clicks the approve button */}
