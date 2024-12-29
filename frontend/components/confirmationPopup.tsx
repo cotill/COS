@@ -21,11 +21,11 @@ type ConfirmationDialogProp = {
 export const ConfirmationDialog = ({application_team_name, onConfirm, onCancel}: ConfirmationDialogProp) => {
   return (
     <>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-black bg-opacity-70">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white text-center">Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-200 text-base">
-              Are you sure you want to delete {application_team_name} application? <br />
+              Are you sure you want to delete <span className="font-bold">{application_team_name}</span> application? <br />
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
