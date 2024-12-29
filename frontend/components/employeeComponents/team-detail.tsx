@@ -88,84 +88,86 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
   }
   return (
     <>
-    <DialogContent className="bg-gray-900 text-white max-w-md">
-      <DialogHeader>
-        <div className="flex items-center justify-between">
-          <DialogTitle className="text-xl">{team.team_name}</DialogTitle>
-        </div>
-      </DialogHeader>
-      <div className="space-y-4">
-        <div>
-          <p className="text-gray-400 mb-2">Team detail:</p>
-          <p>{team.about_us}</p>
-        </div>
-        <div>
-          <p className="text-gray-400 mb-2">Team members:</p>
-          <div className="space-y-2">
-            {team.members.map((member, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-gray-800 p-2 rounded-md"
-              >
-                <div>
-                  <p>{member.full_name}</p>
-                  <p className="text-sm text-gray-400">{member.role}</p>
+      <DialogContent className="bg-gray-900 text-white max-w-md">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl">{team.team_name}</DialogTitle>
+          </div>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <p className="text-gray-400 mb-2">Team detail:</p>
+            <p>{team.about_us}</p>
+          </div>
+          <div>
+            <p className="text-gray-400 mb-2">Team members:</p>
+            <div className="space-y-2">
+              {team.members.map((member, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-800 p-2 rounded-md"
+                >
+                  <div>
+                    <p>{member.full_name}</p>
+                    <p className="text-sm text-gray-400">{member.role}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openResume(member.resume)}
+                  >
+                    View Resume
+                  </Button>
                 </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <DialogClose asChild>
+              {displayRejectBtn ? (
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => openResume(member.resume)}
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                  onClick={() => onReject?.(team.application_id)}
+                  disabled={!onReject}
                 >
-                  View Resume
+                  Reject
                 </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 pt-4">
-          <DialogClose asChild>
-            {displayRejectBtn ? (
-            <Button
-              variant="outline"
-              className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
-              onClick={() => onReject?.(team.application_id)}
-              disabled={!onReject}
-            >
-              Reject
-            </Button>
-            ) : (
-              <Button
-              variant="outline"
-              className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400"
-              onClick={() => onPending?.(team.application_id)}
-              disabled={!onPending}
-            >
-              Pending
-            </Button>
-            )
-            }
-          </DialogClose>
-          {/* <DialogClose asChild> */}
+              ) : (
+                <Button
+                  variant="outline"
+                  className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400"
+                  onClick={() => onPending?.(team.application_id)}
+                  disabled={!onPending}
+                >
+                  Pending
+                </Button>
+              )}
+            </DialogClose>
+            {/* <DialogClose asChild> */}
             <Button
               variant="outline"
               className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
-              onClick={() => 
-                onApprove && handleApproveClick(team.application_id, team.project_id, team?.university)
+              onClick={() =>
+                onApprove &&
+                handleApproveClick(
+                  team.application_id,
+                  team.project_id,
+                  team?.university
+                )
               }
               disabled={!onApprove}
             >
               Approve
             </Button>
-          {/* </DialogClose> */}
+            {/* </DialogClose> */}
+          </div>
         </div>
-      </div>
-          {/* Alert Dialog will display when the user clicks the delete button */}
-    <AlertDialog open={dialogOpen} onOpenChange={()=> setDialogOpen(false)}>
-      {dialogProps && <ConfirmationDialog {...dialogProps}/>}
-    </AlertDialog>
-    </DialogContent>
-
-    
+        {/* Alert Dialog will display when the user clicks the approve button */}
+        <AlertDialog open={dialogOpen} onOpenChange={() => setDialogOpen(false)}>
+          {dialogProps && <ConfirmationDialog {...dialogProps} />}
+        </AlertDialog>
+      </DialogContent>
     </>
   );
 }
