@@ -1,6 +1,5 @@
 import ApplicationList from "@/components/employeeComponents/application-list";
 import { createClient } from "@/utils/supabase/server";
-import { Application } from "@/utils/types";
 import { redirect } from 'next/navigation';
 import { Employee } from "@/utils/types";
 

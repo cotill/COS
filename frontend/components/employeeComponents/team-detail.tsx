@@ -8,6 +8,19 @@ import {
 } from "@/components/ui/dialog";
 import { Application, Application_Status } from "@/utils/types";
 import { createClient } from "@/utils/supabase/client";
+import { ConfirmationDialog, ConfirmationDialogProp } from "../confirmationPopup";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface TeamDetailsDialogProps {
   team: Application | null;
@@ -37,8 +50,44 @@ async function openResume(resume_filepath: string) {
 export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: TeamDetailsDialogProps) {
   if (!team ) return null;
   const displayRejectBtn = team.status === Application_Status.PENDING || team.status === Application_Status.APPROVED; // if the btn current status is pending or pending, then display rejected button
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogProps, setDialogProps] = useState<ConfirmationDialogProp | null>(null);
 
+  /**
+   * Will activate the confirmation popup
+   * @param application_id the application to approve
+   * @param project_id the project that the application is for
+   * @param university the university the application is for
+   */
+  const handleApproveClick = (application_id: number, project_id: number, university: string) => {
+    setDialogProps({
+      title: "Confirm Approval",
+      description: (
+        <>
+          Are you sure you want to approve{" "}
+          <span className="font-bold">{team.team_name}</span> application?
+          This action cannot be undone
+        </>
+      ),
+      confirmationLabel: "Approve",
+      onConfirm: () => {
+        handleConfirmApprove(application_id, project_id, university);
+      },
+      onCancel: () => {handleCancelConfirm()},
+    });
+    setDialogOpen(true);
+  };
+  const handleConfirmApprove = (application_id: number, project_id: number, university: string) => {
+    onApprove?.(application_id, project_id, university);
+    setDialogOpen(false)
+    onClose();// close the view team detail popup
+  }
+  function handleCancelConfirm () {
+    setDialogOpen(false); 
+    onClose();
+  }
   return (
+    <>
     <DialogContent className="bg-gray-900 text-white max-w-md">
       <DialogHeader>
         <div className="flex items-center justify-between">
@@ -96,20 +145,27 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
             )
             }
           </DialogClose>
-          <DialogClose asChild>
+          {/* <DialogClose asChild> */}
             <Button
               variant="outline"
               className="bg-green-500/10 hover:bg-green-500/20 text-green-400"
-              onClick={() =>
-                onApprove && onApprove(team.application_id, team.project_id, team?.university)
+              onClick={() => 
+                onApprove && handleApproveClick(team.application_id, team.project_id, team?.university)
               }
               disabled={!onApprove}
             >
               Approve
             </Button>
-          </DialogClose>
+          {/* </DialogClose> */}
         </div>
       </div>
+          {/* Alert Dialog will display when the user clicks the delete button */}
+    <AlertDialog open={dialogOpen} onOpenChange={()=> setDialogOpen(false)}>
+      {dialogProps && <ConfirmationDialog {...dialogProps}/>}
+    </AlertDialog>
     </DialogContent>
+
+    
+    </>
   );
 }

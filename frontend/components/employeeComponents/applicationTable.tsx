@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash } from "lucide-react";
 import { useState } from "react";
-import { ConfirmationDialog } from "../confirmationPopup";
+import { ConfirmationDialog, ConfirmationDialogProp } from "../confirmationPopup";
 import { AlertDialog } from "../ui/alert-dialog";
 import { confirmEmployeeAuthorization } from "@/app/student_applications/application";
 
@@ -22,7 +22,8 @@ type ApplicationTableProps = {
   employeeInfo: Employee
 };
 function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication, employeeInfo}: ApplicationTableProps) {
-  const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogProps, setDialogProps] = useState<ConfirmationDialogProp | null>(null);
 
   /**
    * if the employee is authorized to delete the application, this function will set the selected application id to the application id
@@ -39,24 +40,35 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
         alert("Can't delete an application that is already approved");
         return;
       }
-      setSelectedApplicationId(application_id);// setting this state will open the confirmation dialog
+
+      const application_team_name = currentApplications.find(application => application.application_id === application_id)?.team_name;
+      // set the properties for the confirmation dialog
+      setDialogProps({
+        title: "Confirm Delete",
+        description: (<>Are you sure you want to delete <span className="font-bold">{application_team_name}</span> application? <br />
+          This action cannot be undone.</>),
+        confirmationLabel: "Delete",
+        onConfirm: () => {
+          handleConfirmDelete(application_id)
+        },
+        onCancel:() => {handleCancelDelete()}
+      });
+      setDialogOpen(true);// setting this state to open the confirmation dialog
   }
 
   /**
    * This function will delete the application if the user confirms the delete
    */
-  const handleConfirmDelete = () => {
-    if (selectedApplicationId !== null){ // confirm that there was a application clicked
-      onDeleteApplication(selectedApplicationId) // call to the parent function to delete the application
-      setSelectedApplicationId(null);
-    }
-  }
+  const handleConfirmDelete = (application_id: number) => {
+    onDeleteApplication(application_id); // call to the parent function to delete the application
+    setDialogOpen(false);
+  };
 
   /**
    * This function will close the confirmation dialog
    */
   const handleCancelDelete = () => {
-    setSelectedApplicationId(null);
+    setDialogOpen(false);
   }
   return (
     <>
@@ -108,13 +120,9 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
           ))}
         </TableBody>
       </Table>
-      {/* Alert Dialog will display whn the user clicks the delete button */}
-      <AlertDialog open={selectedApplicationId !== null} onOpenChange={()=> setSelectedApplicationId(null)}>
-        <ConfirmationDialog 
-          application_team_name= {currentApplications.find(application => application.application_id === selectedApplicationId)?.team_name}
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-        />
+      {/* Alert Dialog will display when the user clicks the delete button */}
+      <AlertDialog open={dialogOpen} onOpenChange={()=> setDialogOpen(false)}>
+        {dialogProps && <ConfirmationDialog {...dialogProps}/>}
       </AlertDialog>
     </>
   );
