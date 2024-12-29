@@ -109,6 +109,26 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
 
       await loadApplications();
     }
+    
+    /**
+     * 
+     * @param application_id The application id to set to pending
+     * @returns void but the function will update the application status to pending and fetch the data after update
+    */
+    const handlePending = async (application_id: number) => {
+      // Handle pending logic
+      if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
+        alert("Set application to pending requires you to be level 2+");
+        return;
+      }
+      try {
+        await updateApplicationStatus(application_id,Application_Status.PENDING, selectedTeam?.team_name);
+      } catch (error) {
+        alert(error)
+      }
+
+      await loadApplications();
+    }
 
     /**
      * 
@@ -169,6 +189,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
           onClose={() => setSelectedTeam(null)}
           onApprove={isAnyApplicationApproved ? undefined : handleApprove}
           onReject={isAnyApplicationApproved ? undefined : handleReject}
+          onPending={isAnyApplicationApproved ? undefined : handlePending}
         />
       </Dialog>
     </div>

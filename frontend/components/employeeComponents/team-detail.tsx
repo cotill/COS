@@ -6,14 +6,15 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Application } from "@/utils/types";
+import { Application, Application_Status } from "@/utils/types";
 import { createClient } from "@/utils/supabase/client";
 
 interface TeamDetailsDialogProps {
   team: Application | null;
   onClose: () => void;
   onApprove?: ( application_id: number, projectId: number, university: string) => void;
-  onReject?: (application_id: number, projectId: number) => void;
+  onReject?: (application_id: number) => void;
+  onPending?: (application_id: number) => void;
 }
 
 /**
@@ -33,8 +34,9 @@ async function openResume(resume_filepath: string) {
   }
 }
 
-export function TeamDetailsDialog({team,onClose,onApprove,onReject,}: TeamDetailsDialogProps) {
+export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: TeamDetailsDialogProps) {
   if (!team ) return null;
+  const displayRejectBtn = team.status === Application_Status.PENDING || team.status === Application_Status.APPROVED; // if the btn current status is pending or pending, then display rejected button
 
   return (
     <DialogContent className="bg-gray-900 text-white max-w-md">
@@ -73,14 +75,26 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject,}: TeamDetail
         </div>
         <div className="flex justify-end gap-2 pt-4">
           <DialogClose asChild>
+            {displayRejectBtn ? (
             <Button
               variant="outline"
               className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
-              onClick={() => onReject?.(team.application_id, team.project_id)}
+              onClick={() => onReject?.(team.application_id)}
               disabled={!onReject}
             >
               Reject
             </Button>
+            ) : (
+              <Button
+              variant="outline"
+              className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400"
+              onClick={() => onPending?.(team.application_id)}
+              disabled={!onPending}
+            >
+              Pending
+            </Button>
+            )
+            }
           </DialogClose>
           <DialogClose asChild>
             <Button
