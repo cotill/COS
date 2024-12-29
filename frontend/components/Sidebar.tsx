@@ -59,10 +59,8 @@ export default function Sidebar(sideBarProp: SidebarProps) {
               className={`p-4 pl-4 rounded-br-3xl rounded-tr-3xl ${sideBarProp.activePage === link.name ? "bg-[#81c26c]" : ""}`}
             >
               <div className="flex items-center space-x-4">
-                {/* SVG (Icon) placed on the left */}
                 <span>{link.svg}</span>
 
-                {/* Text visible only when sidebar is expanded */}
                 <span className={`${sideBarProp.collapsed ? "hidden" : ""}`}>{link.name}</span>
               </div>
             </li>
