@@ -17,19 +17,27 @@ export const fetchApplications = async(projectId: string): Promise<Application[]
 };
 
 /**
- * 
+ * This function updates the status of an application.
+ * If the application is been APPROVED, then, the functionw will also update the appoval_date column
  * @param applicationId The application id to update
  * @param status The new status of the application
  * @param team_name The name of the team. This is used for error messages
  */
 export const updateApplicationStatus = async (applicationId: number, status: string, team_name: string | undefined) => {
     const supabase = createClient();
-    const { error } = await supabase.from("Applications").update({ status }).eq("application_id", applicationId);
+    let updateData: {status: string , approval_date?: string} = { status };
+
+    if (status === Application_Status.APPROVED) {
+      updateData.approval_date = new Date().toISOString(); // set approval_date to current date and time
+    }
+
+    const { error } = await supabase.from("Applications").update(updateData).eq("application_id", applicationId);
     if (error) throw new Error(`Error updating ${team_name} application status! Error was: ${error.message}`);
 };
 
 /**
- * This function will reject all applications for a project except the application id provided
+ * This function is a bulk rejection
+ * It will reject all applications for a project except the application id provided.
  */
 export const rejectOtherApplications = async (application_id: number, project_id: number) => {
     const supabase =  createClient();

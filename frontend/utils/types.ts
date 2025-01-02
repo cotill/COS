@@ -108,4 +108,5 @@ export interface Member {
     size: number;
     about_us: string | null; 
     submission_date: string;
+    approval_date: string | null; // can be null because not every project will be approved
   }
