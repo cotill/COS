@@ -5,7 +5,6 @@ import Navbar from "../Navbar";
 import { EmployeePages, UserRole } from "@/utils/types";
 import BackButton from "./backbutton";
 import { usePathname } from "next/navigation";
-import Headingbar from "@/components/employeeComponents/Headingbar";
 
 interface EmpLayoutProps {
   children: React.ReactNode;
@@ -31,6 +30,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
     "/Employee/Projects": EmployeePages.PROJECTS,
     "/Employee/Training": EmployeePages.TRAINING,
     "/Employee/SponsoredProjects": EmployeePages.SPONSORED_PROJECTS,
+    "/Employee/Settings": EmployeePages.SETTINGS,
   };
 
   const activePage = pathToPageMap[pathname as keyof typeof pathToPageMap];
@@ -41,6 +41,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
         initials={
           layoutProps.firstName.charAt(0) + "" + layoutProps.lastName.charAt(0)
         }
+        name={layoutProps.firstName + " " + layoutProps.lastName}
         signOutButton={layoutProps.signOutFunc}
       />
       <div className="flex">
@@ -54,7 +55,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
 
         {/**Main Content */}
         <main
-          className={`bg-[#413F46] flex-1 pl-4 transition-all duration-200 ease-in-out main-content rounded-3xl  ${isSidebarCollapsed ? "ml-0" : "ml-200px"}`}
+          className={`bg-[#413F46] flex-1 p-4 transition-all duration-200 ease-in-out main-content rounded-3xl  ml-4 mr-4 ${isSidebarCollapsed ? "ml-0" : "ml-200px"}`}
         >
       <div className="flex items-center gap-4 m">
         {pathname !== "/Employee/Projects" && pathname !== "/Employee/Training" && pathname !== "/Employee/SponsoredProjects" && (
