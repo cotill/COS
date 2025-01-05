@@ -74,7 +74,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       }
     
       await loadApplications();
-      /*
+
       try {
         const teamMembers = selectedTeam?.members as Member[];
         await createStudentAccounts(teamMembers, project_id, university);
@@ -82,7 +82,6 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         console.error(`Error creating student accounts:\n${error}`)
         alert(`Error creating student accounts please contact system admin`)
       }
-        */
        
       try {
         await updateProjectStatus(projectId,Project_Status.AWARDED)
