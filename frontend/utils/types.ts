@@ -36,7 +36,15 @@ export enum EmployeePages {
     PROJECTS = "Projects",
     TRAINING = "Training",
     SPONSORED_PROJECTS = "Sponsored Projects",
-    SETTINGS = "Employee Settings"
+    SETTINGS = "Employee Settings",
+    CREATE_PROJECT = "Create Project",
+}
+
+export enum Department_Types {
+    ENGINEERING = "ENGINEERING",
+    COMPUTER_SCIENCE = "COMPUTER_SCIENCE",
+    BIOMEDICAL = "BIOMEDICAL",
+    SUSTAINABILITY = "SUSTAINABILITY",
 }
 
 export interface Project {

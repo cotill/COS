@@ -2,7 +2,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import React, { useState } from "react";
-import SideMenu from "./user-side-menu";
+import UserMenu from "./user-menu";
 
 interface NavbarProperities {
   initials: string;
@@ -67,7 +67,7 @@ export default function Navbar({ initials, signOutButton, name }: NavbarProperit
 
           {isMenuOpen && (
             <div className="fixed top-0 right-0">
-            <SideMenu
+            <UserMenu
               initials={initials}
               onClose={() => setMenuOpen(false)}
               signOutButton={signOutButton}
