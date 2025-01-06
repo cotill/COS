@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Headingbar from "@/components/employeeComponents/Headingbar";
 import { Button } from "@/components/ui/button";
-import { DepartmentTypes } from "@/utils/types";
+import { Department_Types } from "@/utils/types";
 import { createClient } from "@/utils/supabase/client";
 
 interface FormData {
@@ -112,7 +112,7 @@ export default function CreateProjectPage() {
             className="px-3 py-2 outline-none rounded-xl w-full"
           >
             <option value="" disabled></option>
-            {Object.values(DepartmentTypes).map((dept) => (
+            {Object.values(Department_Types).map((dept) => (
               <option key={dept} value={dept}>
                 {dept}
               </option>
