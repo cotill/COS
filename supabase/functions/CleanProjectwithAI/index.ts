@@ -90,12 +90,6 @@ Deno.serve(async (req) => {
   )
 })
 
-async function callChatGpt(description: string) {
-  const message = `Please clean and expand on the following project description:\n\n${description}`;
-
-    // Documentation here: https://github.com/openai/openai-node
-
-}
 /**
  * one token generally represents one piece of a word
  * pricing model:
