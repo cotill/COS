@@ -39,3 +39,10 @@ export enum EmployeePages {
     SETTINGS = "Employee Settings",
     CREATE_PROJECT = "Create Project",
 }
+
+export enum DepartmentTypes {
+    ENGINEERING = "ENGINEERING",
+    COMPUTER_SCIENCE = "COMPUTER_SCIENCE",
+    BIOMEDICAL = "BIOMEDICAL",
+    SUSTAINABILITY = "SUSTAINABILITY",
+}
