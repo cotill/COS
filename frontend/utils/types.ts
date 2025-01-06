@@ -63,8 +63,11 @@ export interface Project {
     team_min_size: number | null;
 }
 
-export enum Department_Types{
-    ENGINEERING, COMPUTER_SCIENCE, BIOMEDICAL, SUSTAINABILITY
+export enum Department_Types {
+    ENGINEERING = "ENGINEERING",
+    COMPUTER_SCIENCE = "COMPUTER_SCIENCE",
+    BIOMEDICAL = "BIOMEDICAL",
+    SUSTAINABILITY = "SUSTAINABILITY",
 }
 
 export enum Universities{
