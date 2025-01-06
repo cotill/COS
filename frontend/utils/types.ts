@@ -71,13 +71,6 @@ export interface Project {
     team_min_size: number | null;
 }
 
-export enum Department_Types {
-    ENGINEERING = "ENGINEERING",
-    COMPUTER_SCIENCE = "COMPUTER_SCIENCE",
-    BIOMEDICAL = "BIOMEDICAL",
-    SUSTAINABILITY = "SUSTAINABILITY",
-}
-
 export enum Universities{
     UofC= "University of Calgary", 
     UBC = "University of British Columbia"
