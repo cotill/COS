@@ -40,7 +40,7 @@ export enum EmployeePages {
     CREATE_PROJECT = "Create Project",
 }
 
-export enum DepartmentTypes {
+export enum Department_Types {
     ENGINEERING = "ENGINEERING",
     COMPUTER_SCIENCE = "COMPUTER_SCIENCE",
     BIOMEDICAL = "BIOMEDICAL",
