@@ -44,10 +44,11 @@ supabase functions new {function_name}
 1.a instead of npm, npx can be used to run the command without installing it globally
 ```bash
 npx supbase function new {function_name}
-
+```
+(**if using npx for installation of supabase, you must include `npx` in front of every command**)
 ### Run Edge Function Locally
-1. Start the Supabase local development environment (if using npx, include `npx` in front of every command)
-\n keep in mind that supabase creates a docker container to run the local environment, so make sure you have docker installed and running on your machine
+1. Start the Supabase local development environment <br>
+ keep in mind that supabase creates a docker container to run the local environment, so make sure you have docker installed and running on your machine
 ```bash
 supabase start
 ```
