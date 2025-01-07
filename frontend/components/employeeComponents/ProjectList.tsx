@@ -92,7 +92,7 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
   });
 
   const filteredProjects = sortedProjects.filter((project) =>
-    project[filter]?.toString()?.toLowerCase()?.includes(searchTerm.toLowerCase())
+    project[filter as keyof Project]?.toString()?.toLowerCase()?.includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);

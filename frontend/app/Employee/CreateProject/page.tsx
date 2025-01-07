@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Headingbar from "@/components/employeeComponents/Headingbar";
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { Department_Types } from "@/utils/types";
+import { createClient } from "@/utils/supabase/client";
 
 interface FormData {
   title: string;
@@ -11,50 +13,80 @@ interface FormData {
 }
 
 export default function CreateProjectPage() {
-  const [formData, setFormData] = useState<FormData>(() => {
-    const savedData = localStorage.getItem('createProjectForm');
-    return savedData ? JSON.parse(savedData) : { title: '', department: '', description: '' };
+  const [formData, setFormData] = useState<FormData>({
+    title: "",
+    department: "",
+    description: "",
   });
 
   const [error, setError] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const supabase = createClient();
+
   useEffect(() => {
-    localStorage.setItem('createProjectForm', JSON.stringify(formData));
-  }, [formData]);
+    const savedData = localStorage.getItem("createProjectForm");
+    if (savedData) {
+      setFormData(JSON.parse(savedData));
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      const updatedForm = { ...prev, [name]: value };
+      localStorage.setItem("createProjectForm", JSON.stringify(updatedForm));
+      return updatedForm;
+    });
   };
 
   const handleCancel = () => {
     setFormData({
-      title: '',
-      department: '',
-      description: '',
+      title: "",
+      department: "",
+      description: "",
     });
-    localStorage.removeItem('createProjectForm');
+    localStorage.removeItem("createProjectForm");
     setError(null);
   };
 
   const handleSubmit = () => {
     if (!formData.title || !formData.department || !formData.description) {
-      setError('One or more fields are incomplete. Please fill them in before submitting.');
+      setError("One or more fields are incomplete. Please fill them in before submitting.");
       return;
     }
     setError(null);
     setIsConfirming(true);
   };
 
-  const confirmSubmission = () => {
+  const confirmSubmission = async () => {
     setIsConfirming(false);
-    setIsSubmitted(true);
-    localStorage.removeItem('createProjectForm'); // Clear localStorage on submit
+
+    try {
+      // Stuff to enter projects into supabase
+      // const { data, error } = await supabase.from("Projects").insert([
+      //   {
+      //     title: formData.title,
+      //     department: formData.department,
+      //     description: formData.description,
+      //     creator_email: ???
+      //   },
+      // ]);
+
+      // if (error) {
+      //   console.error("Error inserting data:", error.message);
+      //   setError("Failed to submit the project. Please try again.");
+      //   return;
+      // }
+
+      // console.log("Inserted data:", data);
+      setIsSubmitted(true);
+      localStorage.removeItem("createProjectForm"); // Clear localStorage on submit
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    }
   };
 
   return (
@@ -80,11 +112,11 @@ export default function CreateProjectPage() {
             className="px-3 py-2 outline-none rounded-xl w-full"
           >
             <option value="" disabled></option>
-            <option value="CompSci">CompSci</option>
-            <option value="Engineering">Engineering</option>
-            <option value="MBA">MBA</option>
-            <option value="Business">Business</option>
-            <option value="GIS">GIS</option>
+            {Object.values(Department_Types).map((dept) => (
+              <option key={dept} value={dept}>
+                {dept}
+              </option>
+            ))}
           </select>
         </div>
         <div className="space-y-2">
