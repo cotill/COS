@@ -107,13 +107,14 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
                 </Button>
               </TableCell>
               <TableCell>
-                {confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2) && applicant.status != Application_Status.APPROVED &&(
-                <Button
+                {applicant.status !== Application_Status.APPROVED && (
+                  <Button
                   variant="ghost"
                   onClick={() => handleDeleteClick(applicant.application_id, applicant.status)}
-                >
+                  disabled={!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)}
+                  >
                   <Trash />
-                </Button>
+                  </Button>
                 )}
               </TableCell>
             </TableRow>
