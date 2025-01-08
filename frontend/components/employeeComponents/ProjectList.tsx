@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/pagination"
 
 import { createClient } from '@/utils/supabase/client'
+import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
+import { Department_Types } from '@/utils/types';
+import { Project_Status } from '@/utils/types';
 
 type Project = {
   id: string;
@@ -35,8 +38,14 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
   const [sortColumn, setSortColumn] = useState<'date' | 'name'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
   const supabase = createClient();
+
+  const departmentOptions = Object.values(Department_Types);
+  const statusOptions = Object.values(Project_Status);
 
   const fetchProjects = async () => {
     // console.log('Fetching projects...');
@@ -91,9 +100,19 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
     return 0;
   });
 
-  const filteredProjects = sortedProjects.filter((project) =>
-    project[filter as keyof Project]?.toString()?.toLowerCase()?.includes(searchTerm.toLowerCase())
-  );
+  const filteredProjects = sortedProjects.filter((project) => {
+    const matchesDepartment =
+      selectedDepartments.length === 0 ||
+      selectedDepartments.includes(project.department);
+    const matchesStatus =
+      selectedStatus.length === 0 ||
+      selectedStatus.includes(project.status);
+    const matchesSearchTerm = project[filter as keyof Project]
+      ?.toString()
+      ?.toLowerCase()
+      ?.includes(searchTerm.toLowerCase());
+    return matchesDepartment && matchesStatus && matchesSearchTerm;
+  });
 
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
@@ -105,6 +124,11 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
         )
       : [];
 
+  const handleClearFilters = () => {
+    setSelectedDepartments([]);
+    setSelectedStatus([]);
+  };
+      
   return (
     <div className="space-y-4 rounded-3xl mt-4 p-4" style={{ backgroundColor: '#c9c7ce' }}>
       {loading ? (
@@ -114,19 +138,60 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
           <Table>
             <TableHeader>
               <TableRow style={{ backgroundColor: '#1d1b23' }}>
-                <TableHead onClick={() => handleSort('date')} className="cursor-pointer rounded-tl-2xl rounded-bl-2xl">
+                <TableHead onClick={() => handleSort('date')} className="cursor-pointer rounded-tl-2xl rounded-bl-2xl text-white">
                   {sortColumn === 'date'
                     ? `Date ${sortOrder === 'asc' ? '▲' : '▼'}`
                     : 'Date ▲▼'}
                 </TableHead>
-                <TableHead onClick={() => handleSort('name')} className="cursor-pointer">
+                <TableHead onClick={() => handleSort('name')} className="cursor-pointer text-white">
                   {sortColumn === 'name'
                     ? `Project Name ${sortOrder === 'asc' ? '▲' : '▼'}`
                     : 'Project Name ▲▼'}
                 </TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="rounded-tr-2xl rounded-br-2xl">Action</TableHead>
+                <TableHead>
+                  <DropdownFilter
+                    options={departmentOptions}
+                    selectedOptions={selectedDepartments}
+                    onSelect={(option) => {
+                      setSelectedDepartments((prev) =>
+                        prev.includes(option)
+                          ? prev.filter((item) => item !== option)
+                          : [...prev, option]
+                      );
+                    }}
+                    title="Department"
+                    visibleProjectCount={currentProjects.length}
+                  />
+                </TableHead>
+                <TableHead>
+                  <DropdownFilter
+                    options={statusOptions}
+                    selectedOptions={selectedStatus}
+                    onSelect={(option) => {
+                      setSelectedStatus((prev) =>
+                        prev.includes(option)
+                          ? prev.filter((item) => item !== option)
+                          : [...prev, option]
+                      );
+                    }}
+                    title="Status"
+                    visibleProjectCount={currentProjects.length}
+                  />
+                </TableHead>
+                <TableHead className="rounded-tr-2xl rounded-br-2xl">
+                  <button
+                    className="px-4 py-2 rounded"
+                    onClick={handleClearFilters}
+                    disabled={selectedDepartments.length === 0 && selectedStatus.length === 0} // Disable when no filters are selected
+                  >
+                    <span className={`${selectedDepartments.length === 0 && selectedStatus.length === 0 ? 'text-gray-400' : 'text-white'}`}>
+                      Clear
+                    </span>
+                    <span className={`ml-2 font-bold ${selectedDepartments.length === 0 && selectedStatus.length === 0 ? 'text-gray-400' : 'text-[#E75973]'}`}>
+                      ⓧ
+                    </span>
+                  </button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -164,7 +229,7 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-gray-500">
+                  <TableCell colSpan={5} className="py-7 text-center text-gray-500 rounded-2xl">
                     No matching projects
                   </TableCell>
                 </TableRow>
@@ -203,6 +268,5 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
         </>
       )}
     </div>
-  )
+  );
 }
-
