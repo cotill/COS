@@ -3,8 +3,8 @@
 import Headingbar from "@/components/employeeComponents/Headingbar";
 import UserInfo from "@/components/employeeComponents/user-information";
 import ChangePassword from "@/components/employeeComponents/user-pw-change";
+import { resetPasswordAction } from "../../actions";
 import {createClient} from '@/utils/supabase/client';
-import { User } from "lucide-react";
 import { useState, useEffect } from "react";
 // import { Eye, EyeOff } from "lucide-react";
 
@@ -13,7 +13,6 @@ import { useState, useEffect } from "react";
 export default function SettingsPage() {
   const [email, setEmail] = useState(""); 
   const [level, setLevel] = useState(null);
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
@@ -55,23 +54,32 @@ export default function SettingsPage() {
   }, []);
 
   const handleCancel = () => {
-    setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
     console.log("textboxes cleaned")
   };
 
-  const handleConfirm = () =>{
-    console.log("submit pw change not implemented yet")
-  } 
+  const handleConfirm = async () =>{
+    const formData = new FormData();
+    formData.append('password', newPassword);
+    formData.append('confirmPassword', confirmPassword);
+
+    await resetPasswordAction(formData);
+
+    // these next 3 lines don't actually run cuz after the form has been submitted, 
+    // it redirects to another page that results in 404
+    // can we change where this gets redirected after successful change in resetPasswordAction?? 
+    alert("Password has been changed successfully.");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+  
 
   return (
     <>
       <Headingbar text="Settings" />
       <UserInfo email={email} level={level} />
       <ChangePassword
-        currentPassword={currentPassword}
-        setCurrentPassword={setCurrentPassword}
         newPassword={newPassword}
         setNewPassword={setNewPassword}
         confirmPassword={confirmPassword}
