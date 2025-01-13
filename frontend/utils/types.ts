@@ -8,6 +8,8 @@ export interface Employee{
     full_name: string;
     level: number;
     Employee_id: string;
+    title: string;
+    department: string;
 }
 export interface Student{
     email: string;
@@ -51,7 +53,7 @@ export interface Project {
     created_date: string; 
     approved_date: string | null; 
     modified_date: string | null;
-    start_date: string | null;
+    activation_date: string | null;
     github: string | null;
     status: Project_Status;
     university: Universities | null;
