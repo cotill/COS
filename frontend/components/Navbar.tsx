@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import React, { useState } from "react";
 import UserMenu from "./user-menu";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface NavbarProperties {
   initials: string;
@@ -34,30 +35,11 @@ export default function Navbar({
         <div className="flex items-center gap-6">
           {/* Sidebar Toggle Button */}
           <Button
-            size="icon"
-            onClick={toggleSidebar}
-            className="mr-4"
-          >
-            {collapsed ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M4 10h12m-6 6h6m-6-12h6" />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M4 6h12M4 12h8m-8 6h12" />
-              </svg>
-            )}
-          </Button>
+        size={"icon"}
+        onClick={toggleSidebar}
+        >
+        {collapsed ? <ChevronLeft /> : <ChevronRight />}
+      </Button>
           <img
             src="/ttg-logo.png"
             alt="Tartigrade Limited"
