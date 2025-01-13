@@ -17,7 +17,7 @@ const Headingbar: React.FC<HeadingbarProps> = ({ text }) => {
       <div className="absolute right-0 top-0 w-[45%] h-full overflow-hidden" >
         <iframe
           src="https://player.vimeo.com/video/981075773?background=1&autoplay=1&loop=1&muted=1&title=0&byline=0&portrait=0"
-          className="absolute top-0 right-0 w-full h-full object-cover transform scale-300"
+          className="absolute top-0 right-0 w-full object-cover transform scale-250"
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
         ></iframe>

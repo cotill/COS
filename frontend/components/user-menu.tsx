@@ -1,14 +1,14 @@
 import React from "react";
 import Link from "next/link";
 
-interface SideMenuProps {
+interface UserMenuProps {
   initials: string;
   onClose: () => void;
   signOutButton: () => void;
   name: string;
 }
 
-const SideMenu: React.FC<SideMenuProps> = ({ initials, onClose, signOutButton, name }) => {
+const UserMenu: React.FC<UserMenuProps> = ({ initials, onClose, signOutButton, name }) => {
   return (
     <div className="absolute right-0 w-60 bg-gray-900 text-white rounded-lg shadow-lg">
       <div className="flex items-center justify-between p-3 border-b border-gray-700">
@@ -46,4 +46,4 @@ const SideMenu: React.FC<SideMenuProps> = ({ initials, onClose, signOutButton, n
   );
 };
 
-export default SideMenu;
+export default UserMenu;
