@@ -3,9 +3,9 @@
 import Headingbar from "@/components/employeeComponents/Headingbar";
 import UserInfo from "@/components/employeeComponents/user-information";
 import ChangePassword from "@/components/employeeComponents/user-pw-change";
-import { resetPasswordAction } from "../../actions";
 import {createClient} from '@/utils/supabase/client';
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 // import { Eye, EyeOff } from "lucide-react";
 
 
@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
+  const router = useRouter();
 
   const toggleVisibility = () => setIsVisible(prevState => !prevState);
 
@@ -59,17 +60,38 @@ export default function SettingsPage() {
     console.log("textboxes cleaned")
   };
 
-  const handleConfirm = async () =>{
-    const formData = new FormData();
-    formData.append('password', newPassword);
-    formData.append('confirmPassword', confirmPassword);
+  const handlePasswordReset = async (password: string, confirmPassword: string) => {
+    const supabase = createClient();
 
-    await resetPasswordAction(formData);
 
-    // these next 3 lines don't actually run cuz after the form has been submitted, 
-    // it redirects to another page that results in 404
-    // can we change where this gets redirected after successful change in resetPasswordAction?? 
-    alert("Password has been changed successfully.");
+    if (!password || !confirmPassword) {
+      alert("Please confirm your new password");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: password });
+
+      if (error) {
+        alert("Password update failed");
+        console.error("Error updating password:", error);
+      } else {
+        alert("Password updated successfully");
+        router.refresh(); // Refresh the page after successful update
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("An unexpected error occurred. Please try again.");
+    }
+  };
+
+  const handleConfirm = () => {
+    handlePasswordReset(newPassword, confirmPassword);
     setNewPassword("");
     setConfirmPassword("");
   };
@@ -92,3 +114,4 @@ export default function SettingsPage() {
     </>
   );
 }
+
