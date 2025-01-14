@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 export default function SettingsPage() {
   const [email, setEmail] = useState(""); 
   const [level, setLevel] = useState(null);
+  const [department, setDepartment] = useState(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
@@ -38,7 +39,7 @@ export default function SettingsPage() {
     const userId = session.user.id; 
     const { data, error } = await supabase
       .from("Employees")
-      .select("email, level")
+      .select("email, level, department")
       .eq("employee_id", userId)  // match userid with the employee id
       .single(); // only 1 record returned
 
@@ -47,6 +48,7 @@ export default function SettingsPage() {
     } else {
       setEmail(data.email); 
       setLevel(data.level); 
+      setDepartment(data.department);
     }
   };
   
@@ -100,7 +102,7 @@ export default function SettingsPage() {
   return (
     <>
       <Headingbar text="Settings" />
-      <UserInfo email={email} level={level} />
+      <UserInfo email={email} level={level} department={department}/>
       <ChangePassword
         newPassword={newPassword}
         setNewPassword={setNewPassword}

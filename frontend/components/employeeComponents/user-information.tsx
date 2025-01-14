@@ -1,9 +1,10 @@
 interface UserInfoProps {
     email: string;
     level: string | null;
+    department: string | null;
   }
 
-const UserInfo = ({ email, level }: UserInfoProps) => {
+const UserInfo = ({ email, level, department }: UserInfoProps) => {
     return (
         <div>
             <div className="p-4 text-white">
@@ -15,7 +16,7 @@ const UserInfo = ({ email, level }: UserInfoProps) => {
                     </p>
                     <p className="mb-1">
                         <span className="font-medium">Department: </span>
-                        <span className="text-gray-400"> Placeholder Department</span>
+                        <span className="text-gray-400"> {department}</span>
                         {/* db needs department */}
                     </p>
                     <p className="mb-1">
