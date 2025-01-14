@@ -20,10 +20,11 @@ export default async function ProjectPage({params,} : {params : Promise<{slug : 
             <Headingbar
                 text={project.title}
             />
-            {/* <ProjectDetail project={project}/> */}
+           
+            <ProjectDetail project={project}/>
 
             {/* project description stuff before Sponsor */}
-            <div className="text-white flex items-center justify-between p-4">
+            {/* <div className="text-white flex items-center justify-between py-2">
                 <div className="flex items-center">
                     <h1 className="mr-2 text-lg font-semibold">Project Description</h1>
                     <Info className="mr-2" /> 
@@ -34,9 +35,9 @@ export default async function ProjectPage({params,} : {params : Promise<{slug : 
                     <ArrowRightCircle size={20} />
                 </button>
             </div>
-            <div className="w-full h-32 p-2 bg-gray-300 border border-gray-600 rounded-xl">
+            <div className="w-full h-32 p-2  bg-gray-300 border border-gray-600 rounded-xl">
                 huge paragraph with the description of the project but idk how to get it from supabase yet. :) 
-            </div>
+            </div> */}
 
         </div>
     );
