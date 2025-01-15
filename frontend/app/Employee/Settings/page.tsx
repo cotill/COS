@@ -5,7 +5,8 @@ import UserInfo from "@/components/employeeComponents/user-information";
 import ChangePassword from "@/components/employeeComponents/user-pw-change";
 import {createClient} from '@/utils/supabase/client';
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
+
 // import { Eye, EyeOff } from "lucide-react";
 
 
@@ -31,8 +32,7 @@ export default function SettingsPage() {
     } = await supabase.auth.getSession();
 
     if (sessionError || !session) {
-      console.error("error...", sessionError);
-      return;
+      redirect("/sign-in")
     }
 
     // from session stuff, get user id
