@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/client";
 import Headingbar from "@/components/employeeComponents/Headingbar";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { Employee, Project } from "@/utils/types";
+import { Application_Status, Employee, Project } from "@/utils/types";
 interface applicationActionProps {
 	project: Project;
 	employee: Employee;
@@ -13,8 +13,10 @@ export default function ApplicationActions({
 	project,
 	employee,
 }: applicationActionProps) {
-	const deleteAllApps = () => {
+	const deleteAllApps = async() => {
 		console.log("testing the button");
+        const supabase = createClient();
+        const {data: projInfo, error: projError} = await supabase.from("Applications").delete().eq('project_id',project.project_id).neq('status',Application_Status.APPROVED).single();
 	};
 	return (
 		<>
