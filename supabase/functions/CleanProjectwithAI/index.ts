@@ -29,7 +29,7 @@ export interface Project {
   modified_date: string | null;
   start_date: string | null;
   github: string | null;
-  status: "APPROVED" | "REJECTED" | "DRAFT" | "UNDER_REVIEW" | "DISPATCHED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "AWARDED";
+  status: "APPROVED" | "REJECTED" | "DRAFT" | "NEW" | "REVIEW" | "DISPATCHED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "AWARDED";
   university: "University of Calgary" | "University of British Columbia" | null;
   application_link: string | null;
   team_max_size: number | null;
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
   const { data : updatedProject, error } = await supabase
   .from('Projects')
-  .update({ description: reply })
+  .update({ description: reply, status: "DRAFT" })
   .eq('project_id', project_id)
   .select();
 
