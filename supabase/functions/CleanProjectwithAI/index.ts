@@ -64,11 +64,11 @@ Deno.serve(async (req) => {
     stream: false,
   })
 
-  const reply = chatCompletion.choices[0].message.content
+  const reply = chatCompletion.choices[0].message.content;
 
   const { data : updatedProject, error } = await supabase
   .from('Projects')
-  .update({ description: reply, status: "DRAFT" })
+  .update({ description: reply, status: 'DRAFT' })
   .eq('project_id', project_id)
   .select();
 
@@ -81,7 +81,8 @@ Deno.serve(async (req) => {
       },
     )
   }
-  console.log(`Project with id: ${project_id}, description was updated to: ${updatedProject[0].description} and status is now: ${updatedProject[0].status}` );
+  console.log(`Project with id: ${project_id}, description was updated to: ${updatedProject[0].description} `);
+  console.log(`and status is now: ${updatedProject[0].status}` );
   return new Response(
     JSON.stringify(updatedProject),
     { headers: { "Content-Type": "application/json" },
