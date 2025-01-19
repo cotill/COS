@@ -80,21 +80,22 @@ export enum Universities{
 
 
 export enum Project_Status {
-    APPROVED = "APPROVED",
-    REJECTED = "REJECTED",
-    DRAFT = "DRAFT",
-    UNDER_REVIEW = "UNDER_REVIEW",
-    DISPATCHED = "DISPATCHED",
-    ACTIVE = "ACTIVE",
-    COMPLETED = "COMPLETED",
-    CANCELLED = "CANCELLED",
-    AWARDED = "AWARDED",
+    NEW = "NEW", // dirty project
+    DRAFT = "DRAFT", // cleaned project
+    REVIEW = "REVIEW", //project is under review 
+    APPROVED = "APPROVED", //Approved by lvl2+ employee
+    REJECTED = "REJECTED", // Rejected by lvl2+ employee
+    DISPATCHED = "DISPATCHED", //Project was downloaded to be sent to a university
+    AWARDED = "AWARDED", // Awarded to team
+    ACTIVE = "ACTIVE", //Team is actively working on the project
+    COMPLETED = "COMPLETED",//An active project was successfully completed by the team
+    CANCELLED = "CANCELLED",// An active project was cancelled 
 }
 
 export enum Application_Status {
-    PENDING = "PENDING", 
-    REJECTED = "REJECTED", 
-    APPROVED = "APPROVED"
+    PENDING = "PENDING", // Application is under review by an TTG employee
+    REJECTED = "REJECTED", // Application is rejected
+    APPROVED = "APPROVED"// The application is accepted and the team members are created Capstone Onbaording System accounts
 }
 
 export interface Member {
