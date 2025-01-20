@@ -101,7 +101,7 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
           </div>
           <div>
             <p className="text-gray-400 mb-2">Team members:</p>
-            <div className="space-y-2">
+            <div className={`space-y-2 ${team.members.length > 3 ? "max-h-60 overflow-y-scroll scrollbar" : ""}`}>
               {team.members.map((member, index) => (
                 <div
                   key={index}

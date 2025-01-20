@@ -58,12 +58,34 @@
     --chart-5: 340 75% 55%;
   }
 }
-
+/* Custom scrollbar */
 @layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .scrollbar::-webkit-scrollbar {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    border-radius: 100vh;
+    /* background: #1F2937; /*tailwind gray-800 */
+  }
+
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: #4B5563; /*tailwind gray-600 */
+    border-radius: 100vh;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #E5E7EB; /*tailwind gray-200 */
   }
 }

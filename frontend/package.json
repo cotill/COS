@@ -17,6 +17,7 @@
     "autoprefixer": "10.4.20",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "date-and-time": "^3.6.0",
     "geist": "^1.2.1",
     "lucide-react": "^0.456.0",
     "next": "latest",

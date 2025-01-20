@@ -53,13 +53,13 @@ export interface Project {
     creator_email: string;
     approval_email: string | null; 
     sponsor_email: string | null; 
-    teamID: string | null; 
+    awarded_application_id: number | null; 
     description: string;
     department: Department_Types; 
     created_date: string; 
     approved_date: string | null; 
     modified_date: string | null;
-    start_date: string | null;
+    activation_date: string | null;
     github: string | null;
     status: Project_Status;
     university: Universities | null;
@@ -69,6 +69,8 @@ export interface Project {
     application_deadline: string | null;
     applications_allowed: boolean | null;
     team_min_size: number | null;
+    dispatcher_email: string | null;
+    dispatched_date: string | null;
 }
 
 export enum Universities{

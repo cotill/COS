@@ -14,14 +14,16 @@ export default async function ProjectPage({params,} : {params : Promise<{slug : 
             Error retrieving project with project id, {projectId}! Please contact system admin
         </div>
     }
-    
+    const creatorName = await getEmployeeName(project.creator_email);
+    const approvalName = project.approval_email ? await getEmployeeName(project.approval_email) : null;
+    const dispatcherName = project.dispatcher_email ? await getEmployeeName(project.dispatcher_email) : null;
     return (
         <div>
             <Headingbar
                 text={project.title}
             />
            
-            <ProjectDetail project={project}/>
+            <ProjectDetail project={project} creatorName={creatorName} approvalName={approvalName} dispatcherName={dispatcherName}/>
 
             {/* project description stuff before Sponsor */}
             {/* <div className="text-white flex items-center justify-between py-2">
@@ -47,4 +49,15 @@ async function getProjectById(projectId: string) : Promise<Project | null> {
     const {data: projectInfo , error} = await supabase.from("Projects").select("*").eq('"project_id"',projectId).single();
     console.log("Project info is: ", projectInfo)
     return error ? null : projectInfo as Project;
+}
+
+const getEmployeeName = async(query_email: string): Promise<string> => {
+    const supabase = await createClient();
+    const {data, error} = await supabase.from("Employees").select("full_name").eq("email",query_email).single();
+    const name : string | null  | undefined= data?.full_name;
+    console.log(`The query fullname is ... ${data} and the query email was: ${query_email}`);
+    if(name === null || name === undefined || error || name.length === 0){
+      return "N/A"
+    }
+    return name;
 }
