@@ -63,8 +63,8 @@ export default function ProjectDetail({project} : ProjectDetailProps) {
             <h3 className="font-bold mb-2">Project Detail</h3>
             <p>Department: {project.department}</p>
             <p>Created by: {project.creator_email} on {project.created_date}</p> 
-            <p>Reviewed by: uhh </p>
-            <p>Dispatched by: uhhh</p>
+            <p>Reviewed by: {"uhh"} </p>
+            <p>Dispatched by: {project.dispatcher_email || "uhh"}</p>
             <p>Project activated on: {project.activation_date || "uhh"}</p>
           </div>
         </div>
