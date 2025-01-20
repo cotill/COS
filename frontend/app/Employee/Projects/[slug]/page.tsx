@@ -47,7 +47,6 @@ export default async function ProjectPage({params,} : {params : Promise<{slug : 
 async function getProjectById(projectId: string) : Promise<Project | null> {
     const supabase = await createClient();
     const {data: projectInfo , error} = await supabase.from("Projects").select("*").eq('"project_id"',projectId).single();
-    console.log("Project info is: ", projectInfo)
     return error ? null : projectInfo as Project;
 }
 
@@ -55,7 +54,6 @@ const getEmployeeName = async(query_email: string): Promise<string> => {
     const supabase = await createClient();
     const {data, error} = await supabase.from("Employees").select("full_name").eq("email",query_email).single();
     const name : string | null  | undefined= data?.full_name;
-    console.log(`The query fullname is ... ${data} and the query email was: ${query_email}`);
     if(name === null || name === undefined || error || name.length === 0){
       return "N/A"
     }
