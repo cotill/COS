@@ -84,7 +84,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       }
        
       try {
-        await updateProjectStatus(projectId,Project_Status.AWARDED)
+        await updateProjectStatus(projectId,Project_Status.AWARDED,application_id)
       } catch (error) {
         alert(error)
       }

@@ -128,12 +128,12 @@ export function confirmEmployeeAuthorization(employeeLevel: number, requiredLeve
   return true;
 }
 
-export const updateProjectStatus = async(project_id: string, status: string) => {
+export const updateProjectStatus = async(project_id: string, status: string, application_id: number) => {
   const supabase = createClient();
   let error;
   if(status === Project_Status.AWARDED){
     // close the project to prevent further applications
-    const {data, error: err } = await supabase.from("Projects").update({status: status, applications_allowed: false}).eq('"project_id"',project_id).select();
+    const {data, error: err } = await supabase.from("Projects").update({status: status, applications_allowed: false, awarded_application_id: application_id}).eq('"project_id"',project_id).select();
     error = err;
   }
   else{
