@@ -68,7 +68,6 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         <DialogContent className="bg-[#1D1B23] text-white">
           <DialogHeader>
             <DialogTitle className='text-xl text-center'>{project.title}</DialogTitle>
-            <DialogDescription className='text-white'>
               <DialogTitle className='text-lg mb-2'>Project Details</DialogTitle>
               <div>
                 <p>Department: {project.department}</p>
@@ -83,7 +82,6 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
                   <p>Project activated on: {project.activation_date}</p>
                 }
               </div>
-            </DialogDescription>
           </DialogHeader>
         </DialogContent>
       </Dialog>
