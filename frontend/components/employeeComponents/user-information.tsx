@@ -1,10 +1,40 @@
+"use client"
+
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+
 interface UserInfoProps {
-    email: string;
-    level: string | null;
-    department: string | null;
+    userId: string
   }
 
-const UserInfo = ({ email, level, department }: UserInfoProps) => {
+export default function UserInfo ({ userId }: UserInfoProps) {
+    const [email, setEmail] = useState(""); 
+    const [level, setLevel] = useState(null);
+    const [department, setDepartment] = useState(null);
+
+    const supabase = createClient();
+
+    useEffect(() => {
+        // This will fetch data when the component mounts
+        const fetchUserData = async () => {
+            const { data: userInfo, error: userError } = await supabase
+                .from("Employees")
+                .select("email, level, department")
+                .eq("employee_id", userId)  // match userid with the employee id
+                .single(); // only 1 record returned
+
+            if (userError) {
+                console.error("error getting user data:", userError);
+            } else {
+                setEmail(userInfo.email);
+                setLevel(userInfo.level);
+                setDepartment(userInfo.department);
+            }
+        };
+
+        fetchUserData(); 
+      }, [userId]);
+
     return (
         <div>
             <div className="p-4 text-white">
@@ -29,5 +59,4 @@ const UserInfo = ({ email, level, department }: UserInfoProps) => {
     );
 }
 
-export default UserInfo
 

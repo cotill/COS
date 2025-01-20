@@ -1,30 +1,29 @@
+"use client"
+
 import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 interface ChangePasswordProps {
-  newPassword: string;
-  setNewPassword: React.Dispatch<React.SetStateAction<string>>;
-  confirmPassword: string;
-  setConfirmPassword: React.Dispatch<React.SetStateAction<string>>;
-  isVisible: boolean;
-  toggleVisibility: () => void;
-  handleCancel: () => void;
-  handleConfirm: () => void;
+  handleConfirm: (newPassword: string, confirmPassword: string) => void;
 }
 
-const ChangePassword = ({
-  newPassword,
-  setNewPassword,
-  confirmPassword,
-  setConfirmPassword,
-  isVisible,
-  toggleVisibility,
-  handleCancel,
-  handleConfirm,
-}: ChangePasswordProps) => {
+const ChangePassword = ({handleConfirm}: ChangePasswordProps) => {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isVisible, setIsVisible] = useState(false);
+  
+  const toggleVisibility = () => setIsVisible(prevState => !prevState);
+
+  const handleCancel = () => {
+      setNewPassword("");
+      setConfirmPassword("");
+      console.log("textboxes cleaned")
+    };
+
   return (
-    <div className="p-4 text-white">
+    <div className="p-4 text-white justify-center">
       <h2 className="text-lg font-semibold underline mb-2">Change Password</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
 
         {/* New Password */}
         <div className="relative flex flex-col">
@@ -80,14 +79,14 @@ const ChangePassword = ({
         <button
           className="bg-red-600 text-white px-8 py-2 mb-6 rounded hover:bg-red-600"
           type="button"
-          onClick={handleCancel}
+          onClick={() => handleCancel}
         >
           Cancel
         </button>
         <button
           className="bg-green-600 text-white px-8 py-2 mb-6 rounded hover:bg-green-600"
           type="button"
-          onClick={handleConfirm}
+          onClick={() => handleConfirm(newPassword, confirmPassword)}
         >
           Confirm
         </button>

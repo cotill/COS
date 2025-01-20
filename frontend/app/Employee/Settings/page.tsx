@@ -1,29 +1,18 @@
-"use client"; // Marks the component as a client component
-
 import Headingbar from "@/components/employeeComponents/Headingbar";
 import UserInfo from "@/components/employeeComponents/user-information";
 import ChangePassword from "@/components/employeeComponents/user-pw-change";
-import {createClient} from '@/utils/supabase/client';
-import { useState, useEffect } from "react";
-import { redirect, useRouter } from "next/navigation";
-
-// import { Eye, EyeOff } from "lucide-react";
+import {createClient} from '@/utils/supabase/server';
+// import { useState } from "react";
+import { redirect } from "next/navigation";
 
 
+export async function SettingsPage() {
+  // const [email, setEmail] = useState(""); 
+  // const [level, setLevel] = useState(null);
+  // const [department, setDepartment] = useState(null);
 
-export default function SettingsPage() {
-  const [email, setEmail] = useState(""); 
-  const [level, setLevel] = useState(null);
-  const [department, setDepartment] = useState(null);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isVisible, setIsVisible] = useState(false);
-  const router = useRouter();
-
-  const toggleVisibility = () => setIsVisible(prevState => !prevState);
-
-  const fetchData = async () => {
-    const supabase = createClient();
+  
+  const supabase = await createClient();
 
     // get session stuff
     const {
@@ -37,34 +26,26 @@ export default function SettingsPage() {
 
     // from session stuff, get user id
     const userId = session.user.id; 
-    const { data, error } = await supabase
-      .from("Employees")
-      .select("email, level, department")
-      .eq("employee_id", userId)  // match userid with the employee id
-      .single(); // only 1 record returned
+    // const { data, error } = await supabase
+    //   .from("Employees")
+    //   .select("email, level, department")
+    //   .eq("employee_id", userId)  // match userid with the employee id
+    //   .single(); // only 1 record returned
 
-    if (error) {
-      console.error("error getting user data:", error);
-    } else {
-      setEmail(data.email); 
-      setLevel(data.level); 
-      setDepartment(data.department);
-    }
-  };
+    // if (error) {
+    //   console.error("error getting user data:", error);
+    // } else {
+    //   setEmail(data.email); 
+    //   setLevel(data.level); 
+    //   setDepartment(data.department);
+    // }
   
-  useEffect(() => {
-    fetchData();
-  }, []);
+  
 
-  const handleCancel = () => {
-    setNewPassword("");
-    setConfirmPassword("");
-    console.log("textboxes cleaned")
-  };
+  
 
   const handlePasswordReset = async (password: string, confirmPassword: string) => {
-    const supabase = createClient();
-
+    const supabase = await createClient();
 
     if (!password || !confirmPassword) {
       alert("Please confirm your new password");
@@ -84,7 +65,7 @@ export default function SettingsPage() {
         console.error("Error updating password:", error);
       } else {
         alert("Password updated successfully");
-        router.refresh(); // Refresh the page after successful update
+        // redirect("/Employee/Settings");
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -92,27 +73,17 @@ export default function SettingsPage() {
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (newPassword: string, confirmPassword: string) => {
     handlePasswordReset(newPassword, confirmPassword);
-    setNewPassword("");
-    setConfirmPassword("");
+    // how would i erase the inputted text? refresh? 
   };
   
 
   return (
     <>
       <Headingbar text="Settings" />
-      <UserInfo email={email} level={level} department={department}/>
-      <ChangePassword
-        newPassword={newPassword}
-        setNewPassword={setNewPassword}
-        confirmPassword={confirmPassword}
-        setConfirmPassword={setConfirmPassword}
-        isVisible={isVisible}
-        toggleVisibility={toggleVisibility}
-        handleCancel={handleCancel}
-        handleConfirm={handleConfirm}
-      />
+      <UserInfo userId={userId}/>
+      <ChangePassword handleConfirm={handleConfirm}/>
     </>
   );
 }
