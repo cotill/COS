@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Dialog } from "@/components/ui/dialog"
 import { TeamDetailsDialog } from './team-detail';
 import { Application_Status, Member,Application, Employee, EmployeeLevel, Project_Status } from '@/utils/types';
-import { fetchApplications, rejectOtherApplications, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization, updateProjectStatus } from "@/app/student_applications/application";
+import { fetchApplications, rejectOtherApplications, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization, updateProjectStatus } from "@/app/project_applications_util/application";
 import ApplicationTable from "./applicationTable";
 import {ApplicationPagination} from "./applicationPagination";
 

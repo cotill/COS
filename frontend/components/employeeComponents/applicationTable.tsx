@@ -13,7 +13,7 @@ import { Trash } from "lucide-react";
 import { useState } from "react";
 import { ConfirmationDialog, ConfirmationDialogProp } from "../confirmationPopup";
 import { AlertDialog } from "../ui/alert-dialog";
-import { confirmEmployeeAuthorization } from "@/app/student_applications/application";
+import { confirmEmployeeAuthorization } from "@/app/project_applications_util/application";
 
 type ApplicationTableProps = {
   currentApplications: Application[] | [];
