@@ -19,9 +19,9 @@ export function DropdownFilter({
   const [dropdownWidth, setDropdownWidth] = useState<number>(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const projectRowHeight = 72; // Fixed height per project row
+  const projectRowHeight = 84; // Fixed height per project row
   const dynamicMaxHeight = visibleProjectCount * projectRowHeight;
-  const fallbackHeight = 72;
+  const fallbackHeight = 84;
   const maxHeight = `${Math.min(dynamicMaxHeight || fallbackHeight, 300)}px`;
 
   // Calculate the width based on the widest option

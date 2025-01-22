@@ -128,9 +128,28 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
     setSelectedDepartments([]);
     setSelectedStatus([]);
   };
+
+  const departmentColors: { [key: string]: string } = { // PLACEHOLDER COLORS
+    ENGINEERING: '#FF6B6B', // Red
+    COMPUTER_SCIENCE: '#4CAF50', // Green
+    BIOMEDICAL: '#FFD700', // Gold
+    SUSTAINABILITY: '#1E90FF', // Blue
+  };
+
+  const statusColors: { [key: string]: string } = {
+    DRAFT: '#788292',
+    REVIEW: '#D7B634',
+    APPROVED: '#81C26C',
+    REJECTED: '#FF6B6B',
+    DISPATCHED: '#000000',
+    AWARDED: '#4B006E',
+    ACTIVE: '#008080',
+    COMPLETED: '#154406',
+    CANCELLED: 'black',
+  };
       
   return (
-    <div className="space-y-4 rounded-3xl mt-4 p-4" style={{ backgroundColor: '#c9c7ce' }}>
+    <div className="space-y-4 rounded-3xl mt-4 px-4 pb-4" style={{ backgroundColor: '#1d1b23' }}>
       {loading ? (
         <p>Loading projects...</p>
       ) : (
@@ -196,29 +215,53 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
             </TableHeader>
             <TableBody>
               {currentProjects.length > 0 ? (
-                currentProjects.map((project, index) => (
+                currentProjects.map((project) => (
                   <TableRow
                     key={project.id}
                     style={{
-                      backgroundColor: index % 2 === 0 ? 'white' : 'grey',
-                      color: index % 2 === 0 ? 'black' : 'white',
+                      backgroundColor: '#413F46',
+                      color: 'white',
                     }}
                   >
                     <TableCell 
-                      style={{ 
-                        borderTopLeftRadius: '1.5rem', 
-                        borderBottomLeftRadius: '1.5rem'
+                      style={{
+                        borderTopLeftRadius: '0.5rem',
+                        borderBottomLeftRadius: '0.5rem',
                       }}
                     >
                       {project.date.substring(0, 10)}
                     </TableCell>
                     <TableCell>{project.name}</TableCell>
-                    <TableCell>{project.department}</TableCell>
-                    <TableCell>{project.status}</TableCell>
+                    <TableCell>
+                      <div
+                        style={{
+                          backgroundColor: departmentColors[project.department],
+                          display: 'inline-block',
+                          color: 'white',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '1.0rem',
+                        }}
+                      >
+                        {project.department}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div
+                        style={{
+                          backgroundColor: statusColors[project.status],
+                          display: 'inline-block',
+                          color: 'white',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '1.0rem',
+                        }}
+                      >
+                        {project.status}
+                      </div>
+                    </TableCell>
                     <TableCell
                       style={{
-                        borderTopRightRadius: '1.5rem',
-                        borderBottomRightRadius: '1.5rem',
+                        borderTopRightRadius: '0.5rem',
+                        borderBottomRightRadius: '0.5rem',
                       }}
                     >
                       <Button variant="outline" asChild>
@@ -236,7 +279,7 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
               )}
             </TableBody>
           </Table>
-          <Pagination>
+          <Pagination className="text-white">
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
