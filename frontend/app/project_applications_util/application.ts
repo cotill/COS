@@ -112,6 +112,12 @@ export async function deleteApplication(application_id: number){
   if (error || data === null) throw new Error(`Error deleting application: ${error.message}`);
   
   const deletedApplicationData = data[0] as Application;
+  deleteResume(deletedApplicationData);
+  
+}
+
+//delete application resumes
+const deleteResume=async(deletedApplicationData:Application)=>{
   let resume_url: string[] = [];
   deletedApplicationData.members.map(member => {
     resume_url.push(member.resume)
@@ -120,6 +126,8 @@ export async function deleteApplication(application_id: number){
   const {data: deleteResume_data, error: deletedResume_error} = await supabase.storage.from("applicants_resumes").remove(resume_url);
   if(deleteResume_data === null || deletedResume_error) throw new Error(`Error deleting applicant's resume: ${deletedResume_error.message}`);
 }
+
+
 /**
  * 
  * @param employeeLevel The level of the employee
