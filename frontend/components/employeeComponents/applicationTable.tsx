@@ -19,9 +19,13 @@ type ApplicationTableProps = {
   currentApplications: Application[] | [];
   onViewDetails: (newValue: Application | null) => void;
   onDeleteApplication: (application_id: number) => void;
-  employeeInfo: Employee
+  employeeInfo: Employee;
+  isRefreshingTable: boolean;
 };
-function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication, employeeInfo}: ApplicationTableProps) {
+function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication, employeeInfo, isRefreshingTable}: ApplicationTableProps) {
+  if (isRefreshingTable){
+    return <div className="text-center text-white">Loading applications...</div>;
+  }
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogProps, setDialogProps] = useState<ConfirmationDialogProp | null>(null);
 

@@ -15,7 +15,8 @@ interface ApplicationListProps {
   employeeInfo: Employee
 }
 export default function ApplicationList({projectId, employeeInfo}:ApplicationListProps) {
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true); // shows the loading icon for the entire page
+    const [isRefreshingTable, setRefreshingTable] = useState(false); // controls the loading icon for the table 
     const [currentPage, setCurrentPage] = useState(1)
     const applicationsPerPage = 5
     const [projectApplications, setProjectApplications] = useState<Application[] | null> (null);
@@ -31,8 +32,17 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
      * The function will load all applications for a project
      */
     const loadApplications = async() =>{
-      setIsLoading(true);
+
+      const isIntialLoad : boolean = projectApplications === null; // if there are no application we assume it because its the initial load
+
       try {
+        if (isIntialLoad){
+          setIsLoading(true); // set the loading icon for the page
+        }
+        else {
+          setRefreshingTable(true);
+        }
+
         const application_result = await fetchApplications(projectId);
         setProjectApplications(application_result);
       
@@ -41,7 +51,12 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         console.error(err);
       
       }finally{
-        setIsLoading(false);
+        if (isIntialLoad){
+          setIsLoading(false); // set the loading icon for the page to false
+        }
+        else {
+          setRefreshingTable(false); //set the control table loading icon to false
+        }
       }
     };
 
@@ -211,6 +226,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         onViewDetails ={setSelectedTeam}
         onDeleteApplication={handleDeleteApplication}
         employeeInfo={employeeInfo}
+        isRefreshingTable={isRefreshingTable}
       />
       {/* Display the pagination */}
       <ApplicationPagination 

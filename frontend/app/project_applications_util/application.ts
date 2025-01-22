@@ -110,7 +110,7 @@ export async function createStudentAccounts(teamMembers: Member[], projectId: nu
  */
 export async function deleteApplication(application_id: number){
   const {data, error} = await supabase.from('Applications').delete().eq("application_id",application_id).select();
-  if (error || data !== null) throw new Error(`Error deleting application: ${error?.message}`);
+  if (error) throw new Error(`Error deleting application: ${error?.message}`);
   
   const deletedApplicationData = data[0] as Application;
   deleteResume(deletedApplicationData);
@@ -123,7 +123,7 @@ export async function deleteApplication(application_id: number){
  */
 export const deleteAllApps = async(project_id: number) => {
   const {data: deletedApps, error} = await supabase.from("Applications").delete().eq('project_id',project_id).neq('status',Application_Status.APPROVED);
-  if(deletedApps !== null || error) throw new Error (`delete application error: ${error?.message}`);
+  if(error) throw new Error (`delete application error: ${error?.message}`);
 
   console.log("Deleted apps are ", deletedApps);
 };
