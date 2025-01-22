@@ -53,7 +53,7 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
         },
         onCancel:() => {handleCancelDelete()}
       });
-      setDialogOpen(true);// setting this state to open the confirmation dialog
+      setDialogOpen(true);// open the confirmation dialog
   }
 
   /**
