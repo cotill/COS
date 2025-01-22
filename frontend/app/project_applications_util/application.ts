@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Application, Application_Status, Member, Project_Status } from "@/utils/types";
 import {v4 as uuidv4 } from "uuid"
 import { UserRole } from "@/utils/types";
+import { error } from "console";
 
 const supabase = createClient();
 
@@ -11,7 +12,7 @@ const supabase = createClient();
  * @param projectId The project id to fetch applications for
  * @returns An array of applications or null if there are no applications
  */
-export const fetchApplications = async(projectId: string): Promise<Application[] | null> =>{
+export const fetchApplications = async(projectId: number): Promise<Application[] | null> =>{
     const {data, error} = await supabase.from("Applications").select("*").eq('"project_id"',projectId); 
     if (error) throw new Error(`Error fetching applications: ${error.message}`);
     return data;
@@ -109,13 +110,28 @@ export async function createStudentAccounts(teamMembers: Member[], projectId: nu
  */
 export async function deleteApplication(application_id: number){
   const {data, error} = await supabase.from('Applications').delete().eq("application_id",application_id).select();
-  if (error || data === null) throw new Error(`Error deleting application: ${error.message}`);
+  if (error || data !== null) throw new Error(`Error deleting application: ${error?.message}`);
   
   const deletedApplicationData = data[0] as Application;
   deleteResume(deletedApplicationData);
   
 }
 
+/**
+ * Will delete all applications except for the application which has been approved
+ * @param project_id the project_id for the applications to be deleted 
+ */
+export const deleteAllApps = async(project_id: number) => {
+  const {data: deletedApps, error} = await supabase.from("Applications").delete().eq('project_id',project_id).neq('status',Application_Status.APPROVED);
+  if(deletedApps !== null || error) throw new Error (`delete application error: ${error?.message}`);
+
+  console.log("Deleted apps are ", deletedApps);
+};
+
+/**
+ * Deletes the resumes of the deleted application
+ * @param deletedApplicationData An object represent the deleted application.
+ */
 //delete application resumes
 const deleteResume=async(deletedApplicationData:Application)=>{
   let resume_url: string[] = [];
@@ -141,7 +157,7 @@ export function confirmEmployeeAuthorization(employeeLevel: number, requiredLeve
   return true;
 }
 
-export const updateProjectStatus = async(project_id: string, status: string, application_id: number) => {
+export const updateProjectStatus = async(project_id: number, status: string, application_id: number) => {
   const supabase = createClient();
   let error;
   if(status === Project_Status.AWARDED){

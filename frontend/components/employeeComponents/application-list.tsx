@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react'
 import { Dialog } from "@/components/ui/dialog"
 import { TeamDetailsDialog } from './team-detail';
 import { Application_Status, Member,Application, Employee, EmployeeLevel, Project_Status } from '@/utils/types';
-import { fetchApplications, rejectOtherApplications, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization, updateProjectStatus } from "@/app/project_applications_util/application";
+import { fetchApplications, rejectOtherApplications, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization, updateProjectStatus, deleteAllApps } from "@/app/project_applications_util/application";
 import ApplicationTable from "./applicationTable";
 import {ApplicationPagination} from "./applicationPagination";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface ApplicationListProps {
-  projectId: string,
+  projectId: number,
   employeeInfo: Employee
 }
 export default function ApplicationList({projectId, employeeInfo}:ApplicationListProps) {
@@ -154,6 +156,14 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       
       await loadApplications();
     }
+  async function handleDeleteAllApps(){
+    try {
+      await deleteAllApps(projectId); 
+    } catch (error) {
+      alert(error);
+    }
+    await loadApplications();
+  }
 
   if(isLoading) {
     return <div className="text-center text-white">Loading...</div>;
@@ -167,6 +177,33 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
   }
 
   return (
+    <>
+    <div className="pt-4 space-y-4">
+        <div className="flex justify-between">
+          {/* <SearchBar 
+              value={searchTerm} 
+              onSearchChange={handleSearchChange} 
+              filter={filter} 
+              onFilterChange={handleFilterChange} 
+              placeholder={`Search by ${filter}...`}
+            /> */}
+          <Button
+            style={{
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "16px",
+              width: "17.5%",
+              borderRadius: "20px",
+            }}
+            className="bg-red-400 hover:bg-red-500 flex items-center space-x-4"
+            onClick={() => {
+              handleDeleteAllApps();
+            }}
+          >
+            <span>Delete All (fix me)</span>
+            <Trash2 />
+          </Button>
+        </div>
     <div className="space-y-4">
       {/* Displays the application table */}
       <ApplicationTable
@@ -193,5 +230,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
         />
       </Dialog>
     </div>
+    </div>
+    </>
   )
 }

@@ -1,11 +1,11 @@
-import ApplicationActions from "@/components/employeeComponents/application-actions";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from 'next/navigation';
 import { Application_Status, Employee, Project } from "@/utils/types";
-
+import Headingbar from "@/components/employeeComponents/Headingbar";
+import ApplicationList from "@/components/employeeComponents/application-list";
 
 export default async function ApplicantsPage({params,} : {params : Promise<{slug : string}>}) {
-  const projectId = (await params).slug;
+  const projectId = parseInt((await params).slug, 10);
   const supabase = await createClient();
   const {data, error} = await supabase.auth.getUser();
   if(error){
@@ -21,7 +21,9 @@ export default async function ApplicantsPage({params,} : {params : Promise<{slug
 
   return (
     <>
-      <ApplicationActions project={projectInfo} employee={employeeInfo}/>
+      <Headingbar text={projectInfo.title + " Applications"} />
+
+      <ApplicationList projectId={projectId} employeeInfo={empInfo} />
     </>
   )
 }
