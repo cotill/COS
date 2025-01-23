@@ -16,8 +16,9 @@ export default function ApplicationActions({
 	const deleteAllApps = async() => {
 		console.log("testing the button");
         const supabase = createClient();
-        const {data: projInfo, error: projError} = await supabase.from("Applications").delete().eq('project_id',project.project_id).neq('status',Application_Status.APPROVED).single();
-		if(projError){
+        const {data: projInfo, error: projError} = await supabase.from("Applications").delete().eq('project_id',project.project_id).neq('status',Application_Status.APPROVED);
+		console.log(projInfo)
+        if(projError){
 			console.log("delete application error: ", projError)
 		}
 	};
