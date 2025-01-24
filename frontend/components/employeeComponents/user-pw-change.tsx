@@ -2,29 +2,62 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client"
 
-interface ChangePasswordProps {
-  handleConfirm: (newPassword: string, confirmPassword: string) => void;
-}
 
-const ChangePassword = ({handleConfirm}: ChangePasswordProps) => {
+
+
+const ChangePassword = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   
   const toggleVisibility = () => setIsVisible(prevState => !prevState);
+  const router = useRouter();
 
   const handleCancel = () => {
-      setNewPassword("");
-      setConfirmPassword("");
-      console.log("textboxes cleaned")
-    };
+    setNewPassword("");
+    setConfirmPassword("");
+    console.log("textboxes cleaned")
+  };
+
+  const handlePasswordReset = async (password: string, confirmPassword: string) => {
+    const supabase = await createClient();
+
+    if (!password || !confirmPassword) {
+      alert("Please confirm your new password");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: password });
+
+      if (error) { 
+        alert("Password update failed");
+        console.error("Error updating password:", error);
+      } else {
+        alert("Password updated successfully");
+        setNewPassword("");
+        setConfirmPassword("");
+        router.refresh();
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("An unexpected error occurred. Please try again.");
+    }
+  };
 
   return (
-    <div className="p-4 text-white justify-center">
+    <div className="p-4 text-white flex flex-col justify-center">
       <h2 className="text-lg font-semibold underline mb-2">Change Password</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-
+      <div className="px-48 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+    
         {/* New Password */}
         <div className="relative flex flex-col">
           <label htmlFor="new-password" className="font-medium">
@@ -51,7 +84,7 @@ const ChangePassword = ({handleConfirm}: ChangePasswordProps) => {
 
         {/* Confirm Password */}
         <div className="relative flex flex-col">
-          <label htmlFor="confirm-password" className="font-medium">
+          <label htmlFor="confirm-password" className="font-medium ">
             Confirm Password
           </label>
           <div className="relative">
@@ -75,7 +108,7 @@ const ChangePassword = ({handleConfirm}: ChangePasswordProps) => {
       </div>
 
       {/* Cancel/Confirm buttons */}
-      <div className="flex justify-between items-center mt-6 px-4">
+      <div className="flex justify-between items-center mt-6 px-4 pt-4">
         <button
           className="bg-red-600 text-white px-8 py-2 mb-6 rounded hover:bg-red-600"
           type="button"
@@ -86,7 +119,7 @@ const ChangePassword = ({handleConfirm}: ChangePasswordProps) => {
         <button
           className="bg-green-600 text-white px-8 py-2 mb-6 rounded hover:bg-green-600"
           type="button"
-          onClick={() => handleConfirm(newPassword, confirmPassword)}
+          onClick={() => handlePasswordReset(newPassword, confirmPassword)}
         >
           Confirm
         </button>

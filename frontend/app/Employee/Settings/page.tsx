@@ -6,7 +6,7 @@ import {createClient} from '@/utils/supabase/server';
 import { redirect } from "next/navigation";
 
 
-export async function SettingsPage() {
+export default async function SettingsPage() {
   // const [email, setEmail] = useState(""); 
   // const [level, setLevel] = useState(null);
   // const [department, setDepartment] = useState(null);
@@ -16,16 +16,16 @@ export async function SettingsPage() {
 
     // get session stuff
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session) {
+    if ( userError || !user) {
       redirect("/sign-in")
     }
 
     // from session stuff, get user id
-    const userId = session.user.id; 
+    const userId = user.id; 
     // const { data, error } = await supabase
     //   .from("Employees")
     //   .select("email, level, department")
@@ -39,51 +39,12 @@ export async function SettingsPage() {
     //   setLevel(data.level); 
     //   setDepartment(data.department);
     // }
-  
-  
-
-  
-
-  const handlePasswordReset = async (password: string, confirmPassword: string) => {
-    const supabase = await createClient();
-
-    if (!password || !confirmPassword) {
-      alert("Please confirm your new password");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-
-    try {
-      const { error } = await supabase.auth.updateUser({ password: password });
-
-      if (error) {
-        alert("Password update failed");
-        console.error("Error updating password:", error);
-      } else {
-        alert("Password updated successfully");
-        // redirect("/Employee/Settings");
-      }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      alert("An unexpected error occurred. Please try again.");
-    }
-  };
-
-  const handleConfirm = (newPassword: string, confirmPassword: string) => {
-    handlePasswordReset(newPassword, confirmPassword);
-    // how would i erase the inputted text? refresh? 
-  };
-  
 
   return (
     <>
       <Headingbar text="Settings" />
       <UserInfo userId={userId}/>
-      <ChangePassword handleConfirm={handleConfirm}/>
+      <ChangePassword/>
     </>
   );
 }
