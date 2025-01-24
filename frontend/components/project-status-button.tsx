@@ -49,14 +49,14 @@ export function ProjectStatusButton({status, onChangeStatus}:ProjectStatusButton
     <div className="flex">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn("h-9 px-4 rounded-l-full flex items-center font-medium text-white",currentConfig.color)} >
+          <button className={cn("h-9 px-4 rounded-l-full flex items-center font-medium text-white focus:outline-none",currentConfig.color)} >
             <div className="flex items-center space-x-2">
               <div className={cn("w-2 h-2 rounded-full bg-current")} />
               <span>{status}</span>
             </div>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-40 max-w-40 bg-[#413F46]/95 border-gray-400 ">
+        <DropdownMenuContent className="w-40 max-w-40 bg-[#413F46]/95 border-gray-400">
           {ProjectStatusOrder.map((statusKey) => {
             const isSelectable = checkStatusSelectable(status, statusKey);
             return (
@@ -65,8 +65,8 @@ export function ProjectStatusButton({status, onChangeStatus}:ProjectStatusButton
                 disabled={!isSelectable}
                 onClick={() => isSelectable && handleStatusChange(statusKey)}
                 className={cn(
-                  "flex items-center space-x-2 text-white",
-                  isSelectable ? "hover:bg-gray-700" : "opacity-50 cursor-not-allowed",
+                  "flex items-center space-x-2 text-white focus:outline-none",
+                  isSelectable ? "hover:bg-gray-800" : "opacity-50 cursor-not-allowed",
                 )}
               >
                 <div className={cn("w-2 h-2 rounded-full",statusConfig[statusKey].color)} />

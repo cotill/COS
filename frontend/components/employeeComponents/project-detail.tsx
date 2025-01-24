@@ -5,7 +5,10 @@ import { useState } from 'react'
 import { Project, Project_Status } from '@/utils/types'
 import { Info } from 'lucide-react';
 import ReactMarkdown from "react-markdown";
-import { ArrowRightCircle } from 'lucide-react'
+import DatePicker from "react-datepicker"; // npm install react-datepicker AND date-fns
+import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
+import { Calendar } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -31,6 +34,11 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [projStatus, setProjStatus] = useState<Project_Status>(project.status);
+  const [teamSizeMin, setTeamSizeMin] = useState(3);
+  const [teamSizeMax, setTeamSizeMax] = useState(5);
+
+  const [budget, setBudget] = useState("");
+  const [deadline, setDeadline] = useState<Date | null>(null);
 
   function formatDateTime(raw_date: string | null): string{ 
     if (raw_date === null) return "N/A";
@@ -89,6 +97,63 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           {project.description}
         </ReactMarkdown>
       </div>
+
+      <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center">
+        {/* Team Size */}
+        <div className=" relative flex flex-col">
+          <label className="text-base mb-2">Team size:</label>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <input
+                type="text"
+                placeholder="Min"
+                value={teamSizeMin}
+                onChange={(e) => setTeamSizeMin(Number(e.target.value.replace(/[^0-9]/g, '')))}
+                className="w-16 p-1 rounded-md text-black"
+              />
+            </div>
+            <span className="text-white font-medium">-</span>
+            <div className="flex flex-col">
+              <input
+                type="text"
+                placeholder="Max"
+                value={teamSizeMax}
+                onChange={(e) => setTeamSizeMax(Number(e.target.value.replace(/[^0-9]/g, '')))} 
+                className="w-16 p-1 rounded-md text-black"
+              />
+            </div>
+          </div>
+        </div>
+      {/* Budget */}
+      <div className=" relative flex flex-col">
+        <label className="text-base mb-2">Budget:</label>
+        <div className="flex items-center">
+          <span className="text-white font-medium">$</span>
+          <input
+            type="number"
+            placeholder="Enter budget"
+            value={budget}
+            onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))}
+            className="ml-2 p-1 rounded-md text-black"
+          />
+        </div>
+      </div>
+
+      {/* Application Deadline */}
+      <div className="relative flex flex-col">
+        <label className="text-base mb-2">Application deadline:</label>
+        <div className="relative flex items-center">
+          <DatePicker
+            selected={deadline}
+            onChange={(date) => setDeadline(date)}
+            dateFormat="MMM d, yyyy"
+            placeholderText="Select a date"
+            className="bg-white text-black px-2 py-1 rounded-md"
+          />
+          <Calendar className="h-6 w-6 text-black absolute right-2 pointer-events-none" />
+        </div>
+      </div>
+    </div>
 
       {/* <Button asChild>
         <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>View Applicants</Link>
