@@ -8,6 +8,8 @@ import ReactMarkdown from "react-markdown";
 import DatePicker from "react-datepicker"; // npm install react-datepicker AND date-fns
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
 import { Calendar } from "lucide-react";
+import { Button } from '../ui/button';
+import Link from 'next/link';
 
 import {
   Dialog,
@@ -155,9 +157,9 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       </div>
     </div>
 
-      {/* <Button asChild>
+      <Button asChild>
         <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>View Applicants</Link>
-      </Button> */}
+      </Button>
     </div>
   );
 }

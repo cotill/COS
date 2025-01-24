@@ -21,7 +21,7 @@ interface ProjectStatusButtonProp {
 
 const statusConfig: Record<Project_Status, {color: string}> = {
   NEW: { color: "bg-white" },
-  DRAFT: { color: "bg-white" },
+  DRAFT: { color: "bg-white text-black" },
   REVIEW: { color: "bg-[#D7B634]" },
   REJECTED: { color: "bg-[#E75973]" },
   APPROVED: { color: "bg-[#81C26C]" },
@@ -80,8 +80,8 @@ export function ProjectStatusButton({status, onChangeStatus}:ProjectStatusButton
       <button
         // onClick={handleNextStatus}
         className={cn(
-          "h-9 px-2 rounded-r-full border-l border-white/20 flex items-center",
-          currentConfig.color
+          "h-9 px-2 rounded-r-full border-l flex items-center border-white",
+          currentConfig.color 
         )}
       >
         <ChevronRight className="h-4 w-4 text-white" />
