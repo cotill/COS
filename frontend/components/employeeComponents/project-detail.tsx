@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useState } from 'react'
-import { Project } from '@/utils/types'
+import { Project, Project_Status } from '@/utils/types'
 import { Info } from 'lucide-react';
 import ReactMarkdown from "react-markdown";
 import { ArrowRightCircle } from 'lucide-react'
@@ -16,6 +16,8 @@ import {
 import date from 'date-and-time'; //npm i date-and-time
 import timezone from 'date-and-time/plugin/timezone'; //// Import plugin for date-time for more tokens
 
+import { ProjectStatusOrder } from '@/app/student_applications/project_detail_helper'; 
+import { ProjectStatusButton } from '../project-status-button';
 
 
 interface ProjectDetailProps{
@@ -27,8 +29,10 @@ interface ProjectDetailProps{
 
 export default function ProjectDetail({project, creatorName, approvalName, dispatcherName } : ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  
-  function formatDateTime(raw_date: string | null): string{
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [projStatus, setProjStatus] = useState<Project_Status>(project.status);
+
+  function formatDateTime(raw_date: string | null): string{ 
     if (raw_date === null) return "N/A";
     date.plugin(timezone); // apply the plugin
     const dateTime = new Date(raw_date);
@@ -56,13 +60,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             <Info className="w-5 h-5" />
           </button>
         </div>
-
-        <button className="bg-white text-black px-4 py-1 rounded-full flex items-center space-x-2">
-          <span>{project.status}</span>
-          <span className="mx-2">|</span>
-          <ArrowRightCircle size={20} />
-          {/* button will be white... idk how to make it change based on what the status is */}
-        </button>
+        <ProjectStatusButton status={projStatus} onChangeStatus={setProjStatus} />
       </div>
       <Dialog open={isPopupOpen === true} onOpenChange={()=> setIsPopupOpen(false)}>
         <DialogContent className="bg-[#1D1B23] text-white">
@@ -85,6 +83,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           </DialogHeader>
         </DialogContent>
       </Dialog>
+
       <div className="bg-gray-300 p-4 rounded-xl text-sm max-h-48 overflow-y-auto">
         <ReactMarkdown className="markdown-content">
           {project.description}

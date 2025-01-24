@@ -95,7 +95,6 @@ export enum Project_Status {
 }
 
 export enum Application_Status {
-    PENDING = "PENDING", // Application is under review by an TTG employee
     REJECTED = "REJECTED", // Application is rejected
     APPROVED = "APPROVED"// The application is accepted and the team members are created Capstone Onbaording System accounts
 }
