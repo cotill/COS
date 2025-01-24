@@ -36,7 +36,7 @@ export default function Navbar({ initials, signOutButton, name }: NavbarProperit
 
         <div className="relative flex items-center gap-6 -ml-20">
 
-          <ThemeSwitcher/>
+          {/* <ThemeSwitcher/> */}
 
           <span className="text-white">{currentDate}</span>
 
