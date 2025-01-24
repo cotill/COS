@@ -108,16 +108,16 @@ const ChangePassword = () => {
       </div>
 
       {/* Cancel/Confirm buttons */}
-      <div className="flex justify-between items-center mt-6 px-4 pt-4">
+      <div className="flex justify-end gap-4 mt-6 px-4 pt-4">
         <button
-          className="bg-red-600 text-white px-8 py-2 mb-6 rounded hover:bg-red-600"
+          className="bg-[#E75973] text-white px-8 py-2 mb-6 rounded hover:bg-red-600"
           type="button"
           onClick={() => handleCancel}
         >
           Cancel
         </button>
         <button
-          className="bg-green-600 text-white px-8 py-2 mb-6 rounded hover:bg-green-600"
+          className="bg-[#81C26C] text-white px-8 py-2 mb-6 rounded hover:bg-green-600"
           type="button"
           onClick={() => handlePasswordReset(newPassword, confirmPassword)}
         >
