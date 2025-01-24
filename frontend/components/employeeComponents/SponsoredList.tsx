@@ -75,7 +75,7 @@ export function SponsoredList() {
 
         const { data, error } = await supabase
             .from('Projects')
-            .select('project_id, title, teamID, status')
+            .select('project_id, title, project_budget, status')
             .eq('sponsor_email', userEmail);
   
         if (error) {
@@ -86,7 +86,7 @@ export function SponsoredList() {
             data.map((project) => ({
                 id: project.project_id,
                 name: project.title,
-                team: project.teamID,
+                team: project.project_budget,
                 status: project.status,
             }))
         );
@@ -142,9 +142,21 @@ export function SponsoredList() {
   const handleClearFilters = () => {
     setSelectedStatus([]);
   };
+
+  const statusColors: { [key: string]: string } = {
+    DRAFT: '#788292',
+    REVIEW: '#D7B634',
+    APPROVED: '#81C26C',
+    REJECTED: '#FF6B6B',
+    DISPATCHED: '#000000',
+    AWARDED: '#4B006E',
+    ACTIVE: '#008080',
+    COMPLETED: '#154406',
+    CANCELLED: 'black',
+  };
       
   return (
-    <div className="space-y-4 rounded-3xl mt-4 p-4" style={{ backgroundColor: '#c9c7ce' }}>
+    <div className="space-y-4 rounded-3xl mt-4 px-4 pb-4" style={{ backgroundColor: '#1d1b23' }}>
       {loading ? (
         <p>Loading projects...</p>
       ) : (
@@ -159,8 +171,8 @@ export function SponsoredList() {
                 </TableHead>
                 <TableHead onClick={() => handleSort('team')} className="cursor-pointer text-white">
                   {sortColumn === 'team'
-                    ? `Team Name ${sortOrder === 'asc' ? '▲' : '▼'}`
-                    : 'Team Name ▲▼'}
+                    ? `Team Name (Using budget as stand in) ${sortOrder === 'asc' ? '▲' : '▼'}`
+                    : 'Team Name (Using budget as stand in) ▲▼'}
                 </TableHead>
                 <TableHead>
                   <DropdownFilter
@@ -195,28 +207,40 @@ export function SponsoredList() {
             </TableHeader>
             <TableBody>
               {currentProjects.length > 0 ? (
-                currentProjects.map((project, index) => (
+                currentProjects.map((project) => (
                   <TableRow
                     key={project.id}
                     style={{
-                      backgroundColor: index % 2 === 0 ? 'white' : 'grey',
-                      color: index % 2 === 0 ? 'black' : 'white',
+                      backgroundColor: '#413F46',
+                      color: 'white',
                     }}
                   >
                     <TableCell 
                       style={{ 
-                        borderTopLeftRadius: '1.5rem', 
-                        borderBottomLeftRadius: '1.5rem'
+                        borderTopLeftRadius: '0.5rem', 
+                        borderBottomLeftRadius: '0.5rem'
                       }}
                     >
                       {project.name}
                     </TableCell>
                     <TableCell>{project.team}</TableCell>
-                    <TableCell>{project.status}</TableCell>
+                    <TableCell>
+                      <div
+                        style={{
+                          backgroundColor: statusColors[project.status],
+                          display: 'inline-block',
+                          color: 'white',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '1.0rem',
+                        }}
+                      >
+                        {project.status}
+                      </div>
+                    </TableCell>
                     <TableCell
                       style={{
-                        borderTopRightRadius: '1.5rem',
-                        borderBottomRightRadius: '1.5rem',
+                        borderTopRightRadius: '0.5rem',
+                        borderBottomRightRadius: '0.5rem',
                       }}
                     >
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -253,7 +277,7 @@ export function SponsoredList() {
               )}
             </TableBody>
           </Table>
-          <Pagination>
+          <Pagination className="text-white">
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
