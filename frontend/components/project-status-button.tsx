@@ -48,9 +48,7 @@ export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonP
 
   const borderColor = status === Project_Status.DRAFT ? "border-black text-black" : "border-white text-white";
 
-  const handleNextStatus = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    console.log("next clicked")
+  const handleNextStatus = () => {
     setProjStatus(getNextStatus(status))
   }
   return (
