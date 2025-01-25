@@ -10,7 +10,8 @@ import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the d
 import { Calendar } from "lucide-react";
 import { Button } from '../ui/button';
 import Link from 'next/link';
-
+import { Loader, Loader2 } from 'lucide-react';
+import {RoundSpinner} from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +25,6 @@ import timezone from 'date-and-time/plugin/timezone'; //// Import plugin for dat
 import { ProjectStatusOrder } from '@/app/student_applications/project_detail_helper'; 
 import { ProjectStatusButton } from '../project-status-button';
 
-
 interface ProjectDetailProps{
   project: Project,
   creatorName: string | null,
@@ -35,6 +35,7 @@ interface ProjectDetailProps{
 export default function ProjectDetail({project, creatorName, approvalName, dispatcherName } : ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [projStatus, setProjStatus] = useState<Project_Status>(project.status);
+  const [isSaving, setIsSaving] = useState(false);
 
   // const [deadline, setDeadline] = useState<Date | null>(null);
   const [projectInfo, setProjectInfo] = useState({
@@ -75,6 +76,12 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
     });
   }
 
+  function handleSaveProject () {
+    setIsSaving(true)
+    setTimeout(() => {
+      setIsSaving(false);
+    }, 1000);
+  }
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-4 py-2">
@@ -157,6 +164,20 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
       <Button asChild>
         <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>View Applicants</Link>
+      </Button>
+      <Button
+        onClick={() => handleSaveProject()}
+      > 
+      {isSaving ?(
+      <>
+        <RoundSpinner size='xs' color='white'/>
+        <span className='ml-1'>saving...</span>
+      </>
+      ): 
+      (
+        <span>Save</span>
+      )
+      }
       </Button>
     </div>
   );
