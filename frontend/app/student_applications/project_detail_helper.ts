@@ -11,3 +11,9 @@ export const ProjectStatusOrder : Project_Status[] = [
     Project_Status.COMPLETED,
     Project_Status.CANCELLED
 ]
+
+export const saveProjectAction = async(formData: FormData) => {
+    const budget = formData.get("budget")?.toString();
+    const deadline = formData.get("deadline")?.toString();
+    console.log(`budget is: ${budget} and deadline: ${deadline}`)
+}

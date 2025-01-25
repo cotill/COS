@@ -3,7 +3,7 @@
 import React from 'react'
 import { useState } from 'react'
 import { Project, Project_Status } from '@/utils/types'
-import { Info } from 'lucide-react';
+import { Hand, Info } from 'lucide-react';
 import ReactMarkdown from "react-markdown";
 import DatePicker from "react-datepicker"; // npm install react-datepicker
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
@@ -36,8 +36,25 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [projStatus, setProjStatus] = useState<Project_Status>(project.status);
 
-  const [budget, setBudget] = useState("");
-  const [deadline, setDeadline] = useState<Date | null>(null);
+  // const [deadline, setDeadline] = useState<Date | null>(null);
+  const [projectInfo, setProjectInfo] = useState({
+    ...project,
+    sponsor_email: project.sponsor_email ?? "",
+    project_budget: project.project_budget ?? 0,
+    approved_date: project.approved_date ?? "",
+    approval_email: project.approval_email ?? "",
+    dispatched_date: project.dispatched_date ?? "",
+    dispatcher_email: project.dispatched_date ?? "",
+    activation_date: project.activation_date ?? "",
+    link_active: project.link_active ?? false,
+    applications_allowed: project.applications_allowed ?? false,
+    application_deadline: project.application_deadline ?? "",
+    awarded_application_id: project.awarded_application_id !== 0 ? project.awarded_application_id : null,
+    application_link: project.application_link ?? "",
+    modified_date: project.modified_date ?? "",
+    university: project.university ?? null,
+    
+  });
 
   function formatDateTime(raw_date: string | null): string{ 
     if (raw_date === null) return "N/A";
@@ -50,7 +67,13 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
     return localDateTime;
   }
-
+  
+  const onInputChange = (event : {target: {name: any, value: any}}) => {
+    const {name, value} = event.target;
+    setProjectInfo({
+      ...projectInfo, [name]:value
+    });
+  }
 
   return (
     <div className="relative">
@@ -100,27 +123,29 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
       <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center">
       {/* Budget */}
-      <div className=" relative flex flex-col">
-        <label className="text-base mb-2">Budget:</label>
+      <div className=" relative flex flex-row items-center">
+        <label className="text-base mr-2">Budget:</label>
         <div className="flex items-center">
           <span className="text-white font-medium">$</span>
           <input
             type="number"
             placeholder="Enter budget"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))}
+            name="project_budget"
+            value={projectInfo.project_budget}
+            onChange={(event) => onInputChange({ target: { name: event.target.name, value: event.target.value.replace(/[^0-9]/g, '') } })}
             className="ml-2 p-1 rounded-md text-black"
           />
         </div>
       </div>
 
       {/* Application Deadline */}
-      <div className="relative flex flex-col">
-        <label className="text-base mb-2">Application deadline:</label>
+      <div className="relative flex flex-row items-center">
+        <label className="text-base mr-2">Application deadline:</label>
         <div className="relative flex items-center">
           <DatePicker
-            selected={deadline}
-            onChange={(date) => setDeadline(date)}
+            name="application_deadline"
+            selected={projectInfo.application_deadline ? new Date(projectInfo.application_deadline) : null}
+            onChange={(date) => onInputChange({ target: { name: 'application_deadline', value: date ? date.toISOString() : '' } })}
             dateFormat="MMM d, yyyy"
             placeholderText="Select a date"
             className="bg-white text-black px-2 py-1 rounded-md"

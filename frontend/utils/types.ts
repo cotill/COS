@@ -71,6 +71,7 @@ export interface Project {
     applications_allowed: boolean | null;
     dispatcher_email: string | null;
     dispatched_date: string | null;
+    project_budget: number | null;
 }
 
 export enum Universities{

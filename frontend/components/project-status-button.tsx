@@ -55,7 +55,7 @@ export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonP
     <div className="flex">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn("h-9 px-4 rounded-l-full flex items-center font-medium text-white focus:outline-none",currentConfig.color)} >
+          <button className={cn("h-9 px-4 rounded-l-full flex items-center font-medium text-white focus:outline-none hover:bg-opacity-40",currentConfig.color)} >
             <div className="flex items-center space-x-2">
               <div className={cn("w-2 h-2 rounded-full bg-current")} />
               <span>{status}</span>
@@ -72,6 +72,8 @@ export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonP
                 onClick={() => isSelectable && handleStatusChange(statusKey)}
                 className={cn(
                   "flex items-center space-x-2 text-white focus:outline-none",
+                  "transition-colors duration-100 ease-in-out",
+                  "rounded-sm", "pl-2",
                   isSelectable ? "hover:bg-gray-800" : "opacity-50 cursor-not-allowed",
                 )}
               >
@@ -86,7 +88,7 @@ export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonP
       <button
         onClick={handleNextStatus}
         className={cn(
-          "h-9 px-2 rounded-r-full border-l flex items-center",
+          "h-9 px-2 rounded-r-full border-l flex items-center hover:bg-opacity-40",
           currentConfig.color ,borderColor,
         )}
       >
