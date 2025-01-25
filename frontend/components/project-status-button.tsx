@@ -2,21 +2,17 @@
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu";
 import { ProjectStatusOrder } from '@/app/student_applications/project_detail_helper'; 
-import { Project_Status } from "@/utils/types";
+import { Application_Status, Project_Status } from "@/utils/types";
 import { cn } from "@/lib/utils"
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { ChevronRight } from "lucide-react"
 
 interface ProjectStatusButtonProp {
   status: Project_Status;
-  onChangeStatus: (new_status: Project_Status) => void;
+  setProjStatus: (new_status: Project_Status) => void;
 }
 
 const statusConfig: Record<Project_Status, {color: string}> = {
@@ -38,12 +34,24 @@ const checkStatusSelectable = (current_status: Project_Status, targetStatus: Pro
   return  targetIndex >= currentIndex ? true : false; // if target index is less than or equal to the current index, then the target status is not selectable
 }
 
-export function ProjectStatusButton({status, onChangeStatus}:ProjectStatusButtonProp){
+function getNextStatus(currentStatus: Project_Status): Project_Status{
+  const currentStatusIndex = ProjectStatusOrder.indexOf(currentStatus);
+  return currentStatusIndex <  ProjectStatusOrder.length -1 ? ProjectStatusOrder[currentStatusIndex+1] : currentStatus;
+}
+export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonProp){
   const currentConfig = statusConfig[status];
   function handleStatusChange (target_status: Project_Status){
     if(target_status !== status) {// if the current status is not the status that was clicked, then call function
-      onChangeStatus(target_status);
+      setProjStatus(target_status);
     }
+  }
+
+  const borderColor = status === Project_Status.DRAFT ? "border-black text-black" : "border-white text-white";
+
+  const handleNextStatus = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    console.log("next clicked")
+    setProjStatus(getNextStatus(status))
   }
   return (
     <div className="flex">
@@ -78,13 +86,13 @@ export function ProjectStatusButton({status, onChangeStatus}:ProjectStatusButton
         </DropdownMenuContent>
       </DropdownMenu>
       <button
-        // onClick={handleNextStatus}
+        onClick={handleNextStatus}
         className={cn(
-          "h-9 px-2 rounded-r-full border-l flex items-center border-white",
-          currentConfig.color 
+          "h-9 px-2 rounded-r-full border-l flex items-center",
+          currentConfig.color ,borderColor,
         )}
       >
-        <ChevronRight className="h-4 w-4 text-white" />
+        <ChevronRight className={`h-5 w-5 ${borderColor}`} />
       </button>
     </div>
   );

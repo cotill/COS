@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Project, Project_Status } from '@/utils/types'
 import { Info } from 'lucide-react';
 import ReactMarkdown from "react-markdown";
-import DatePicker from "react-datepicker"; // npm install react-datepicker AND date-fns
+import DatePicker from "react-datepicker"; // npm install react-datepicker
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
 import { Calendar } from "lucide-react";
 import { Button } from '../ui/button';
@@ -34,10 +34,7 @@ interface ProjectDetailProps{
 
 export default function ProjectDetail({project, creatorName, approvalName, dispatcherName } : ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [projStatus, setProjStatus] = useState<Project_Status>(project.status);
-  const [teamSizeMin, setTeamSizeMin] = useState(3);
-  const [teamSizeMax, setTeamSizeMax] = useState(5);
 
   const [budget, setBudget] = useState("");
   const [deadline, setDeadline] = useState<Date | null>(null);
@@ -49,7 +46,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
     const pattern = date.compile('MMM D, YYYY hh:mm z')
     const localDateTime = date.formatTZ(dateTime, pattern);
-    console.log(localDateTime)
+    // console.log(localDateTime)
 
     return localDateTime;
   }
@@ -70,7 +67,8 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             <Info className="w-5 h-5" />
           </button>
         </div>
-        <ProjectStatusButton status={projStatus} onChangeStatus={setProjStatus} />
+        {/* Project Status button */}
+        <ProjectStatusButton status={projStatus} setProjStatus={setProjStatus} />
       </div>
       <Dialog open={isPopupOpen === true} onOpenChange={()=> setIsPopupOpen(false)}>
         <DialogContent className="bg-[#1D1B23] text-white">
@@ -101,31 +99,6 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       </div>
 
       <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center">
-        {/* Team Size */}
-        <div className=" relative flex flex-col">
-          <label className="text-base mb-2">Team size:</label>
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col">
-              <input
-                type="text"
-                placeholder="Min"
-                value={teamSizeMin}
-                onChange={(e) => setTeamSizeMin(Number(e.target.value.replace(/[^0-9]/g, '')))}
-                className="w-16 p-1 rounded-md text-black"
-              />
-            </div>
-            <span className="text-white font-medium">-</span>
-            <div className="flex flex-col">
-              <input
-                type="text"
-                placeholder="Max"
-                value={teamSizeMax}
-                onChange={(e) => setTeamSizeMax(Number(e.target.value.replace(/[^0-9]/g, '')))} 
-                className="w-16 p-1 rounded-md text-black"
-              />
-            </div>
-          </div>
-        </div>
       {/* Budget */}
       <div className=" relative flex flex-col">
         <label className="text-base mb-2">Budget:</label>

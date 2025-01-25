@@ -66,11 +66,9 @@ export interface Project {
     status: Project_Status;
     university: Universities | null;
     application_link: string | null;
-    team_max_size: number | null;
     link_active: boolean | null;
     application_deadline: string | null;
     applications_allowed: boolean | null;
-    team_min_size: number | null;
     dispatcher_email: string | null;
     dispatched_date: string | null;
 }
