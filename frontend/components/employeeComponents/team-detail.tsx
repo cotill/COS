@@ -42,7 +42,6 @@ async function openResume(resume_filepath: string) {
   if (data?.signedUrl) {
     window.open(data.signedUrl, "_blank");
   } else {
-    console.error("Error fetching resume:", error?.message);
     alert("Unable to fetch the resume. Please try again.");
   }
 }

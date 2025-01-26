@@ -3,7 +3,6 @@ import { createClient } from "@/utils/supabase/client";
 import { Application, Application_Status, Member, Project_Status } from "@/utils/types";
 import {v4 as uuidv4 } from "uuid"
 import { UserRole } from "@/utils/types";
-import { error } from "console";
 
 const supabase = createClient();
 

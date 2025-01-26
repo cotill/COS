@@ -9,11 +9,8 @@ export default async function RootLayout({children,}: {children: React.ReactNode
     const supabase = await createClient();
     const {data: userInfo, error: authError} = await supabase.auth.getUser();
     let metadata = userInfo.user?.user_metadata;
-    // console.log("metadata is ...", metadata)
-    // console.log("user info is...", userInfo)
 
     if (!userInfo.user || authError) {
-        // console.log("can't access user is ", userInfo)
         redirect("/sign-in");
     }
     
