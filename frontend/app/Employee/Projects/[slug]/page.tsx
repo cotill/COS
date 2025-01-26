@@ -3,20 +3,24 @@ import Headingbar from "@/components/employeeComponents/Headingbar";
 import {createClient} from '@/utils/supabase/server';
 import { Project } from "@/utils/types";
 
-const supabase = createClient();
 
 export default async function ProjectPage({params,} : {params : Promise<{slug : string}>}) {
+    const supabase = createClient();
+
     const projectId = (await params).slug;
     const project  = await getProjectById(supabase, projectId);
     if (project === null){
-        return <div>
+        return (
+        <div>
             Error retrieving project with project id, {projectId}! Please contact system admin
         </div>
+        )
     }
-    const creatorName = await getEmployeeName(supabase, project.creator_email);
-    const approvalName = project.approval_email ? await getEmployeeName(supabase, project.approval_email) : null;
-    const dispatcherName = project.dispatcher_email ? await getEmployeeName(supabase, project.dispatcher_email) : null
-
+    const [creatorName, approvalName, dispatcherName] = await Promise.all([
+      await getEmployeeName(supabase, project.creator_email),
+      project.approval_email ? await getEmployeeName(supabase, project.approval_email) : Promise.resolve(null),
+      project.dispatcher_email ? await getEmployeeName(supabase, project.dispatcher_email) : Promise.resolve(null)
+    ])
     return (
         <div>
             <Headingbar text={project.title} />
