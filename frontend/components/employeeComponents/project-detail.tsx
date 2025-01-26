@@ -10,19 +10,17 @@ import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the d
 import { Calendar } from "lucide-react";
 import { Button } from '../ui/button';
 import Link from 'next/link';
-import { Loader, Loader2 } from 'lucide-react';
 import {RoundSpinner} from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import date from 'date-and-time'; //npm i date-and-time
 import timezone from 'date-and-time/plugin/timezone'; //// Import plugin for date-time for more tokens
 
-import { ProjectStatusOrder, getChangedData, onUpdateProject } from '@/app/student_applications/project_detail_helper'; 
+import { getChangedData, onUpdateProject } from '@/app/student_applications/project_detail_helper'; 
 import { ProjectStatusButton } from '../project-status-button';
 
 interface ProjectDetailProps{
@@ -51,7 +49,6 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
     const pattern = date.compile('MMM D, YYYY hh:mm z')
     const localDateTime = date.formatTZ(dateTime, pattern);
-    // console.log(localDateTime)
 
     return localDateTime;
   }
@@ -63,15 +60,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       ...currentProjectInfo, [name]:value
     });
   }
-  const updateProjectDetail = () => {
-    setCurrentProjectInfo({
-      ...currentProjectInfo,
-      description: currentProjectInfo.description,
-      project_budget: currentProjectInfo.project_budget,
-      application_deadline: currentProjectInfo.application_deadline,
-    });
-    console.log(`budget is ${project.project_budget}`);
-  }
+
   async function handleSaveProject () {
     setIsSaving(true);
 
@@ -118,46 +107,60 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         </div>
         {/* Project edit button */}
         <div className="flex items-center gap-6 justify-center">
-
-        <Button 
-          className={`flex flex-row rounded-full w-24 gap-3 font-medium h-9 focus:outline-none 
+          <Button
+            className={`flex flex-row rounded-full w-24 gap-3 font-medium h-9 focus:outline-none 
           hover:bg-opacity-10 hover:bg-white transition-colors duration-100 ease-in-out
-          ${isEditing ? 'hidden' : ''}`}
-          onClick={handleProjectEdit}
-        >
-          <span>Edit</span>
-          <Pencil size={18}/>
-        </Button>
+          ${isEditing ? "hidden" : ""}`}
+            onClick={handleProjectEdit}
+          >
+            <span>Edit</span>
+            <Pencil size={18} />
+          </Button>
 
-        {/* Project status button */}
-        <ProjectStatusButton status={projStatus} setProjStatus={setProjStatus} />
-
+          {/* Project status button */}
+          <ProjectStatusButton
+            status={projStatus}
+            setProjStatus={setProjStatus}
+          />
         </div>
       </div>
-      <Dialog open={isPopupOpen === true} onOpenChange={()=> setIsPopupOpen(false)}>
+      <Dialog
+        open={isPopupOpen === true}
+        onOpenChange={() => setIsPopupOpen(false)}
+      >
         <DialogContent className="bg-[#1D1B23] text-white">
           <DialogHeader>
-            <DialogTitle className='text-xl text-center'>{project.title}</DialogTitle>
-              <DialogTitle className='text-lg mb-2'>Project Details</DialogTitle>
-              <div>
-                <p>Department: {project.department}</p>
-                <p>Created by: {creatorName} on {formatDateTime(project.created_date)}</p> 
-                {approvalName && 
-                  <p>Reviewed by: {approvalName} on {formatDateTime(project.approved_date)}</p>
-                }
-                {dispatcherName &&
-                  <p>Dispatched by: {dispatcherName} on {formatDateTime(project.dispatched_date)}</p>
-                }
-                {project.activation_date &&
-                  <p>Project activated on: {project.activation_date}</p>
-                }
-              </div>
+            <DialogTitle className="text-xl text-center">
+              {project.title}
+            </DialogTitle>
+            <DialogTitle className="text-lg mb-2">Project Details</DialogTitle>
+            <div>
+              <p>Department: {project.department}</p>
+              <p>
+                Created by: {creatorName} on{" "}
+                {formatDateTime(project.created_date)}
+              </p>
+              {approvalName && (
+                <p>
+                  Reviewed by: {approvalName} on{" "}
+                  {formatDateTime(project.approved_date)}
+                </p>
+              )}
+              {dispatcherName && (
+                <p>
+                  Dispatched by: {dispatcherName} on{" "}
+                  {formatDateTime(project.dispatched_date)}
+                </p>
+              )}
+              {project.activation_date && (
+                <p>Project activated on: {project.activation_date}</p>
+              )}
+            </div>
           </DialogHeader>
         </DialogContent>
       </Dialog>
 
-
-      <div >
+      <div>
         {isEditing ? (
           <div>
             <textarea
@@ -178,69 +181,85 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       </div>
 
       <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center">
-      {/* Budget */}
-      <div className=" relative flex flex-row items-center">
-        <label className="text-base mr-2">Budget:</label>
-        <div className="flex items-center">
-          <span className="text-white font-medium">$</span>
-          <input
-            type="number"
-            placeholder="Enter budget"
-            name="project_budget"
-            value={currentProjectInfo.project_budget}
-            onChange={(event) => onInputChange({ target: { name: event.target.name, value: event.target.value.replace(/[^0-9]/g, '') } })}
-            className="ml-2 p-1 rounded-md text-black"
-          />
+        {/* Budget */}
+        <div className=" relative flex flex-row items-center">
+          <label className="text-base mr-2">Budget:</label>
+          <div className="flex items-center">
+            <span className="text-white font-medium">$</span>
+            <input
+              type="number"
+              placeholder="Enter budget"
+              name="project_budget"
+              value={currentProjectInfo.project_budget}
+              onChange={(event) =>
+                onInputChange({
+                  target: {
+                    name: event.target.name,
+                    value: event.target.value.replace(/[^0-9]/g, ""),
+                  },
+                })
+              }
+              className="ml-2 p-1 rounded-md text-black"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Application Deadline */}
-      <div className="relative flex flex-row items-center">
-        <label className="text-base mr-2">Application deadline:</label>
-        <div className="relative flex items-center">
-          <DatePicker
-            name="application_deadline"
-            selected={currentProjectInfo.application_deadline ? new Date(currentProjectInfo.application_deadline) : null}
-            onChange={(date) => onInputChange({ target: { name: 'application_deadline', value: date ? date.toISOString() : '' } })}
-            dateFormat="MMM d, yyyy"
-            placeholderText="Select a date"
-            className="bg-white text-black px-2 py-1 rounded-md"
-          />
-          <Calendar className="h-6 w-6 text-black absolute right-2 pointer-events-none" />
+        {/* Application Deadline */}
+        <div className="relative flex flex-row items-center">
+          <label className="text-base mr-2">Application deadline:</label>
+          <div className="relative flex items-center">
+            <DatePicker
+              name="application_deadline"
+              selected={
+                currentProjectInfo.application_deadline
+                  ? new Date(currentProjectInfo.application_deadline)
+                  : null
+              }
+              onChange={(date) =>
+                onInputChange({
+                  target: {
+                    name: "application_deadline",
+                    value: date ? date.toISOString() : "",
+                  },
+                })
+              }
+              dateFormat="MMM d, yyyy"
+              placeholderText="Select a date"
+              className="bg-white text-black px-2 py-1 rounded-md"
+            />
+            <Calendar className="h-6 w-6 text-black absolute right-2 pointer-events-none" />
+          </div>
         </div>
       </div>
-    </div>
 
       <Button asChild>
-        <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>View Applicants</Link>
+        <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>
+          View Applicants
+        </Link>
       </Button>
-      {isEditing &&(
-      <div className="flex justify-end space-x-2 mt-2">
-        <Button 
-          variant="outline" 
-          onClick={handleCancelEdit}
-          className="flex items-center"
-        >
-          <X className="mr-1 h-4 w-4" /> Cancel
-        </Button>
-        <Button 
-          onClick={handleSaveProject}
-          // disabled={isSaving}
-          className="flex items-center"
-        >
-          {isSaving ? (
-            <>
-              <RoundSpinner size='xs' color='white'/>
-              <span className='ml-1'>Saving...</span>
-            </>
-          ) : (
-            <>
-              <Check className="mr-1 h-4 w-4" /> Save
-            </>
-          )}
-        </Button>
-      </div>
-     )} 
+      {isEditing && (
+        <div className="flex justify-end space-x-2 mt-2">
+          <Button
+            variant="outline"
+            onClick={handleCancelEdit}
+            className="flex items-center"
+          >
+            <X className="mr-1 h-4 w-4" /> Cancel
+          </Button>
+          <Button onClick={handleSaveProject} className="flex items-center">
+            {isSaving ? (
+              <>
+                <RoundSpinner size="xs" color="white" />
+                <span className="ml-1">Saving...</span>
+              </>
+            ) : (
+              <>
+                <Check className="mr-1 h-4 w-4" /> Save
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

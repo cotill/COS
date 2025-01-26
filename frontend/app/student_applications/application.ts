@@ -59,7 +59,7 @@ export async function createStudentAccounts(teamMembers: Member[], projectId: nu
     let errorMessages: string[] = [];
     const teamId= uuidv4();
 
-    // intial payload
+    // initial payload
     const basePayload ={
       user_metadata: {
         project_id: projectId,
@@ -71,7 +71,7 @@ export async function createStudentAccounts(teamMembers: Member[], projectId: nu
     
     for (const member of teamMembers){
       try{
-        // create custom payload for each memeber
+        // create custom payload for each member
         const payLoad = {
           email: member.email,
           ...basePayload,

@@ -2,8 +2,6 @@ import ProjectDetail from "@/components/employeeComponents/project-detail";
 import Headingbar from "@/components/employeeComponents/Headingbar";
 import {createClient} from '@/utils/supabase/server';
 import { Project } from "@/utils/types";
-import { Info } from 'lucide-react';
-import { ArrowRightCircle } from 'lucide-react';
 
 const supabase = createClient();
 
@@ -21,28 +19,9 @@ export default async function ProjectPage({params,} : {params : Promise<{slug : 
 
     return (
         <div>
-            <Headingbar
-                text={project.title}
-            />
+            <Headingbar text={project.title} />
            
             <ProjectDetail project={project} creatorName={creatorName} approvalName={approvalName} dispatcherName={dispatcherName}/>
-
-            {/* project description stuff before Sponsor */}
-            {/* <div className="text-white flex items-center justify-between py-2">
-                <div className="flex items-center">
-                    <h1 className="mr-2 text-lg font-semibold">Project Description</h1>
-                    <Info className="mr-2" /> 
-                </div>
-                <button className="bg-white text-black px-4 py-1 rounded-full flex items-center space-x-2">
-                    <span>Draft</span>
-                    <span className="mx-2">|</span>
-                    <ArrowRightCircle size={20} />
-                </button>
-            </div>
-            <div className="w-full h-32 p-2  bg-gray-300 border border-gray-600 rounded-xl">
-                huge paragraph with the description of the project but idk how to get it from supabase yet. :) 
-            </div> */}
-
         </div>
     );
 }
