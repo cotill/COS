@@ -50,7 +50,7 @@ export enum Department_Types {
 }
 
 export interface Project {
-    project_id: string; 
+    project_id: number; 
     title: string;
     creator_email: string;
     approval_email: string | null; 
@@ -71,7 +71,7 @@ export interface Project {
     applications_allowed: boolean | null;
     dispatcher_email: string | null;
     dispatched_date: string | null;
-    project_budget: number | null;
+    project_budget: number;
 }
 
 export enum Universities{
