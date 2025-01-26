@@ -1,13 +1,13 @@
 "use client"
 
 import React from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Project, Project_Status } from '@/utils/types'
 import { Hand, Info, Pencil, X, Check } from 'lucide-react';
-import ReactMarkdown from "react-markdown";
-import DatePicker from "react-datepicker"; // npm install react-datepicker
+import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
-import { Calendar } from "lucide-react";
+import "./customDatePickerWidth.css";
+import ReactMarkdown from "react-markdown";
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import {RoundSpinner} from "@/components/ui/spinner";
@@ -30,11 +30,22 @@ interface ProjectDetailProps{
   dispatcherName: string | null,
 }
 
+
 export default function ProjectDetail({project, creatorName, approvalName, dispatcherName } : ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [projStatus, setProjStatus] = useState<Project_Status>(project.status);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isMessage, setMessage] = useState<string | null >(null);
+  const timeoutLength = 1000;
+
+  useEffect(() => {
+    if (isMessage) {
+      const timer = setTimeout(() => {
+        setMessage(null);
+      }, timeoutLength);
+      return () => clearTimeout(timer);
+    }
+  }, [isMessage]);
 
   // need to store the original data so that we can revert back
   const [originalProjectInfo, setOriginalProjectInfo] = useState<Project>(project);
@@ -52,6 +63,9 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
     return localDateTime;
   }
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({length: 5}, (_,i) => (currentYear+i).toString());
   
   // modifies the current project object
   const onInputChange = (event : {target: {name: any, value: any}}) => {
@@ -68,16 +82,22 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
     setTimeout(() => {
       setIsSaving(false);
       setIsEditing(false)
-    }, 1000);
+    }, timeoutLength);
     // save logic
     try {
       const updatedData: Partial<Project> = getChangedData(originalProjectInfo, currentProjectInfo); 
+      if (Object.keys(updatedData).length === 0) {
+        setMessage("No changes detected to update the project.");
+        setCurrentProjectInfo(originalProjectInfo)
+        return;
+      }
       await onUpdateProject(updatedData, project.project_id);
 
       setOriginalProjectInfo(currentProjectInfo);
 
     } catch (error) {
       alert(`Failed to update project ${error}`);
+      setCurrentProjectInfo(originalProjectInfo);
     }finally {
     }
 
@@ -90,6 +110,14 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
     setIsEditing(!isEditing);
   }
 
+  function updateDate(date: Date | undefined) {
+    onInputChange({
+      target: {
+        name: "application_deadline",
+        value: date ? date.toISOString() : "",
+      },
+    })
+  }
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
@@ -118,10 +146,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           </Button>
 
           {/* Project status button */}
-          <ProjectStatusButton
-            status={projStatus}
-            setProjStatus={setProjStatus}
-          />
+          <ProjectStatusButton initial_status={originalProjectInfo.status} status={currentProjectInfo.status} setProjStatus={(status) => onInputChange({target: {name: "status", value: status}})} allowClick={isEditing}/>
         </div>
       </div>
       <Dialog
@@ -167,8 +192,9 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
               name="description"
               value={currentProjectInfo.description}
               onChange={onInputChange}
-              className="w-full h-48  text-sm max-h-48 p-2 rounded-md text-black focus:outline-none"
+              className="w-full h-48  text-sm max-h-48 p-2 rounded-md text-black focus:outline-none bg-gray-300 "
               placeholder="Enter project description"
+              readOnly={!isEditing}
             />
           </div>
         ) : (
@@ -179,15 +205,19 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           </div>
         )}
       </div>
-
-      <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center">
+      
+      {/* Budget, Deadline and Start Term */}
+      {/* <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center"> */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-white my-4">
+        
         {/* Budget */}
-        <div className=" relative flex flex-row items-center">
-          <label className="text-base mr-2">Budget:</label>
-          <div className="flex items-center">
-            <span className="text-white font-medium">$</span>
-            <input
+        <div className="space-y-2 w-full">
+          <label htmlFor="budget">Budget</label>
+          <div className="relative">
+          <span className="absolute left-3 top-1 text-black">$</span>
+          <input
               type="number"
+              min="0"
               placeholder="Enter budget"
               name="project_budget"
               value={currentProjectInfo.project_budget}
@@ -199,35 +229,60 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
                   },
                 })
               }
-              className="ml-2 p-1 rounded-md text-black"
+              readOnly={!isEditing}
+              className={`p-1 pl-7 rounded-md text-black w-full outline-none ${!isEditing ? 'cursor-default' : ''}`}
             />
           </div>
         </div>
 
         {/* Application Deadline */}
-        <div className="relative flex flex-row items-center">
-          <label className="text-base mr-2">Application deadline:</label>
-          <div className="relative flex items-center">
+        {/* <div className="relative flex flex-col items-center space-y-2"> */}
+        <div className="space-y-2 w-full">
+          <label className="text-base">Application deadline</label>
+            <div className="customDatePickerWidth">
             <DatePicker
               name="application_deadline"
               selected={
-                currentProjectInfo.application_deadline
-                  ? new Date(currentProjectInfo.application_deadline)
-                  : null
+              currentProjectInfo.application_deadline
+                ? new Date(currentProjectInfo.application_deadline)
+                : null
               }
               onChange={(date) =>
-                onInputChange({
-                  target: {
-                    name: "application_deadline",
-                    value: date ? date.toISOString() : "",
-                  },
-                })
+              onInputChange({
+                target: {
+                name: "application_deadline",
+                value: date ? date.toISOString() : "",
+                },
+              })
               }
-              dateFormat="MMM d, yyyy"
+              dateFormat="MMM d, yyyy hh:mm aa "
+              timeFormat="p"
               placeholderText="Select a date"
-              className="bg-white text-black px-2 py-1 rounded-md"
+              className={`bg-white text-black py-1 rounded-md outline-none w-full ${!isEditing ? 'cursor-default' : ''}`}
+              showTimeSelect
+              minDate={new Date()}
+              toggleCalendarOnIconClick
+              showIcon
+              locale="mst-us"
+              readOnly={!isEditing}
             />
-            <Calendar className="h-6 w-6 text-black absolute right-2 pointer-events-none" />
+            </div>
+        </div>
+        
+        {/* Start Term */}
+        <div className=" relative flex flex-col items-center">
+          <label className="text-base capitalize">start team</label>
+          <div className="flex items-center space-x-2">
+            <select className='text-black focus:outline-none'>
+              {["Jan","May", "Sept"].map((choice) => (
+                <option key={choice} value={choice}>{choice}</option>
+              ))}
+            </select>
+            <select className='text-black focus:outline-none'>
+              {years.map((choice) => (
+                <option key={choice} value={choice}>{choice}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -237,6 +292,8 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           View Applicants
         </Link>
       </Button>
+      {/* error message */}
+      {isMessage && <div className='text-red-400 text-center'>{isMessage}</div>}
       {isEditing && (
         <div className="flex justify-end space-x-2 mt-2">
           <Button

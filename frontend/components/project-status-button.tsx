@@ -11,8 +11,10 @@ import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { ChevronRight } from "lucide-react"
 
 interface ProjectStatusButtonProp {
+  initial_status: Project_Status;
   status: Project_Status;
   setProjStatus: (new_status: Project_Status) => void;
+  allowClick: boolean;
 }
 
 const statusConfig: Record<Project_Status, {color: string}> = {
@@ -27,18 +29,18 @@ const statusConfig: Record<Project_Status, {color: string}> = {
   COMPLETED: { color: "bg-[#154406]" },
   CANCELLED: { color: "bg-black" },
 }
-const checkStatusSelectable = (current_status: Project_Status, targetStatus: Project_Status) : boolean => {
-  const currentIndex = ProjectStatusOrder.indexOf(current_status);
+const checkStatusSelectable = (initial_status: Project_Status, targetStatus: Project_Status) : boolean => {
+  const initialIndex = ProjectStatusOrder.indexOf(initial_status);
   const targetIndex = ProjectStatusOrder.indexOf(targetStatus);
 
-  return  targetIndex >= currentIndex ? true : false; // if target index is less than or equal to the current index, then the target status is not selectable
+  return  targetIndex >= initialIndex ? true : false; // if target index is less than or equal to the initial index, then the target status is not selectable
 }
 
 function getNextStatus(currentStatus: Project_Status): Project_Status{
   const currentStatusIndex = ProjectStatusOrder.indexOf(currentStatus);
   return currentStatusIndex <  ProjectStatusOrder.length -1 ? ProjectStatusOrder[currentStatusIndex+1] : currentStatus;
 }
-export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonProp){
+export function ProjectStatusButton({initial_status,status, setProjStatus, allowClick}:ProjectStatusButtonProp){
   const currentConfig = statusConfig[status];
   function handleStatusChange (target_status: Project_Status){
     if(target_status !== status) {// if the current status is not the status that was clicked, then call function
@@ -55,7 +57,11 @@ export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonP
     <div className="flex">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn("h-9 px-4 rounded-l-full flex items-center font-medium text-white focus:outline-none hover:bg-opacity-40",currentConfig.color)} >
+            <button className={cn(
+              `h-9 px-4 rounded-l-full flex items-center font-medium text-white focus:outline-none transition-all duration-200 ease-in-out ${allowClick ? 'hover:bg-opacity-40': 'cursor-default'}`,
+              currentConfig.color)} 
+              disabled={!allowClick}
+              >
             <div className="flex items-center space-x-2">
               <div className={cn("w-2 h-2 rounded-full bg-current")} />
               <span>{status}</span>
@@ -64,12 +70,12 @@ export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonP
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-40 max-w-40 bg-[#413F46]/95 border-gray-400">
           {ProjectStatusOrder.map((statusKey) => {
-            const isSelectable = checkStatusSelectable(status, statusKey);
+            const isSelectable = checkStatusSelectable(initial_status, statusKey);
             return (
               <DropdownMenuItem
                 key={statusKey}
                 disabled={!isSelectable}
-                onClick={() => isSelectable && handleStatusChange(statusKey)}
+                onSelect={() => isSelectable && allowClick && handleStatusChange(statusKey)}
                 className={cn(
                   "flex items-center space-x-2 text-white focus:outline-none",
                   "transition-colors duration-100 ease-in-out",
@@ -88,9 +94,10 @@ export function ProjectStatusButton({status, setProjStatus}:ProjectStatusButtonP
       <button
         onClick={handleNextStatus}
         className={cn(
-          "h-9 px-2 rounded-r-full border-l flex items-center hover:bg-opacity-40",
+          `h-9 px-2 rounded-r-full border-l flex items-center transition-all duration-200 ease-in-out ${allowClick ? 'hover:bg-opacity-40': 'cursor-default'}`,
           currentConfig.color ,borderColor,
         )}
+        disabled={!allowClick}
       >
         <ChevronRight className={`h-5 w-5 ${borderColor}`} />
       </button>

@@ -72,6 +72,7 @@ export interface Project {
     dispatcher_email: string | null;
     dispatched_date: string | null;
     project_budget: number;
+    start_term: string | null;
 }
 
 export enum Universities{
