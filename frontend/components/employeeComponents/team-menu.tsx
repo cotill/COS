@@ -1,11 +1,23 @@
 import React from "react";
-import Link from "next/link";
+
+type Members = {
+  full_name: string;
+  major: string;
+  email: string;
+  resume: string;
+};
 
 interface TeamMenuProps {
   onClose: () => void;
+  teamsData: {
+    projectName: string;
+    university: string;
+    teamName: string;
+    members: Members[];
+  };
 }
 
-const TeamMenu: React.FC<TeamMenuProps> = ({ onClose }) => {
+const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData }) => {
   return (
     <>
       {/* Backdrop Overlay */}
@@ -19,7 +31,7 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose }) => {
         <div className="w-1/4 bg-gray-900 text-white rounded-lg shadow-lg">
           <div className="flex items-center justify-between p-3 border-b border-gray-700">
             <div className="flex items-center gap-2">
-              <span className="text-l font-semibold">Project Name</span>
+              <span className="text-l font-semibold">{teamsData.projectName}</span>
             </div>
             <button className="text-xl font-bold" onClick={onClose}>
               &times;
@@ -28,65 +40,34 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose }) => {
 
           <div className="p-4 space-y-3">
             <div>
-                <span>University: Greendale Community College</span>
+              <span>University: {teamsData.university}</span>
             </div>
             <div>
-                <span>Team Name: Greendale Human Being</span>
+              <span>Team Name: {teamsData.teamName}</span>
             </div>
-            <div className="flex items-center justify-between">
-                <span>Member 1 - Degree</span>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's email shows up now *wow*")}>
-                    Email
-                </button>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's resume shows up now *wow*")}>
-                    View Resume
-                </button>
-            </div>
-            <div className="flex items-center justify-between">
-                <span>Member 2 - Degree</span>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's email shows up now *wow*")}>
-                    Email
-                </button>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's resume shows up now *wow*")}>
-                    View Resume
-                </button>
-            </div>
-            <div className="flex items-center justify-between">
-                <span>Member 3 - Degree</span>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's email shows up now *wow*")}>
-                    Email
-                </button>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's resume shows up now *wow*")}>
-                    View Resume
-                </button>
-            </div>
-            <div className="flex items-center justify-between">
-                <span>Member 4 - Degree</span>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's email shows up now *wow*")}>
-                    Email
-                </button>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's resume shows up now *wow*")}>
-                    View Resume
-                </button>
-            </div>
-            <div className="flex items-center justify-between">
-                <span>Member 5 - Degree</span>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's email shows up now *wow*")}>
-                    Email
-                </button>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's resume shows up now *wow*")}>
-                    View Resume
-                </button>
-            </div>
-            <div className="flex items-center justify-between">
-                <span>Member 6 - Degree</span>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's email shows up now *wow*")}>
-                    Email
-                </button>
-                <button className="outline rounded-lg p-0.5" onClick={() => alert("Pretend that the person's resume shows up now *wow*")}>
-                    View Resume
-                </button>
-            </div>
+            {teamsData.members.map((member, index) => (
+              <div className="flex flex-col gap-3" key={index}>
+                <div className="flex justify-between items-center">
+                  <span className="flex-1">
+                    {member.full_name} - {member.major}
+                  </span>
+                  <div className="flex space-x-2 flex-wrap">
+                    <button
+                      className="outline rounded-lg p-0.5"
+                      onClick={() => alert(`Email: ${member.email}`)}
+                    >
+                      Email
+                    </button>
+                    <button
+                      className="outline rounded-lg p-0.5"
+                      onClick={() => window.open(member.resume, "_blank")}
+                    >
+                      View Resume
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

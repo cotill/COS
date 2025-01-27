@@ -31,11 +31,26 @@ type Project = {
   status: string;
 };
 
+type Members = {
+  full_name: string;
+  major: string;
+  email: string;
+  resume: string;
+};
+
+type Team = {
+  team_name: string;
+  university: string;
+  title: string;
+  members: Members[];
+}
+
 export function SponsoredList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<'team' | 'name'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [projects, setProjects] = useState<Project[]>([]);
+  const [teams, setTeams] = useState<Team>();
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -96,7 +111,56 @@ export function SponsoredList() {
     } finally {
       setLoading(false);
     }
-  };  
+  };
+  
+  const fetchTeams = async ( projectId: string ) => {
+    console.log('Fetching teams...');
+    try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          console.error("Error getting session: ", sessionError);
+          return;
+        }
+
+        const { data: teamsData, error: teamsError } = await supabase
+          .from('Applications')
+          .select(`
+            team_name,
+            university,
+            Projects!Applications_project_id_fkey (title),
+            members
+          `)
+          .eq('project_id', projectId)
+          .eq('status', 'APPROVED')
+          .single();
+            
+        if (teamsError) {
+          console.error("Error fetching teams: ", teamsError);
+        } else if (teamsData) {
+          const projectTitle = teamsData.Projects?.title ?? 'Unknown Title';
+
+          const members = teamsData.members || [];
+          const memberDetails = members.map((member: any) => ({
+            full_name: member.full_name,
+            major: member.major,
+            email: member.email,
+            resume: member.resume,
+      }));
+          setTeams({
+            team_name: teamsData.team_name,
+            university: teamsData.university,
+            title: projectTitle,
+            members: memberDetails,
+          });
+        }
+    } catch (err) {
+      console.error('Unexpected error: ', err);
+    }
+  };
 
   useEffect(() => {
     fetchProjects();
@@ -153,6 +217,12 @@ export function SponsoredList() {
     ACTIVE: '#008080',
     COMPLETED: '#154406',
     CANCELLED: 'black',
+  };
+
+  const handleTeamDetails = async (projectId: string) => {
+    await fetchTeams(projectId); // Fetch the teams
+    setMenuOpen(true); // Open the menu
+    console.log('fetched team: ', teams);
   };
       
   return (
@@ -260,8 +330,11 @@ export function SponsoredList() {
                         <button className="outline rounded-lg p-0.5">
                         <Link href={`/Employee/Projects/${project.id}`}>Project Details</Link>
                         </button>
-                        <button className="outline rounded-lg p-0.5" onClick={() => setMenuOpen(!isMenuOpen)}>
-                            Team Details
+                        <button
+                          className="outline rounded-lg p-0.5"
+                          onClick={() => handleTeamDetails(project.id)}
+                        >
+                          Team Details
                         </button>
                         {isMenuOpen && (
                             <>
@@ -273,6 +346,12 @@ export function SponsoredList() {
                             <div className="fixed top-0 right-0 z-50">
                                 <TeamMenu
                                 onClose={() => setMenuOpen(false)}
+                                teamsData={{
+                                  projectName: teams.title,
+                                  university: teams.university,
+                                  teamName: teams.team_name,
+                                  members: teams.members,
+                                }}
                                 />
                             </div>
                             </>
