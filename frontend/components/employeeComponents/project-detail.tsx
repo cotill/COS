@@ -3,7 +3,7 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { Project, Project_Status } from '@/utils/types'
-import { Hand, Info, Pencil, X, Check } from 'lucide-react';
+import { Hand, Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from 'lucide-react';
 import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
 import "./customDatePickerWidth.css";
@@ -22,6 +22,7 @@ import timezone from 'date-and-time/plugin/timezone'; //// Import plugin for dat
 
 import { getChangedData, onUpdateProject } from '@/app/student_applications/project_detail_helper'; 
 import { ProjectStatusButton } from '../project-status-button';
+import { Http2ServerRequest } from 'http2';
 
 interface ProjectDetailProps{
   project: Project,
@@ -121,17 +122,39 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
-        <div className="flex items-center space-x-0.5">
-          <h1 className="text-xl font-bold text-white px-2">
-            Project Description
-          </h1>
-          <button
-            onClick={() => setIsPopupOpen(true)}
-            className="flex text-sm text-gray-300 hover:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none px-1"
-            aria-label="More Information"
-          >
-            <Info className="w-5 h-5" />
-          </button>
+        <div className="flex flex-col space-y-2">
+          {isEditing ? (
+            <div>
+              <input
+                name="title"
+                value={currentProjectInfo.title}
+                onChange={onInputChange}
+                className="w-full max-h-14 text-2xl font-bold p-2 rounded-md text-black focus:outline-none bg-gray-300 "
+                placeholder="Enter project title"
+                readOnly={!isEditing}
+                style={{
+                  width: `${currentProjectInfo.title.length +1}ch`,
+                }}
+              />
+            </div>
+          ) : (
+            <h1 className="text-2xl underline font-bold text-white px-2">
+              {currentProjectInfo.title}
+            </h1>
+          )}
+
+          <div className='flex items-center space-x-0.5'>
+            <h2 className="text-xl font-bold text-white px-2">
+              Project Description
+            </h2>
+            <button
+              onClick={() => setIsPopupOpen(true)}
+              className="flex text-sm text-gray-300 hover:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none px-1"
+              aria-label="More Information"
+            >
+              <Info className="w-5 h-5" />
+            </button>
+          </div>
         </div>
         {/* Project edit button */}
         <div className="flex items-center gap-6 justify-center">
@@ -270,15 +293,17 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         </div>
         
         {/* Start Term */}
-        <div className=" relative flex flex-col items-center">
+        <div className=" relative flex flex-col">
           <label className="text-base capitalize">start team</label>
           <div className="flex items-center space-x-2">
-            <select className='text-black focus:outline-none'>
+            <select className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? 'cursor-default' : ''}`}
+              disabled={!isEditing}>
               {["Jan","May", "Sept"].map((choice) => (
                 <option key={choice} value={choice}>{choice}</option>
               ))}
             </select>
-            <select className='text-black focus:outline-none'>
+            <select className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? 'cursor-default' : ''}`}
+            disabled={!isEditing}>
               {years.map((choice) => (
                 <option key={choice} value={choice}>{choice}</option>
               ))}
@@ -287,11 +312,30 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         </div>
       </div>
 
-      <Button asChild>
-        <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>
-          View Applicants
-        </Link>
-      </Button>
+      
+
+      {/* Applications */}
+      <div>
+        <h2 className="text-xl font-bold text-white py-2">
+          Applications
+        </h2>
+        <div className='space-x-2'>
+          <Button asChild className='text-md space-x-1'>
+            <Link href={`/Employee/Projects/${project.project_id}/Applicants`}> {/* change this */}
+              <span>Application Link</span>
+              <ArrowUpRight/>
+            </Link>
+          </Button>
+          <Button asChild className='text-md space-x-1'>
+            <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>
+              <span>View Applicants</span>
+              <ChevronRight/>
+            </Link>
+          </Button>
+        </div>
+      </div>
+      
+      
       {/* error message */}
       {isMessage && <div className='text-red-400 text-center'>{isMessage}</div>}
       {isEditing && (
