@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { UserRole, EmployeeLevel } from "@/utils/types";
+import { UserRole, EmployeeLevel, Department_Types } from "@/utils/types";
 
 export const signUpAction = async (formData: FormData) => {
   const first_name = formData.get("first_name")?.toString();
@@ -46,7 +46,7 @@ export const signUpAction = async (formData: FormData) => {
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: `${origin}/auth/confirm`,
       data: {
         user_role: UserRole.EMPLOYEE,
         full_name,
