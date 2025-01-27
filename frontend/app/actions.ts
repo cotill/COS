@@ -5,22 +5,43 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { UserRole } from "@/utils/types";
+import { UserRole, EmployeeLevel } from "@/utils/types";
 
 export const signUpAction = async (formData: FormData) => {
+  const first_name = formData.get("first_name")?.toString();
+  const last_name = formData.get("last_name")?.toString();
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
-  const supabase = await createClient();
-  const origin = (await headers()).get("origin");
-
-  if (!email || !password) {
-    return encodedRedirect(
-      "error",
-      "/sign-up",
-      "Email and password are required",
-    );
+  const title = formData.get("title")?.toString();
+  const department = formData.get("department")?.toString();
+  console.log("user sign up data",{
+    first_name,
+    last_name,
+    email,
+    password,
+    department,
+  });
+  const emailRegex = /^[^\s@]+@ttg\.com$/i;
+  
+  if (!first_name || first_name.trim().length ==0) {
+    return encodedRedirect("error", "/sign-up", "First name is required");
+  }
+  if (!last_name || last_name.trim().length ==0) {
+    return encodedRedirect("error", "/sign-up", "Last name is required");
+  }
+  if (!email || email.trim().length ==0 /*|| !emailRegex.test(email)*/) {
+    return encodedRedirect("error", "/sign-up", "Tartigrade Email is required");
   }
 
+  if (!password) {
+    return encodedRedirect("error", "/sign-up", "Password is required");
+  }
+  if (!department){
+    return encodedRedirect("error", "/sign-up", "Department is required");
+  }
+  const full_name = `${first_name.charAt(0).toUpperCase() + first_name.slice(1)} ${last_name.charAt(0).toUpperCase() + last_name.slice(1)}`;
+  const supabase = await createClient();
+  const origin = (await headers()).get("origin");
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -28,8 +49,10 @@ export const signUpAction = async (formData: FormData) => {
       emailRedirectTo: `${origin}/auth/callback`,
       data: {
         user_role: UserRole.EMPLOYEE,
-        full_name: "fake name",
-        level: 2,
+        full_name,
+        department: department,
+        title: title,
+        level: EmployeeLevel.LEVEL_0,
       }
     },
   });
