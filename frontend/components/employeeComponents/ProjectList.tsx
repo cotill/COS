@@ -33,7 +33,7 @@ type Project = {
   status: string;
 };
 
-export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filter: string }) {
+export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: string; filter: string, dateRange: { startDate: Date | null; endDate: Date | null } }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<'date' | 'name'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -101,18 +101,38 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
   });
 
   const filteredProjects = sortedProjects.filter((project) => {
+    // console.log('BREAK')
+    // console.log('BREAK')
+    // console.log('BREAK')
+    // console.log(project.name)
+    const projectDate = new Date(project.date);
+    // console.log('projectDate = ', projectDate)
+    // console.log('project date test: ', project.date)
+    // const matchStart = (!dateRange.startDate || projectDate >= dateRange.startDate)
+    // console.log('matchStart = ', matchStart, ': ', dateRange.startDate)
+    // const matchEnd = (!dateRange.endDate || projectDate <= dateRange.endDate)
+    // console.log('matchEnd = ', matchEnd, ': ', dateRange.endDate)
+    // const matchSame = (dateRange.startDate && dateRange.endDate && dateRange.startDate === dateRange.endDate && projectDate === dateRange.startDate);
+    // console.log('matchSame = ', matchSame)
+    // const matchesDate = matchStart && matchEnd;
+    const matchesDate = (!dateRange.startDate || projectDate >= dateRange.startDate) &&
+      (!dateRange.endDate || projectDate <= dateRange.endDate)
+    // console.log('matchesDate = ', matchesDate)
+
     const matchesDepartment =
-      selectedDepartments.length === 0 ||
-      selectedDepartments.includes(project.department);
+      selectedDepartments.length === 0 || selectedDepartments.includes(project.department);
+  
     const matchesStatus =
-      selectedStatus.length === 0 ||
-      selectedStatus.includes(project.status);
-    const matchesSearchTerm = project[filter as keyof Project]
+      selectedStatus.length === 0 || selectedStatus.includes(project.status);
+  
+    const matchesSearchTerm = filter === 'date' ? true : project[filter as keyof Project]
       ?.toString()
       ?.toLowerCase()
       ?.includes(searchTerm.toLowerCase());
-    return matchesDepartment && matchesStatus && matchesSearchTerm;
+  
+    return matchesDate && matchesDepartment && matchesStatus && matchesSearchTerm;
   });
+  
 
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
@@ -130,18 +150,18 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
   };
 
   const departmentColors: { [key: string]: string } = { // PLACEHOLDER COLORS
-    ENGINEERING: '#FF6B6B', // Red
-    COMPUTER_SCIENCE: '#4CAF50', // Green
-    BIOMEDICAL: '#FFD700', // Gold
-    SUSTAINABILITY: '#1E90FF', // Blue
+    ENGINEERING: '#FFA767',
+    COMPUTER_SCIENCE: '#63B3FF',
+    BIOMEDICAL: '#E75973',
+    SUSTAINABILITY: '#81C26C',
   };
 
   const statusColors: { [key: string]: string } = {
-    DRAFT: '#788292',
+    DRAFT: 'white',
     REVIEW: '#D7B634',
     APPROVED: '#81C26C',
-    REJECTED: '#FF6B6B',
-    DISPATCHED: '#000000',
+    REJECTED: '#E75973',
+    DISPATCHED: '#000080',
     AWARDED: '#4B006E',
     ACTIVE: '#008080',
     COMPLETED: '#154406',
@@ -199,15 +219,27 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
                 </TableHead>
                 <TableHead className="rounded-tr-2xl rounded-br-2xl">
                   <button
-                    className="px-4 py-2 rounded"
+                    className="px-4 py-2 rounded flex items-center space-x-2"
                     onClick={handleClearFilters}
                     disabled={selectedDepartments.length === 0 && selectedStatus.length === 0} // Disable when no filters are selected
                   >
-                    <span className={`${selectedDepartments.length === 0 && selectedStatus.length === 0 ? 'text-gray-400' : 'text-white'}`}>
+                    <span
+                      className={`${
+                        selectedDepartments.length === 0 && selectedStatus.length === 0
+                          ? 'text-gray-400'
+                          : 'text-white'
+                      }`}
+                    >
                       Clear
                     </span>
-                    <span className={`ml-2 font-bold ${selectedDepartments.length === 0 && selectedStatus.length === 0 ? 'text-gray-400' : 'text-[#E75973]'}`}>
-                      ⓧ
+                    <span
+                      className={`${
+                        selectedDepartments.length === 0 && selectedStatus.length === 0
+                          ? 'bg-gray-400 text-gray-200'
+                          : 'bg-[#E75973] text-white'
+                      } rounded-full h-4 w-4 flex items-center justify-center text-[12px]`}
+                    >
+                      ×
                     </span>
                   </button>
                 </TableHead>
@@ -229,7 +261,7 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
                         borderBottomLeftRadius: '0.5rem',
                       }}
                     >
-                      {project.date.substring(0, 10)}
+                      {new Date(project.date).toLocaleString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'}).substring(0,10)}
                     </TableCell>
                     <TableCell>{project.name}</TableCell>
                     <TableCell>
@@ -250,7 +282,7 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
                         style={{
                           backgroundColor: statusColors[project.status],
                           display: 'inline-block',
-                          color: 'white',
+                          color: project.status === 'DRAFT' ? 'black' : 'white', // Conditional color
                           padding: '0.25rem 0.75rem',
                           borderRadius: '1.0rem',
                         }}

@@ -59,7 +59,13 @@ export function DropdownFilter({
         onClick={() => setIsOpen((prev) => !prev)}
       >
         <span>{title}</span>
-        <span className="ml-2">{isOpen ? '▲' : '▼'}</span>
+        <span
+          className={`ml-2 ${
+            selectedOptions.length > 0 ? 'text-[#E75973]' : 'text-white'
+          }`}
+        >
+          {isOpen ? '▲' : '▼'}
+        </span>
       </button>
       {isOpen && (
         <div
