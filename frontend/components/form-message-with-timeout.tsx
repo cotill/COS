@@ -12,7 +12,7 @@ export function FormMessageWithTimeout({ message }: { message: Message }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 3000); // Message will disappear after 3 seconds
+    }, 6000); // Message will disappear after 6 seconds
 
     return () => clearTimeout(timer);
   }, [message]);
