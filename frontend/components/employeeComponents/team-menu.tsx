@@ -7,64 +7,94 @@ type Members = {
   resume: string;
 };
 
+type Team = {
+  team_name: string;
+  university: string;
+  title: string;
+  bio: string;
+  members: Members[];
+}
+
 interface TeamMenuProps {
   onClose: () => void;
-  teamsData: {
-    projectName: string;
-    university: string;
-    teamName: string;
-    members: Members[];
-  };
+  teamsData: Team | null;
 }
 
 const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData }) => {
+  if (teamsData == null) {
+    return (
+      <div className="fixed inset-0 z-50 flex justify-center items-center">
+      <div className="flex justify-between p-4 bg-gray-900 text-white rounded-lg shadow-lg w-auto space-x-4">
+              <span className="text-lg">No team data available</span>
+              <button className="text-2xl font-bold" onClick={onClose}>
+                &times;
+              </button>
+            </div>
+          </div>
+    );
+  }
+
   return (
     <>
-      {/* Backdrop Overlay */}
-      <div 
-        className="fixed inset-0 bg-black opacity-10 z-40" 
-        onClick={onClose} 
-      />
-      
-      {/* Modal Container */}
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        onClick={onClose}
+      ></div>
+
+      {/* Modal */}
       <div className="fixed inset-0 z-50 flex justify-center items-center">
-        <div className="w-1/4 bg-gray-900 text-white rounded-lg shadow-lg">
-          <div className="flex items-center justify-between p-3 border-b border-gray-700">
-            <div className="flex items-center gap-2">
-              <span className="text-l font-semibold">{teamsData.projectName}</span>
+        <div
+          className="bg-gray-900 text-white rounded-lg shadow-lg w-auto max-w-[450px] max-h-[300px] overflow-y-auto"
+        >
+          {/* Modal Header (Sticky) */}
+          <div className="sticky top-0 bg-gray-900 z-10 p-4 border-b border-gray-700">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">{teamsData.title}</h2>
+              <button className="text-2xl font-bold" onClick={onClose}>
+                &times;
+              </button>
             </div>
-            <button className="text-xl font-bold" onClick={onClose}>
-              &times;
-            </button>
           </div>
 
+          {/* Modal Content */}
           <div className="p-4 space-y-3">
             <div>
               <span>University: {teamsData.university}</span>
             </div>
             <div>
-              <span>Team Name: {teamsData.teamName}</span>
+              <span>Team Name: {teamsData.team_name}</span>
+            </div>
+            <div>
+              <span>About: {teamsData.bio}</span>
+            </div>
+            <div>
+              <span>Members:</span>
             </div>
             {teamsData.members.map((member, index) => (
-              <div className="flex flex-col gap-3" key={index}>
-                <div className="flex justify-between items-center">
-                  <span className="flex-1">
-                    {member.full_name} - {member.major}
+              <div
+                className="flex items-center justify-between"
+                key={index}
+              >
+                <span>
+                  {member.full_name}{/* - {member.major}*/}
+                </span>
+                <div className="flex space-x-4">
+                  <span>
+                    {member.email}
                   </span>
-                  <div className="flex space-x-2 flex-wrap">
-                    <button
-                      className="outline rounded-lg p-0.5"
-                      onClick={() => alert(`Email: ${member.email}`)}
-                    >
-                      Email
-                    </button>
-                    <button
-                      className="outline rounded-lg p-0.5"
-                      onClick={() => window.open(member.resume, "_blank")}
-                    >
-                      View Resume
-                    </button>
-                  </div>
+                  {/* <button
+                    className="outline rounded-lg px-2 py-1"
+                    onClick={() => alert(`Email: ${member.email}`)}
+                  >
+                    Email
+                  </button> */}
+                  <button
+                    className="outline rounded-lg px-2 py-1"
+                    onClick={() => window.open(member.resume, "_blank")}
+                  >
+                    View Resume
+                  </button>
                 </div>
               </div>
             ))}

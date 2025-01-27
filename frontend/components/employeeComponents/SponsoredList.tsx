@@ -42,6 +42,7 @@ type Team = {
   team_name: string;
   university: string;
   title: string;
+  bio: string;
   members: Members[];
 }
 
@@ -50,7 +51,7 @@ export function SponsoredList() {
   const [sortColumn, setSortColumn] = useState<'team' | 'name'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [projects, setProjects] = useState<Project[]>([]);
-  const [teams, setTeams] = useState<Team>();
+  const [teams, setTeams] = useState<Team | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -90,7 +91,7 @@ export function SponsoredList() {
 
         const { data, error } = await supabase
             .from('Projects')
-            .select('project_id, title, project_budget, status')
+            .select('project_id, title, Applications!Projects_awarded_application_id_fkey(team_name), status')
             .eq('sponsor_email', userEmail);
   
         if (error) {
@@ -101,7 +102,7 @@ export function SponsoredList() {
             data.map((project) => ({
                 id: project.project_id,
                 name: project.title,
-                team: project.project_budget,
+                team: project.Applications?.team_name?? 'Project Not Awarded',
                 status: project.status,
             }))
         );
@@ -132,6 +133,7 @@ export function SponsoredList() {
             team_name,
             university,
             Projects!Applications_project_id_fkey (title),
+            about_us,
             members
           `)
           .eq('project_id', projectId)
@@ -154,6 +156,7 @@ export function SponsoredList() {
             team_name: teamsData.team_name,
             university: teamsData.university,
             title: projectTitle,
+            bio: teamsData.about_us,
             members: memberDetails,
           });
         }
@@ -241,8 +244,8 @@ export function SponsoredList() {
                 </TableHead>
                 <TableHead onClick={() => handleSort('team')} className="cursor-pointer text-white">
                   {sortColumn === 'team'
-                    ? `Team Name (Using budget as stand in) ${sortOrder === 'asc' ? '▲' : '▼'}`
-                    : 'Team Name (Using budget as stand in) ▲▼'}
+                    ? `Team Name ${sortOrder === 'asc' ? '▲' : '▼'}`
+                    : 'Team Name ▲▼'}
                 </TableHead>
                 <TableHead>
                   <DropdownFilter
@@ -344,15 +347,10 @@ export function SponsoredList() {
                                 onClick={() => setMenuOpen(false)} // Close modal when clicking backdrop
                             />
                             <div className="fixed top-0 right-0 z-50">
-                                <TeamMenu
-                                onClose={() => setMenuOpen(false)}
-                                teamsData={{
-                                  projectName: teams.title,
-                                  university: teams.university,
-                                  teamName: teams.team_name,
-                                  members: teams.members,
-                                }}
-                                />
+                            <TeamMenu
+                              onClose={() => setMenuOpen(false)}
+                              teamsData={teams ?? null} // Pass null if teams is null
+                            />
                             </div>
                             </>
                         )}
