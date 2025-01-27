@@ -187,19 +187,32 @@ export function SponsoredList() {
                     }}
                     title="Status"
                     visibleProjectCount={currentProjects.length}
+                    height={100} 
                   />
                 </TableHead>
                 <TableHead className="rounded-tr-2xl rounded-br-2xl">
                   <button
-                    className="px-4 py-2 rounded"
+                    className="px-4 py-2 rounded flex items-center space-x-2"
                     onClick={handleClearFilters}
-                    disabled={selectedStatus.length === 0} // Disable when no filters are selected
+                    disabled={ selectedStatus.length === 0} // Disable when no filters are selected
                   >
-                    <span className={`${selectedStatus.length === 0 ? 'text-gray-400' : 'text-white'}`}>
+                    <span
+                      className={`${
+                        selectedStatus.length === 0
+                          ? 'text-gray-400'
+                          : 'text-white'
+                      }`}
+                    >
                       Clear
                     </span>
-                    <span className={`ml-2 font-bold ${selectedStatus.length === 0 ? 'text-gray-400' : 'text-[#E75973]'}`}>
-                      ⓧ
+                    <span
+                      className={`${
+                        selectedStatus.length === 0
+                          ? 'bg-gray-400 text-gray-200'
+                          : 'bg-[#E75973] text-white'
+                      } rounded-full h-4 w-4 flex items-center justify-center text-[12px]`}
+                    >
+                      ×
                     </span>
                   </button>
                 </TableHead>

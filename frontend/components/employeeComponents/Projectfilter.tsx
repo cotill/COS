@@ -6,6 +6,7 @@ type ProjectFilterProps = {
   onSelect: (option: string) => void;
   title: string;
   visibleProjectCount: number;
+  height: number;
 };
 
 export function DropdownFilter({
@@ -14,14 +15,15 @@ export function DropdownFilter({
   onSelect,
   title,
   visibleProjectCount,
+  height,
 }: ProjectFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownWidth, setDropdownWidth] = useState<number>(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const projectRowHeight = 72; // Fixed height per project row
+  const projectRowHeight = height; // Fixed height per project row
   const dynamicMaxHeight = visibleProjectCount * projectRowHeight;
-  const fallbackHeight = 72;
+  const fallbackHeight = height;
   const maxHeight = `${Math.min(dynamicMaxHeight || fallbackHeight, 300)}px`;
 
   // Calculate the width based on the widest option
@@ -59,7 +61,13 @@ export function DropdownFilter({
         onClick={() => setIsOpen((prev) => !prev)}
       >
         <span>{title}</span>
-        <span className="ml-2">{isOpen ? '▲' : '▼'}</span>
+        <span
+          className={`ml-2 ${
+            selectedOptions.length > 0 ? 'text-[#E75973]' : 'text-white'
+          }`}
+        >
+          {isOpen ? '▲' : '▼'}
+        </span>
       </button>
       {isOpen && (
         <div
