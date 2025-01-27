@@ -19,6 +19,7 @@ export interface Student{
     major: string;
     github?: string;
     team_id: string;
+    ttg_email: string;
 }
 
 export enum EmployeeLevel {
