@@ -145,10 +145,29 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
     fetchEmployeeDetails();
   }, [currentProjectInfo.sponsor_email, supabase]);
 
-  function handleClearSponsor() {
-    setSponsorData(null);
-    currentProjectInfo.sponsor_email == null; 
-    // should we put a thing here so i can only remove my name? 
+  const handleClearSponsor = async () => {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+  
+    if ( userError || !user) {
+      redirect("/sign-in")
+    }
+    const { data: employee } = await supabase
+    .from("Employees")
+    .select("level")
+    .eq("employee_id", user.id)
+    .single();
+    
+    if (employee?.level !== 3 ) {
+      alert("You do not have permission to remove the sponsor.");
+      return;
+    }
+    else{
+      setSponsorData(null);
+    currentProjectInfo.sponsor_email == null;
+    }    
   }
 
   const handleAutofill = async () => {
@@ -163,7 +182,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
     const { data, error } = await supabase
     .from("Employees")
-    .select("full_name, email, title, department, employee_id")
+    .select("full_name, email, title, department, employee_id, level")
     .eq("employee_id", user.id)
     .single();
 
@@ -172,8 +191,14 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       setError(error.message);
       return;
     }
-
-    setSponsorData(data as unknown as Employee);
+    if (data.level == 3 ) {
+      setSponsorData(data as unknown as Employee);
+      return;
+    }else{
+      alert("You do not have permission to sponsor a project.");
+      return;
+    }
+    
   };
 
   
@@ -383,7 +408,6 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             onClick={sponsorData ? handleClearSponsor : handleAutofill}
           >
             {sponsorData ? "Remove" : "Sponsor"}
-
           </Button>
         )}
       </div>
@@ -395,6 +419,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             type="text"
             value={sponsorData?.full_name ?? ""}
             readOnly={!isEditing}
+            onChange={onInputChange}
             className="p-1 rounded-md bg-white text-black outline-none"
           />
         </div>
@@ -405,6 +430,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             type="email"
             value={currentProjectInfo.sponsor_email || sponsorData?.email || ""}
             readOnly={!isEditing}
+            onChange={onInputChange}
             className="p-1 rounded-md bg-white text-black outline-none"
           />
         </div>
@@ -415,6 +441,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             type="text"
             value={sponsorData?.department ?? ""}
             readOnly={!isEditing}
+            onChange={onInputChange}
             className="p-1 rounded-md bg-white text-black outline-none"
           />
         </div>
@@ -425,6 +452,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             type="text"
             value={sponsorData?.title ?? ""}
             readOnly={!isEditing}
+            onChange={onInputChange}
             className="p-1 rounded-md bg-white text-black outline-none"
           />
         </div>
