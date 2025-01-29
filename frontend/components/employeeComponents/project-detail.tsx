@@ -130,7 +130,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       if (!currentProjectInfo.sponsor_email) return;
       const { data, error } = await supabase
         .from("Employees")
-        .select("full_name, title, department")
+        .select("*")
         .eq("email", currentProjectInfo.sponsor_email)
         .single(); // Expect one record
 
@@ -143,7 +143,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
     };
 
     fetchEmployeeDetails();
-  }, [currentProjectInfo.sponsor_email, supabase]);
+  }, []);
 
   const handleClearSponsor = async () => {
     const {
@@ -166,7 +166,9 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
     }
     else{
       setSponsorData(null);
-    currentProjectInfo.sponsor_email == null;
+      onInputChange({
+        target: {name: "sponsor_email", value: null  }
+      })
     }    
   }
 
@@ -182,7 +184,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
     const { data, error } = await supabase
     .from("Employees")
-    .select("full_name, email, title, department, employee_id, level")
+    .select("*")
     .eq("employee_id", user.id)
     .single();
 
@@ -191,14 +193,20 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       setError(error.message);
       return;
     }
+    
     if (data.level == 3 ) {
       setSponsorData(data as unknown as Employee);
+      onInputChange({
+        target:{
+          name: "sponsor_email",
+          value: data.email 
+        }
+      })
       return;
     }else{
       alert("You do not have permission to sponsor a project.");
       return;
     }
-    
   };
 
   
@@ -418,8 +426,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           <input
             type="text"
             value={sponsorData?.full_name ?? ""}
-            readOnly={!isEditing}
-            onChange={onInputChange}
+            readOnly
             className="p-1 rounded-md bg-white text-black outline-none"
           />
         </div>
@@ -427,10 +434,9 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         <div className="flex flex-col">
           <label className="text-white">Email:</label>
           <input
-            type="email"
-            value={currentProjectInfo.sponsor_email || sponsorData?.email || ""}
-            readOnly={!isEditing}
-            onChange={onInputChange}
+            type="text"
+            value= {sponsorData?.email || ""}
+            readOnly
             className="p-1 rounded-md bg-white text-black outline-none"
           />
         </div>
@@ -440,8 +446,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           <input
             type="text"
             value={sponsorData?.department ?? ""}
-            readOnly={!isEditing}
-            onChange={onInputChange}
+            readOnly
             className="p-1 rounded-md bg-white text-black outline-none"
           />
         </div>
@@ -451,8 +456,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           <input
             type="text"
             value={sponsorData?.title ?? ""}
-            readOnly={!isEditing}
-            onChange={onInputChange}
+            readOnly
             className="p-1 rounded-md bg-white text-black outline-none"
           />
         </div>

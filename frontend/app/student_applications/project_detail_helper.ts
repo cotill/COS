@@ -26,10 +26,8 @@ export const getChangedData = (originalProjectInfo: Project, currentProjectInfo 
     Object.keys(originalProjectInfo).forEach(key => {
         if (originalProjectInfo[key as keyof Project] !== currentProjectInfo[key as keyof Project]) {
             const value = currentProjectInfo[key as keyof Project];
-            if (value !== null) {
-                (changedData as any)[key as keyof Project] = value;
-                console.log(`Key: ${key} was modified to value: ${value}`)
-            }
+            (changedData as any)[key as keyof Project] = value;
+            console.log(`Key: ${key} was modified to value: ${value}`)
         }
     });
 
