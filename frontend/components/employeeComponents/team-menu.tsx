@@ -10,7 +10,6 @@ type Members = {
 type Team = {
   team_name: string;
   university: string;
-  // title: string;
   bio: string;
   members: Members[];
 }
@@ -89,18 +88,12 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
                 key={index}
               >
                 <span>
-                  {member.full_name}{/* - {member.major}*/}
+                  {member.full_name}
                 </span>
                 <div className="flex space-x-4">
                   <span>
                     {member.email}
                   </span>
-                  {/* <button
-                    className="outline rounded-lg px-2 py-1"
-                    onClick={() => alert(`Email: ${member.email}`)}
-                  >
-                    Email
-                  </button> */}
                   <button
                     className="outline rounded-lg px-2 py-1"
                     onClick={() => window.open(member.resume, "_blank")}

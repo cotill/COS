@@ -41,7 +41,6 @@ type Members = {
 type Team = {
   team_name: string;
   university: string;
-  // title: string;
   bio: string;
   members: Members[];
 }
