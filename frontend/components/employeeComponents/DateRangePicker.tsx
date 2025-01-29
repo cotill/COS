@@ -1,6 +1,5 @@
 import React from 'react';
 import DatePicker from 'react-datepicker';
-// import "react-datepicker/dist/react-datepicker.css";
 import "@/components/employeeComponents/DateRangePicker.css";
 
 interface DateRangePickerProps {
@@ -19,19 +18,17 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   // Function to handle setting the end date to 23:59:59
   const handleEndDateChange = (date: Date | null) => {
     if (date) {
-      // Set the time to 23:59:59 for the end date
       date.setHours(23, 59, 59, 999);
     }
-    onEndDateChange(date);  // Pass the modified end date back
+    onEndDateChange(date);
   };
 
   // Function to handle setting the start date to 00:00:00
   const handleStartDateChange = (date: Date | null) => {
     if (date) {
-      // Set the time to 00:00:00 for the start date
       date.setHours(0, 0, 0, 0);
     }
-    onStartDateChange(date);  // Pass the modified start date back
+    onStartDateChange(date);
   };
 
   return (
@@ -47,7 +44,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
       />
       <DatePicker
         selected={endDate}
-        onChange={handleEndDateChange}  // Handle end date with 23:59:59
+        onChange={handleEndDateChange}
         dateFormat="yyyy-MM-dd"
         placeholderText="End Date"
         showPopperArrow={false}

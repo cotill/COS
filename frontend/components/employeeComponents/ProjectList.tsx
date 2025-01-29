@@ -48,7 +48,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
   const statusOptions = Object.values(Project_Status);
 
   const fetchProjects = async () => {
-    // console.log('Fetching projects...');
+    console.log('Fetching projects...');
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -58,7 +58,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
       if (error) {
         console.error('Error fetching projects:', error);
       } else if (data) {
-        // console.log('Fetched projects:', data);
+        console.log('Fetched projects:', data);
         setProjects(
           data.map((project) => ({
             id: project.project_id,
@@ -101,23 +101,10 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
   });
 
   const filteredProjects = sortedProjects.filter((project) => {
-    // console.log('BREAK')
-    // console.log('BREAK')
-    // console.log('BREAK')
-    // console.log(project.name)
     const projectDate = new Date(project.date);
-    // console.log('projectDate = ', projectDate)
-    // console.log('project date test: ', project.date)
-    // const matchStart = (!dateRange.startDate || projectDate >= dateRange.startDate)
-    // console.log('matchStart = ', matchStart, ': ', dateRange.startDate)
-    // const matchEnd = (!dateRange.endDate || projectDate <= dateRange.endDate)
-    // console.log('matchEnd = ', matchEnd, ': ', dateRange.endDate)
-    // const matchSame = (dateRange.startDate && dateRange.endDate && dateRange.startDate === dateRange.endDate && projectDate === dateRange.startDate);
-    // console.log('matchSame = ', matchSame)
-    // const matchesDate = matchStart && matchEnd;
+
     const matchesDate = (!dateRange.startDate || projectDate >= dateRange.startDate) &&
       (!dateRange.endDate || projectDate <= dateRange.endDate)
-    // console.log('matchesDate = ', matchesDate)
 
     const matchesDepartment =
       selectedDepartments.length === 0 || selectedDepartments.includes(project.department);
@@ -149,7 +136,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
     setSelectedStatus([]);
   };
 
-  const departmentColors: { [key: string]: string } = { // PLACEHOLDER COLORS
+  const departmentColors: { [key: string]: string } = {
     ENGINEERING: '#FFA767',
     COMPUTER_SCIENCE: '#63B3FF',
     BIOMEDICAL: '#E75973',
@@ -200,6 +187,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                     }}
                     title="Department"
                     visibleProjectCount={currentProjects.length}
+                    height={84}
                   />
                 </TableHead>
                 <TableHead>
@@ -215,6 +203,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                     }}
                     title="Status"
                     visibleProjectCount={currentProjects.length}
+                    height={84}
                   />
                 </TableHead>
                 <TableHead className="rounded-tr-2xl rounded-br-2xl">
@@ -282,7 +271,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                         style={{
                           backgroundColor: statusColors[project.status],
                           display: 'inline-block',
-                          color: project.status === 'DRAFT' ? 'black' : 'white', // Conditional color
+                          color: project.status === 'DRAFT' ? 'black' : 'white',
                           padding: '0.25rem 0.75rem',
                           borderRadius: '1.0rem',
                         }}

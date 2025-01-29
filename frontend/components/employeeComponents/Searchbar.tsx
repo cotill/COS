@@ -21,7 +21,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Determine the appropriate placeholder text based on the selected filter
   const getPlaceholderText = (filter: string) => {
     switch (filter) {
       case 'name':
@@ -39,7 +38,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         value={filter}
         onChange={(event) => {
           onFilterChange(event);
-          setShowDatePicker(event.target.value === 'date'); // Show date picker only when "date" is selected
+          setShowDatePicker(event.target.value === 'date');
         }}
         className="border-r px-5 py-2 text-gray-700 outline-none cursor-pointer"
         style={{
@@ -74,7 +73,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           value={value}
           onChange={onSearchChange}
           className="px-4 py-2 outline-none rounded-3xl w-full"
-          placeholder={getPlaceholderText(filter)} // Use the dynamic placeholder
+          placeholder={getPlaceholderText(filter)}
         />
       )}
     </div>
