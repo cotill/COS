@@ -9,7 +9,8 @@ import ApplicationTable from "./applicationTable";
 import {ApplicationPagination} from "./applicationPagination";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-
+import { ConfirmationDialog, ConfirmationDialogProp } from "../confirmationPopup";
+import { AlertDialog } from "../ui/alert-dialog";
 interface ApplicationListProps {
   projectId: number,
   employeeInfo: Employee
@@ -28,6 +29,11 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
 
     const [selectedTeam, setSelectedTeam] = useState<Application | null>(null);
     const isAnyApplicationApproved = projectApplications?.some((application) => application.status === Application_Status.APPROVED);
+
+    /*states that controls the alert dialog*/
+    const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
+    const [alertDialogProps, setAlertDialogProps] = useState<ConfirmationDialogProp | null>(null);
+  
     /**
      * The function will load all applications for a project
      */
@@ -171,13 +177,35 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
       
       await loadApplications();
     }
-  async function handleDeleteAllApps(){
+  const handleConfrimDeleteAllApps = async() => {
     try {
       await deleteAllApps(projectId); 
     } catch (error) {
       alert(error);
     }
-    await loadApplications();
+    finally{
+      setAlertDialogOpen(false);
+      await loadApplications();
+    }
+  }
+
+  async function handleDeleteAllApps()
+  {
+    if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
+      alert("Deleting all applications requires you to be level 2+");
+      return;
+    }
+
+      // set the properties for the confirmation dialog
+      setAlertDialogProps({
+        title: "Confirm Delete All",
+        description: (<>Are you sure you want to <span className='underline'>delete all</span> unapproved applications? <br />
+          This action cannot be undone.</>),
+        confirmationLabel: "Delete",
+        onConfirm: () => {handleConfrimDeleteAllApps()},
+        onCancel:() => {setAlertDialogOpen(false);}
+      });
+      setAlertDialogOpen(true)
   }
 
   if(isLoading) {
@@ -219,33 +247,37 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
             <Trash2 />
           </Button>
         </div>
-    <div className="space-y-4">
-      {/* Displays the application table */}
-      <ApplicationTable
-        currentApplications={currentApplications}
-        onViewDetails ={setSelectedTeam}
-        onDeleteApplication={handleDeleteApplication}
-        employeeInfo={employeeInfo}
-        isRefreshingTable={isRefreshingTable}
-      />
-      {/* Display the pagination */}
-      <ApplicationPagination 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(page: number) => setCurrentPage(page)}
-      />
-
-      {/* Display the team application*/}
-      <Dialog open={selectedTeam !== null} onOpenChange={() => setSelectedTeam(null)}>
-        <TeamDetailsDialog
-          team={selectedTeam}
-          onClose={() => setSelectedTeam(null)}
-          onApprove={isAnyApplicationApproved ? undefined : handleApprove}
-          onReject={isAnyApplicationApproved ? undefined : handleReject}
-          onPending={isAnyApplicationApproved ? undefined : handlePending}
+      <div className="space-y-4">
+        {/* Displays the application table */}
+        <ApplicationTable
+          currentApplications={currentApplications}
+          onViewDetails ={setSelectedTeam}
+          onDeleteApplication={handleDeleteApplication}
+          employeeInfo={employeeInfo}
+          isRefreshingTable={isRefreshingTable}
         />
-      </Dialog>
-    </div>
+        {/* Display the pagination */}
+        <ApplicationPagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page: number) => setCurrentPage(page)}
+        />
+
+        {/* Display the team application*/}
+        <Dialog open={selectedTeam !== null} onOpenChange={() => setSelectedTeam(null)}>
+          <TeamDetailsDialog
+            team={selectedTeam}
+            onClose={() => setSelectedTeam(null)}
+            onApprove={isAnyApplicationApproved ? undefined : handleApprove}
+            onReject={isAnyApplicationApproved ? undefined : handleReject}
+            onPending={isAnyApplicationApproved ? undefined : handlePending}
+          />
+        </Dialog>
+      </div>
+      {/* Alert Dialog will display when the user clicks the deleteAll button */}
+      <AlertDialog open={alertDialogOpen} onOpenChange={()=> setAlertDialogOpen(false)}>
+        {alertDialogProps && <ConfirmationDialog {...alertDialogProps}/>}
+      </AlertDialog>
     </div>
     </>
   )

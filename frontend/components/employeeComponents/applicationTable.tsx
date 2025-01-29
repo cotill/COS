@@ -26,8 +26,8 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
   if (isRefreshingTable){
     return <div className="text-center text-white">Loading applications...</div>;
   }
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogProps, setDialogProps] = useState<ConfirmationDialogProp | null>(null);
+  const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
+  const [alertDialogProps, setAlertDialogProps] = useState<ConfirmationDialogProp | null>(null);
 
   /**
    * if the employee is authorized to delete the application, this function will set the selected application id to the application id
@@ -47,7 +47,7 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
 
       const application_team_name = currentApplications.find(application => application.application_id === application_id)?.team_name;
       // set the properties for the confirmation dialog
-      setDialogProps({
+      setAlertDialogProps({
         title: "Confirm Delete",
         description: (<>Are you sure you want to delete <span className="font-bold">{application_team_name}</span> application? <br />
           This action cannot be undone.</>),
@@ -57,7 +57,7 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
         },
         onCancel:() => {handleCancelDelete()}
       });
-      setDialogOpen(true);// open the confirmation dialog
+      setAlertDialogOpen(true);// open the confirmation dialog
   }
 
   /**
@@ -65,14 +65,14 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
    */
   const handleConfirmDelete = (application_id: number) => {
     onDeleteApplication(application_id); // call to the parent function to delete the application
-    setDialogOpen(false);
+    setAlertDialogOpen(false);
   };
 
   /**
    * This function will close the confirmation dialog
    */
   const handleCancelDelete = () => {
-    setDialogOpen(false);
+    setAlertDialogOpen(false);
   }
   return (
     <>
@@ -126,8 +126,8 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
         </TableBody>
       </Table>
       {/* Alert Dialog will display when the user clicks the delete button */}
-      <AlertDialog open={dialogOpen} onOpenChange={()=> setDialogOpen(false)}>
-        {dialogProps && <ConfirmationDialog {...dialogProps}/>}
+      <AlertDialog open={alertDialogOpen} onOpenChange={()=> setAlertDialogOpen(false)}>
+        {alertDialogProps && <ConfirmationDialog {...alertDialogProps}/>}
       </AlertDialog>
     </>
   );

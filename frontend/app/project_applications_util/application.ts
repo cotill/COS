@@ -118,14 +118,24 @@ export async function deleteApplication(application_id: number){
 }
 
 /**
- * Will delete all applications except for the application which has been approved
+ * Delete all applications except for the application which has been approved.
+ * The resumes for each application will then be deleted asynchronous in parallel
  * @param project_id the project_id for the applications to be deleted 
  */
 export const deleteAllApps = async(project_id: number) => {
-  const {data: deletedApps, error} = await supabase.from("Applications").delete().eq('project_id',project_id).neq('status',Application_Status.APPROVED);
+  const {data: deletedApps, error} = await supabase.from("Applications").delete().eq('project_id',project_id).neq('status',Application_Status.APPROVED).select();
   if(error) throw new Error (`delete application error: ${error?.message}`);
+  
+  const appsToDelete = deletedApps as Application[]; // cast to Application[]
+  const deleteResumePromises: Promise<void>[] = appsToDelete.map(app => deleteResume(app)) // map the deleteResume function to each application
 
-  console.log("Deleted apps are ", deletedApps);
+  try{
+    // promise all performs the operations in parallel -> ALl or Nothing - if 1 fail all fails
+    await Promise.all(deleteResumePromises); 
+  }
+  catch(error: any){
+    throw new Error(`${error?.message}`);
+  }
 };
 
 /**
@@ -134,12 +144,16 @@ export const deleteAllApps = async(project_id: number) => {
  */
 //delete application resumes
 const deleteResume=async(deletedApplicationData:Application)=>{
-  let resume_url: string[] = [];
+  let resume_urls: string[] = [];
   deletedApplicationData.members.map(member => {
-    resume_url.push(member.resume)
+    resume_urls.push(member.resume)
   });
+
+  //check if there were any resumes urls
+  if (resume_urls.length === 0) return;
+
   // delete resumes
-  const {data: deleteResume_data, error: deletedResume_error} = await supabase.storage.from("applicants_resumes").remove(resume_url);
+  const {data: deleteResume_data, error: deletedResume_error} = await supabase.storage.from("applicants_resumes").remove(resume_urls);
   if(deleteResume_data === null || deletedResume_error) throw new Error(`Error deleting applicant's resume: ${deletedResume_error.message}`);
 }
 
