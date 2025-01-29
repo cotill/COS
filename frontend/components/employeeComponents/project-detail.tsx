@@ -147,7 +147,8 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
   function handleClearSponsor() {
     setSponsorData(null);
-    currentProjectInfo.sponsor_email == null;
+    currentProjectInfo.sponsor_email == null; 
+    // should we put a thing here so i can only remove my name? 
   }
 
   const handleAutofill = async () => {
@@ -160,12 +161,10 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       redirect("/sign-in")
     }
 
-
-    // Fetch employee details based on Employee_id
     const { data, error } = await supabase
     .from("Employees")
-    .select("full_name, email, title, department, employee_id") // Include Employee_id for debugging
-    .eq("employee_id", user.id) // Querying by Employee_id
+    .select("full_name, email, title, department, employee_id")
+    .eq("employee_id", user.id)
     .single();
 
     if (error) {
@@ -378,9 +377,9 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         <h2 className="text-xl font-bold text-white py-2">Sponsor</h2>
         {isEditing && (
           <Button
-            className={`px-3 py-1 rounded-md ${
-              sponsorData ? "bg-[#F72E53]" : "bg-[#81C26C]"
-            } text-white`}
+            className={`px-3 py-1 rounded-full ${
+              sponsorData ? "bg-[#F72E53] hover:bg-[#e8516d]" : "bg-[#81C26C] hover:bg-[#7cb36a]"
+            } text-black`}
             onClick={sponsorData ? handleClearSponsor : handleAutofill}
           >
             {sponsorData ? "Remove" : "Sponsor"}
