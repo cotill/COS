@@ -147,6 +147,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
   function handleClearSponsor() {
     setSponsorData(null);
+    currentProjectInfo.sponsor_email == null;
   }
 
   const handleAutofill = async () => {
