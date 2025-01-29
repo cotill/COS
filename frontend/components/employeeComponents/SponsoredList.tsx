@@ -41,17 +41,18 @@ type Members = {
 type Team = {
   team_name: string;
   university: string;
-  title: string;
+  // title: string;
   bio: string;
   members: Members[];
 }
 
-export function SponsoredList() {
+export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filter: string;}) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<'team' | 'name'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [projects, setProjects] = useState<Project[]>([]);
   const [teams, setTeams] = useState<Team | null>(null);
+  const [title, setTitle] = useState<string>();
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -98,13 +99,15 @@ export function SponsoredList() {
             console.error('Error fetching projects:', error);
         } else if (data) {
             console.log('Fetched projects:', data);
+            console.log("CHECK: ", data[0].Applications.length)
+            console.log("Raw Supabase Response:", JSON.stringify(data, null, 2));
             setProjects(
-            data.map((project) => ({
+              data.map((project) => ({
                 id: project.project_id,
                 name: project.title,
-                team: project.Applications?.team_name?? 'Project Not Awarded',
+                team: (project.Applications as unknown as { team_name: string } | null)?.team_name ?? '**Project Not Awarded**',
                 status: project.status,
-            }))
+              }))
         );
       }
     } catch (err) {
@@ -114,6 +117,37 @@ export function SponsoredList() {
     }
   };
   
+  const fetchTitle = async ( projectId: string ) => {
+    console.log('Fetching title...');
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.error("Error getting session: ", sessionError);
+        return;
+      }
+
+      const { data: titleData, error: titleError } = await supabase
+        .from('Projects')
+        .select(`title`)
+        .eq('project_id', projectId)
+        .single()
+
+      if (titleError) {
+        console.error('Error fetching title:', titleError);
+      } else if (titleData) {
+        console.log('Fetched title:', titleData);
+
+        setTitle(titleData.title);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
+  };
+
   const fetchTeams = async ( projectId: string ) => {
     console.log('Fetching teams...');
     try {
@@ -132,7 +166,6 @@ export function SponsoredList() {
           .select(`
             team_name,
             university,
-            Projects!Applications_project_id_fkey (title),
             about_us,
             members
           `)
@@ -140,11 +173,15 @@ export function SponsoredList() {
           .eq('status', 'APPROVED')
           .single();
             
-        if (teamsError) {
+        if (!teamsData) {
+          console.warn("No approved team found for this project.");
+          setTeams(null);
+          return;
+        } else if (teamsError) {
           console.error("Error fetching teams: ", teamsError);
+          setTeams(null);
+          return;
         } else if (teamsData) {
-          const projectTitle = teamsData.Projects?.title ?? 'Unknown Title';
-
           const members = teamsData.members || [];
           const memberDetails = members.map((member: any) => ({
             full_name: member.full_name,
@@ -155,7 +192,6 @@ export function SponsoredList() {
           setTeams({
             team_name: teamsData.team_name,
             university: teamsData.university,
-            title: projectTitle,
             bio: teamsData.about_us,
             members: memberDetails,
           });
@@ -193,7 +229,13 @@ export function SponsoredList() {
     const matchesStatus =
       selectedStatus.length === 0 ||
       selectedStatus.includes(project.status);
-    return matchesStatus;
+
+    const matchesSearchTerm = project[filter as keyof Project]
+      ?.toString()
+      ?.toLowerCase()
+      ?.includes(searchTerm.toLowerCase());
+    
+    return matchesStatus && matchesSearchTerm;
   });
 
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
@@ -223,7 +265,8 @@ export function SponsoredList() {
   };
 
   const handleTeamDetails = async (projectId: string) => {
-    await fetchTeams(projectId); // Fetch the teams
+    await fetchTitle(projectId);
+    await fetchTeams(projectId);
     setMenuOpen(true); // Open the menu
     console.log('fetched team: ', teams);
   };
@@ -350,6 +393,7 @@ export function SponsoredList() {
                             <TeamMenu
                               onClose={() => setMenuOpen(false)}
                               teamsData={teams ?? null} // Pass null if teams is null
+                              title={title ?? 'Unknown Title'}
                             />
                             </div>
                             </>

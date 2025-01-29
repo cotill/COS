@@ -10,7 +10,7 @@ type Members = {
 type Team = {
   team_name: string;
   university: string;
-  title: string;
+  // title: string;
   bio: string;
   members: Members[];
 }
@@ -18,19 +18,31 @@ type Team = {
 interface TeamMenuProps {
   onClose: () => void;
   teamsData: Team | null;
+  title: string;
 }
 
-const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData }) => {
+const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
   if (teamsData == null) {
     return (
       <div className="fixed inset-0 z-50 flex justify-center items-center">
-      <div className="flex justify-between p-4 bg-gray-900 text-white rounded-lg shadow-lg w-auto space-x-4">
-              <span className="text-lg">No team data available</span>
+        <div
+          className="bg-gray-900 text-white rounded-lg shadow-lg w-auto max-w-[450px] max-h-[300px] overflow-y-auto"
+        >
+          <div className="sticky top-0 bg-gray-900 z-10 p-4 border-b border-gray-700">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">{title}</h2>
               <button className="text-2xl font-bold" onClick={onClose}>
                 &times;
               </button>
             </div>
           </div>
+          <div className="p-4 space-y-3">
+            <div>
+              <span>No team details available as the project has not been awarded at this time.</span>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -47,10 +59,10 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData }) => {
         <div
           className="bg-gray-900 text-white rounded-lg shadow-lg w-auto max-w-[450px] max-h-[300px] overflow-y-auto"
         >
-          {/* Modal Header (Sticky) */}
+          {/* Modal Header */}
           <div className="sticky top-0 bg-gray-900 z-10 p-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{teamsData.title}</h2>
+              <h2 className="text-lg font-semibold">{title}</h2>
               <button className="text-2xl font-bold" onClick={onClose}>
                 &times;
               </button>
