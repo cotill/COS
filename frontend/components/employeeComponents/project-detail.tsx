@@ -23,6 +23,7 @@ import timezone from 'date-and-time/plugin/timezone'; //// Import plugin for dat
 import { getChangedData, onUpdateProject } from '@/app/student_applications/project_detail_helper'; 
 import { ProjectStatusButton } from '../project-status-button';
 import { Http2ServerRequest } from 'http2';
+import { createClient } from '@/utils/supabase/client';
 
 interface ProjectDetailProps{
   project: Project,
@@ -36,6 +37,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSponsored, setIsSponsored] = useState(false);
   const [isMessage, setMessage] = useState<string | null >(null);
   const timeoutLength = 1000;
 
@@ -119,6 +121,11 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       },
     })
   }
+
+  
+
+
+  
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
@@ -138,13 +145,13 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
               />
             </div>
           ) : (
-            <h1 className="text-2xl underline font-bold text-white px-2">
+            <h1 className="text-2xl underline font-bold text-white py-2">
               {currentProjectInfo.title}
             </h1>
           )}
 
           <div className='flex items-center space-x-0.5'>
-            <h2 className="text-xl font-bold text-white px-2">
+            <h2 className="text-xl font-bold text-white py-2">
               Project Description
             </h2>
             <button
@@ -312,7 +319,65 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         </div>
       </div>
 
-      
+      {/* Sponsors */}
+      <div>
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-xl font-bold text-white py-2">Sponsor</h2>
+        {isEditing && (
+          <Button
+          //   className={`px-3 py-1 rounded-md ${
+          //     isSponsored ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+          //   } text-white`}
+          //   onClick={isSponsored ? handleClearSponsor : handleAutofill}
+          >
+            {/* {isSponsored ? "Remove" : "Sponsor"} */}
+            a button
+          </Button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-col">
+          <label className="text-white">Name:</label>
+          <input
+            type="text"
+            value={"uh"}
+            readOnly={!isEditing}
+            className="p-1 rounded-md bg-white text-black outline-none"
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-white">Email:</label>
+          <input
+            type="email"
+            value={currentProjectInfo.sponsor_email || ""}
+            readOnly={!isEditing}
+            className="p-1 rounded-md bg-white text-black outline-none"
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-white">Department:</label>
+          <input
+            type="text"
+            value={currentProjectInfo.department}
+            readOnly={!isEditing}
+            className="p-1 rounded-md bg-white text-black outline-none"
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-white">Title:</label>
+          <input
+            type="text"
+            value={currentProjectInfo.title}
+            readOnly={!isEditing}
+            className="p-1 rounded-md bg-white text-black outline-none"
+          />
+        </div>
+      </div>
+    </div>
 
       {/* Applications */}
       <div>
