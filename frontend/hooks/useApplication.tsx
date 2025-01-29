@@ -1,10 +1,9 @@
 'use client'
-
+/*Encapsulate all application-project related state, making the logic resuable and cleaner to follow*/
 import { useEffect, useState } from 'react'
 import { Application_Status, Member,Application, Employee, EmployeeLevel, Project_Status } from '@/utils/types';
-// import { fetchApplications, rejectOtherApplications, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization, updateProjectStatus, deleteAllApps } from "@/app/project_applications_util/application";
 import * as applicationService from "@/app/project_applications_util/application";
-import { ConfirmationDialog, ConfirmationDialogProp} from "../components/confirmationPopup";
+import { ConfirmationDialogProp} from "../components/confirmationPopup";
 
 interface UseApplicationProps {
   project_id: number;

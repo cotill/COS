@@ -1,15 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Dialog } from "@/components/ui/dialog"
 import { TeamDetailsDialog } from './team-detail';
-import { Application_Status, Member,Application, Employee, EmployeeLevel, Project_Status } from '@/utils/types';
-import { fetchApplications, rejectOtherApplications, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization, updateProjectStatus, deleteAllApps } from "@/app/project_applications_util/application";
+import { Employee } from '@/utils/types';
 import ApplicationTable from "./applicationTable";
 import {ApplicationPagination} from "./applicationPagination";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { ConfirmationDialog, ConfirmationDialogProp } from "../confirmationPopup";
+import { ConfirmationDialog } from "../confirmationPopup";
 import { AlertDialog } from "../ui/alert-dialog";
 import { useApplications } from '@/hooks/useApplication';
 interface ApplicationListProps {
@@ -36,8 +34,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
     handleDeleteAllApps,
     alertDialogOpen,
     setAlertDialogOpen,
-    alertDialogProps,
-    setAlertDialogProps} = useApplications ({project_id:projectId,employeeInfo, applicationPerPage: 5});
+    alertDialogProps} = useApplications ({project_id:projectId,employeeInfo, applicationPerPage: 5});
 
   if(isLoading) {
     return <div className="text-center text-white">Loading...</div>;
