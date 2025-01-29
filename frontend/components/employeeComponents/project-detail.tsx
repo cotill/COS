@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useState, useEffect } from 'react'
-import { Project, Project_Status } from '@/utils/types'
+import { Project, Project_Status, Employee } from '@/utils/types'
 import { Hand, Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from 'lucide-react';
 import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
@@ -24,6 +24,7 @@ import { getChangedData, onUpdateProject } from '@/app/student_applications/proj
 import { ProjectStatusButton } from '../project-status-button';
 import { Http2ServerRequest } from 'http2';
 import { createClient } from '@/utils/supabase/client';
+import { redirect } from 'next/navigation';
 
 interface ProjectDetailProps{
   project: Project,
@@ -37,7 +38,8 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isSponsored, setIsSponsored] = useState(false);
+  const [sponsorData, setSponsorData] = useState<Employee | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isMessage, setMessage] = useState<string | null >(null);
   const timeoutLength = 1000;
 
@@ -121,10 +123,60 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       },
     })
   }
+  
+  const supabase = createClient();
+  useEffect(() => {
+    const fetchEmployeeDetails = async () => {
+      if (!currentProjectInfo.sponsor_email) return;
+      const { data, error } = await supabase
+        .from("Employees")
+        .select("full_name, title, department")
+        .eq("email", currentProjectInfo.sponsor_email)
+        .single(); // Expect one record
+
+      if (error) {
+        setError(error.message);
+        setSponsorData(null);
+      } else {
+        setSponsorData(data as Employee); // Type assertion for safety
+      }
+    };
+
+    fetchEmployeeDetails();
+  }, [currentProjectInfo.sponsor_email, supabase]);
+
+  function handleClearSponsor() {
+    setSponsorData(null);
+  }
+
+  const handleAutofill = async () => {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+  
+    if ( userError || !user) {
+      redirect("/sign-in")
+    }
+
+
+    // Fetch employee details based on Employee_id
+    const { data, error } = await supabase
+    .from("Employees")
+    .select("full_name, email, title, department, employee_id") // Include Employee_id for debugging
+    .eq("employee_id", user.id) // Querying by Employee_id
+    .single();
+
+    if (error) {
+      console.error("Supabase query error:", error.message);
+      setError(error.message);
+      return;
+    }
+
+    setSponsorData(data as unknown as Employee);
+  };
 
   
-
-
   
   return (
     <div className="relative">
@@ -325,13 +377,13 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         <h2 className="text-xl font-bold text-white py-2">Sponsor</h2>
         {isEditing && (
           <Button
-          //   className={`px-3 py-1 rounded-md ${
-          //     isSponsored ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
-          //   } text-white`}
-          //   onClick={isSponsored ? handleClearSponsor : handleAutofill}
+            className={`px-3 py-1 rounded-md ${
+              sponsorData ? "bg-[#F72E53]" : "bg-[#81C26C]"
+            } text-white`}
+            onClick={sponsorData ? handleClearSponsor : handleAutofill}
           >
-            {/* {isSponsored ? "Remove" : "Sponsor"} */}
-            a button
+            {sponsorData ? "Remove" : "Sponsor"}
+
           </Button>
         )}
       </div>
@@ -341,7 +393,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           <label className="text-white">Name:</label>
           <input
             type="text"
-            value={"uh"}
+            value={sponsorData?.full_name ?? ""}
             readOnly={!isEditing}
             className="p-1 rounded-md bg-white text-black outline-none"
           />
@@ -351,7 +403,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           <label className="text-white">Email:</label>
           <input
             type="email"
-            value={currentProjectInfo.sponsor_email || ""}
+            value={currentProjectInfo.sponsor_email || sponsorData?.email || ""}
             readOnly={!isEditing}
             className="p-1 rounded-md bg-white text-black outline-none"
           />
@@ -361,7 +413,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           <label className="text-white">Department:</label>
           <input
             type="text"
-            value={currentProjectInfo.department}
+            value={sponsorData?.department ?? ""}
             readOnly={!isEditing}
             className="p-1 rounded-md bg-white text-black outline-none"
           />
@@ -371,7 +423,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           <label className="text-white">Title:</label>
           <input
             type="text"
-            value={currentProjectInfo.title}
+            value={sponsorData?.title ?? ""}
             readOnly={!isEditing}
             className="p-1 rounded-md bg-white text-black outline-none"
           />
