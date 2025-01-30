@@ -14,8 +14,17 @@ import { useState } from "react";
 import { ConfirmationDialog, ConfirmationDialogProp } from "../confirmationPopup";
 import { AlertDialog } from "../ui/alert-dialog";
 import { confirmEmployeeAuthorization } from "@/app/project_applications_util/application";
-import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
+import { DropdownFilter } from '@/components/employeeComponents/appplicationFilter';
 import { FilterConfig } from "@/hooks/useSearchBar";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown } from "lucide-react"
 
 type ApplicationTableProps = {
   currentApplications: Application[] | [];
@@ -94,23 +103,9 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
   const handleCancelDelete = () => {
     setAlertDialogOpen(false);
   }
-  
-  // const handleSort = (column: 'date' | 'name' | 'size') => {
-  //   if (sortColumn === column) {
-  //     setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-  //   } else {
-  //     setSortColumn(column);
-  //     setSortOrder('asc');
-  //   }
-  // };
-  // const sortedApplications = applications ? [...applications].sort((applicationA, applicationB) => {
-  //   const valueA = applicationA[sortColumn as keyof Application];
-  //   const valueB = applicationB[sortColumn as keyof Application];
-  //   if (valueA == null || valueB == null) return 0;
-  //   if (valueA < valueB) return sortOrder === 'asc' ? -1 : 1;
-  //   if (valueA > valueB) return sortOrder === 'asc' ? 1 : -1;
-  //   return 0;
-  // }) : [];
+
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="space-y-4 rounded-3xl mt-4 px-4 pb-4" style={{ backgroundColor: '#1d1b23' }}>
       {isRefreshingTable &&
@@ -135,14 +130,44 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
                 : 'Size ▲▼'}
             </TableHead>
             <TableHead className="relative">
-              <DropdownFilter
+              {/* <DropdownFilter
                 options={statusOptions}
                 selectedOptions={selectedStatus}
                 onSelect={(option) => { handleSelectStatus(option as Application_Status)}}
                 title="Status"
                 visibleProjectCount={currentApplications.length}
                 height={84}
-              />
+              /> */}
+              <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="text-white pr-4 py-2 rounded flex items-center justify-between focus:outline-none"
+                    onClick={() => setIsOpen((prev) => !prev)}
+                  >
+                    <span>Status</span>
+                    <span
+                      className={`ml-2 ${
+                        selectedStatus.length > 0 ? 'text-[#E75973]' : 'text-white'
+                      }`}
+                    >
+                      {isOpen ? '▲' : '▼'}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="max-w-44 bg-black bg-opacity-70" onCloseAutoFocus={(e) => e.preventDefault()}>
+                  {/* <DropdownMenuSeparator /> */}
+                  {statusOptions.map((status) => (
+                    <DropdownMenuCheckboxItem
+                      key={status}
+                      checked={selectedStatus.includes(status)}
+                      onCheckedChange={() => handleSelectStatus(status)}
+                      className="text-white"
+                    >
+                      {status}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </TableHead>
             <TableHead className="rounded-tr-2xl rounded-br-2xl">
                 <button
@@ -166,10 +191,10 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
               <TableHead>{}</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="min-w-full">
           {currentApplications.length === 0 ? (
             <TableRow>
-            <TableCell colSpan={5} className="py-7 text-center text-gray-500 rounded-2xl">
+            <TableCell colSpan={6} className="py-7 text-center text-gray-500 rounded-2xl">
                 No matching Applications
               </TableCell>
             </TableRow>
