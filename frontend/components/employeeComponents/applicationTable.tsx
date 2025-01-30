@@ -14,17 +14,12 @@ import { useState } from "react";
 import { ConfirmationDialog, ConfirmationDialogProp } from "../confirmationPopup";
 import { AlertDialog } from "../ui/alert-dialog";
 import { confirmEmployeeAuthorization } from "@/app/project_applications_util/application";
-import { DropdownFilter } from '@/components/employeeComponents/appplicationFilter';
-import { FilterConfig } from "@/hooks/useSearchBar";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ChevronDown } from "lucide-react"
 
 type ApplicationTableProps = {
   currentApplications: Application[] | [];
@@ -53,10 +48,7 @@ function ApplicationTable({currentApplications,onViewDetails,onDeleteApplication
   const [alertDialogProps, setAlertDialogProps] = useState<ConfirmationDialogProp | null>(null);
 
   /*Filtering and searching applications */
-  // const [sortColumn, setSortColumn] = useState<'date' | 'name' | 'size'>('date');
-  // const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const statusOptions = Object.values(Application_Status);
-  // const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
 
   /**
    * if the employee is authorized to delete the application, this function will set the selected application id to the application id

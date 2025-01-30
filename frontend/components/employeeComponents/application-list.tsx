@@ -12,7 +12,7 @@ import { AlertDialog } from "../ui/alert-dialog";
 import { useApplications } from '@/hooks/useApplication';
 import { useSearchBar, FilterConfig } from "@/hooks/useSearchBar";
 import { useState } from "react";
-import { SearchBar } from "./Searchbar";
+import { SearchBar } from "./genericType_searchbar";
 interface ApplicationListProps {
   projectId: number,
   employeeInfo: Employee
@@ -69,7 +69,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const statusOptions = Object.values(Application_Status);
   const [selectedStatus, setSelectedStatus] = useState<Application_Status[]>([]);
-  console.log(`selected status is ${selectedStatus}`)
+
   // sort applications
   const sortedApplications = all_applications ? [...all_applications].sort((applicationA, applicationB) => {
     const valueA = applicationA[sortColumn as keyof Application];
@@ -82,8 +82,6 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
 
   // Apply filters
   const filteredApplications = filterData(sortedApplications, selectedStatus);
-
-  console.log(`application size is ${all_applications?.length}. sorted application is: ${sortedApplications.length}. filteredApplication is ${filteredApplications.length}`)
   
   //pagination
   const applicationsPerPage = 5;
