@@ -13,14 +13,14 @@ interface UseApplicationProps {
 export const useApplications = ({project_id, employeeInfo, applicationPerPage} : UseApplicationProps) => {
   const [isLoading, setIsLoading] = useState(true); // shows the loading icon for the entire page
   const [isRefreshingTable, setRefreshingTable] = useState(false); // controls the loading icon for the table 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [applications, setApplications] = useState<Application[] | null> (null);
+  // const [currentPage, setCurrentPage] = useState(1);
+  const [all_applications, setAllApplications] = useState<Application[] | null> (null);
   const [selectedTeam, setSelectedTeam] = useState<Application | null>(null);
 
-  const totalPages = applications ? Math.ceil(applications.length / applicationPerPage) : 0
-  const currentApplications = applications ? applications.slice((currentPage-1) * applicationPerPage, currentPage * applicationPerPage) : [];
+  // const totalPages = applications ? Math.ceil(applications.length / applicationPerPage) : 0
+  // const currentApplications = applications ? applications.slice((currentPage-1) * applicationPerPage, currentPage * applicationPerPage) : [];
 
-  const isAnyApplicationApproved = applications?.some((application) => application.status === Application_Status.APPROVED);
+  // const isAnyApplicationApproved = applications?.some((application) => application.status === Application_Status.APPROVED);
 
     /*states that controls the alert dialog*/
     const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
@@ -31,15 +31,15 @@ export const useApplications = ({project_id, employeeInfo, applicationPerPage} :
    */
   const loadApplications = async() =>
   {
-      const isIntialLoad : boolean = applications === null; // if there are no application we assume it because its the initial load
+      const isIntialLoad : boolean = all_applications === null; // if there are no application we assume it because its the initial load
 
       try {
           // if this is the first render, set the loading icon for the page,  else show the loading icon for the table
           (isIntialLoad) ?setIsLoading(true) :  setRefreshingTable(true);
           const application_result = await applicationService.fetchApplications(project_id);
-          setApplications(application_result);
+          setAllApplications(application_result);
       }catch(err){
-      setApplications(null);
+        setAllApplications(null);
       console.error(err);
       }finally{
           // set the loading icon for the page to false
@@ -190,14 +190,14 @@ export const useApplications = ({project_id, employeeInfo, applicationPerPage} :
   return {
     isLoading,
     isRefreshingTable,
-    applications,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    currentApplications,
+    all_applications,
+    // currentPage,
+    // setCurrentPage,
+    // totalPages,
+    // currentApplications,
     selectedTeam,
     setSelectedTeam,
-    isAnyApplicationApproved,
+    // isAnyApplicationApproved,
     handleApprove,
     handleReject,
     handlePending,

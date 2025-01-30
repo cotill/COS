@@ -20,7 +20,7 @@ export const ApplicationPagination = ({
 }: PaginationProps) => {
   return (
     <>
-      <Pagination>
+      <Pagination className="text-white">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
