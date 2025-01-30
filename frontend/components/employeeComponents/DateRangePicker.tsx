@@ -1,6 +1,5 @@
 import React from 'react';
-import DatePicker from 'react-datepicker';
-// import "react-datepicker/dist/react-datepicker.css";
+import DatePicker from 'react-datepicker'; //npm install react-datepicker --save
 import "@/components/employeeComponents/DateRangePicker.css";
 
 interface DateRangePickerProps {
