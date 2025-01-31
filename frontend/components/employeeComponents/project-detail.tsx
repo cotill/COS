@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useState, useEffect } from 'react'
-import { Project, Project_Status, Employee } from '@/utils/types'
+import { Project, Project_Status, Employee, Universities } from '@/utils/types'
 import { Hand, Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from 'lucide-react';
 import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
@@ -25,6 +25,8 @@ import { ProjectStatusButton } from '../project-status-button';
 import { Http2ServerRequest } from 'http2';
 import { createClient } from '@/utils/supabase/client';
 import { redirect } from 'next/navigation';
+import { FaGithub, FaGoogleDrive } from "react-icons/fa";
+
 
 interface ProjectDetailProps{
   project: Project,
@@ -406,62 +408,141 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
 
       {/* Sponsors */}
       <div>
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-bold text-white py-2">Sponsor</h2>
-        {isEditing && (
-          <Button
-            className={`px-3 py-1 rounded-full ${
-              sponsorData ? "bg-[#F72E53] hover:bg-[#e8516d]" : "bg-[#81C26C] hover:bg-[#7cb36a]"
-            } text-black`}
-            onClick={sponsorData ? handleClearSponsor : handleAutofill}
-          >
-            {sponsorData ? "Remove" : "Sponsor"}
-          </Button>
-        )}
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xl font-bold text-white pt-4">Sponsor</h2>
+          {isEditing && (
+            <Button
+              className={`px-3 py-1 rounded-full ${
+                sponsorData ? "bg-[#F72E53] hover:bg-[#e8516d]" : "bg-[#81C26C] hover:bg-[#7cb36a]"
+              } text-black`}
+              onClick={sponsorData ? handleClearSponsor : handleAutofill}
+            >
+              {sponsorData ? "Remove" : "Sponsor"}
+            </Button>
+          )}
+        </div>
+    
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+          <div className="flex flex-col">
+            <label className="text-white">Name:</label>
+            <input
+              type="text"
+              value={sponsorData?.full_name ?? ""}
+              readOnly
+              className="p-1 rounded-md bg-white text-black outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-white">Email:</label>
+            <input
+              type="text"
+              value= {sponsorData?.email || ""}
+              readOnly
+              className="p-1 rounded-md bg-white text-black outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-white">Department:</label>
+            <input
+              type="text"
+              value={sponsorData?.department ?? ""}
+              readOnly
+              className="p-1 rounded-md bg-white text-black outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-white">Title:</label>
+            <input
+              type="text"
+              value={sponsorData?.title ?? ""}
+              readOnly
+              className="p-1 rounded-md bg-white text-black outline-none"
+            />
+          </div>
+        </div>
+      </div>
+      
+      {/* Dispatch Information */}
+      <div>
+        <div className="flex justify-between items-center mb-2 ">
+          <h2 className="text-xl font-bold text-white pt-4">Dispatch Information </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+          <div className="flex flex-col">
+            <label className="text-white flex items-center gap-2"> <FaGoogleDrive/>Google Drive Link:</label>
+            <input
+              type="text"
+              placeholder="Enter Google Drive Link"
+              value={currentProjectInfo.google_link ?? ""}
+              onChange={(event) =>
+                onInputChange({
+                  target: {
+                    name: "google_link",
+                    value: event.target.value,
+                  },
+                })
+              }
+              readOnly={!isEditing}
+              className={`p-1 rounded-md text-black w-full outline-none ${!isEditing ? 'cursor-default' : ''}`}
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-white flex items-center gap-2"> <FaGithub/>GitHub Link:</label>
+            <input
+              type="text"
+              placeholder="Enter GitHub Link"
+              value={currentProjectInfo.github ?? ""}
+              onChange={(event) =>
+                onInputChange({
+                  target: {
+                    name: "github",
+                    value: event.target.value,
+                  },
+                })
+              }
+              readOnly={!isEditing}
+              className="p-1 rounded-md bg-white text-black outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-white">University:</label>
+            <select
+              value={currentProjectInfo.university ?? ""}
+              onChange={(event) =>
+                onInputChange({
+                  target: {
+                    name: "university",
+                    value: event.target.value as Universities,
+                  },
+                })
+              }
+              disabled={!isEditing}
+              className="p-2 rounded-md bg-white text-black outline-none"
+            >
+              <option value="" disabled>
+                Select a university
+              </option>
+              <option value="null">None</option>
+              <option value="University of Calgary">University of Calgary (UofC)</option>
+              <option value="University of British Columbia">University of British Columbia (UBC)</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-white">This is where the download buttons should be</label>
+            <Button> Download as PDF </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col">
-          <label className="text-white">Name:</label>
-          <input
-            type="text"
-            value={sponsorData?.full_name ?? ""}
-            readOnly
-            className="p-1 rounded-md bg-white text-black outline-none"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-white">Email:</label>
-          <input
-            type="text"
-            value= {sponsorData?.email || ""}
-            readOnly
-            className="p-1 rounded-md bg-white text-black outline-none"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-white">Department:</label>
-          <input
-            type="text"
-            value={sponsorData?.department ?? ""}
-            readOnly
-            className="p-1 rounded-md bg-white text-black outline-none"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-white">Title:</label>
-          <input
-            type="text"
-            value={sponsorData?.title ?? ""}
-            readOnly
-            className="p-1 rounded-md bg-white text-black outline-none"
-          />
-        </div>
-      </div>
-    </div>
+    
+      
+    
 
       {/* Applications */}
       <div>

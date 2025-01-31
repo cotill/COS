@@ -62,6 +62,7 @@ export interface Project {
     modified_date: string | null;
     activation_date: string | null;
     github: string | null;
+    google_link: string | null;
     status: Project_Status;
     university: Universities | null;
     application_link: string | null;
