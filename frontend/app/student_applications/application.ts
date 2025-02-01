@@ -112,7 +112,7 @@ export async function createStudentAccounts(
       };
 
       // send the API request
-      const response = await fetch("/project_applications_util", {
+      const response = await fetch("/student_applications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
