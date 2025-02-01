@@ -121,12 +121,8 @@ export default function ProjectDetail({
           originalProjectInfo.status,
           currentProjectInfo.status
         );
-      console.log(`the application link action was ${applicationLinkAction}`);
       if (applicationLinkAction === "create") {
         currentProjectInfo.application_link = uuidv4();
-        console.log(
-          `the application link ${currentProjectInfo.application_link}`
-        );
       } else if (applicationLinkAction === "delete") {
         currentProjectInfo.application_link = null;
       }
@@ -139,7 +135,7 @@ export default function ProjectDetail({
         setCurrentProjectInfo(originalProjectInfo);
         return;
       }
-
+      updatedData.modified_date = new Date().toISOString(); // include the date the data was last modified
       await onUpdateProject(updatedData, project.project_id);
       setOriginalProjectInfo(currentProjectInfo);
     } catch (error) {
@@ -349,6 +345,9 @@ export default function ProjectDetail({
               {project.activation_date && (
                 <p>Project activated on: {project.activation_date}</p>
               )}
+              {/* {project.modified_date && (
+                <p>Project activated on: {project.activation_date}</p>
+              )} */}
             </div>
           </DialogHeader>
         </DialogContent>
@@ -612,18 +611,21 @@ export default function ProjectDetail({
         </div>
       </div>
 
-      {/* Applications and Team Awarded*/}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+      {/* Applications, Team Awarded and Application Status*/}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
         {/* applications */}
         <div>
           <h2 className="text-xl font-bold text-white py-2">Applications</h2>
           <div className="space-x-2">
-            <Button asChild className="text-md space-x-1">
+            <Button
+              asChild
+              className="text-md space-x-1"
+              disabled={!originalProjectInfo.application_link}
+            >
               <Link
                 href={`/ApplicationForm/${originalProjectInfo.application_link}/`}
               >
                 {" "}
-                {/* change this */}
                 <span>Application Link</span>
                 <ArrowUpRight />
               </Link>
@@ -664,6 +666,50 @@ export default function ProjectDetail({
             </Dialog>
           </div>
         )}
+        {/* Application Status */}
+        <div className="flex gap-2 items-start [&_label]:text-white [&_h2]:text-white">
+          <h2 className="text-xl font-normal">Application Status:</h2>
+          <div className="text-md [&_label]:font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <div className="flex items-center mb-3 space-x-2">
+              <input
+                type="radio"
+                className="w-4 h-4"
+                id="project_link_open"
+                name="link_active"
+                checked={currentProjectInfo.link_active === true}
+                disabled={!isEditing}
+                onChange={() => {
+                  onInputChange({
+                    target: {
+                      name: "link_active",
+                      value: true,
+                    },
+                  });
+                }}
+              />
+              <label htmlFor="project_link_open">Open</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="radio"
+                className="w-4 h-4"
+                id="project_link_closed"
+                name="link_active"
+                checked={currentProjectInfo.link_active === false}
+                disabled={!isEditing}
+                onChange={() => {
+                  onInputChange({
+                    target: {
+                      name: "link_active",
+                      value: false,
+                    },
+                  });
+                }}
+              />
+              <label htmlFor="project_link_closed">Closed</label>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* error message */}
