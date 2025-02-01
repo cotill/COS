@@ -20,14 +20,16 @@ export const ApplicationPagination = ({
 }: PaginationProps) => {
   return (
     <>
-      <Pagination>
+      <Pagination className="text-white">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
               href="#"
               onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
               className={
-                currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                currentPage === 1 || totalPages === 0
+                  ? "pointer-events-none opacity-50"
+                  : ""
               }
             />
           </PaginationItem>
@@ -49,7 +51,7 @@ export const ApplicationPagination = ({
                 onPageChange(Math.min(currentPage + 1, totalPages))
               }
               className={
-                currentPage === totalPages
+                currentPage === totalPages || totalPages === 0
                   ? "pointer-events-none opacity-50"
                   : ""
               }

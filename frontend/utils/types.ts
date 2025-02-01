@@ -56,7 +56,7 @@ export interface Project {
     creator_email: string;
     approval_email: string | null; 
     sponsor_email: string | null; 
-    teamID: string | null; 
+    awarded_application_id: number | null; 
     description: string;
     department: Department_Types; 
     created_date: string; 
