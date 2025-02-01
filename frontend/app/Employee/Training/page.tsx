@@ -159,7 +159,7 @@ export default function TrainingPage() {
       } else {
         setLevel((level + 1) as Level);
         setMessage("Congratulations! You've advanced to the next level.");
-        setAnswers(new Array(quizzes[level + 1]?.questions.length).fill(""));
+        setAnswers(new Array(quizzes[(level + 1) as Level]?.questions.length).fill(""));
         setView("success");
       }
     } else {
