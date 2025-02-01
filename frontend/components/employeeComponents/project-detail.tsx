@@ -32,13 +32,14 @@ import timezone from "date-and-time/plugin/timezone"; //// Import plugin for dat
 import {
   getChangedData,
   onUpdateProject,
+  updateApplicationLink,
 } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
-import { Http2ServerRequest } from "http2";
 import { createClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
 import { TeamDetailsDialog } from "./team-detail";
+import { v4 as uuidv4 } from "uuid";
 
 interface ProjectDetailProps {
   project: Project;
@@ -114,6 +115,21 @@ export default function ProjectDetail({
     }, timeoutLength);
     // save logic
     try {
+      // logic for application link
+      const applicationLinkAction: "create" | "keep" | "delete" =
+        updateApplicationLink(
+          originalProjectInfo.status,
+          currentProjectInfo.status
+        );
+      console.log(`the application link action was ${applicationLinkAction}`);
+      if (applicationLinkAction === "create") {
+        currentProjectInfo.application_link = uuidv4();
+        console.log(
+          `the application link ${currentProjectInfo.application_link}`
+        );
+      } else if (applicationLinkAction === "delete") {
+        currentProjectInfo.application_link = null;
+      }
       const updatedData: Partial<Project> = getChangedData(
         originalProjectInfo,
         currentProjectInfo
@@ -123,8 +139,8 @@ export default function ProjectDetail({
         setCurrentProjectInfo(originalProjectInfo);
         return;
       }
-      await onUpdateProject(updatedData, project.project_id);
 
+      await onUpdateProject(updatedData, project.project_id);
       setOriginalProjectInfo(currentProjectInfo);
     } catch (error) {
       alert(`Failed to update project ${error}`);
@@ -139,15 +155,6 @@ export default function ProjectDetail({
   const handleProjectEdit = () => {
     setIsEditing(!isEditing);
   };
-
-  function updateDate(date: Date | undefined) {
-    onInputChange({
-      target: {
-        name: "application_deadline",
-        value: date ? date.toISOString() : "",
-      },
-    });
-  }
 
   const supabase = createClient();
   useEffect(() => {
@@ -235,19 +242,19 @@ export default function ProjectDetail({
 
   const onViewDetails = async () => {
     if (!currentProjectInfo.awarded_application_id) return;
-  
+
     // Fetch the awarded application from Supabase
     const { data, error } = await supabase
       .from("Applications")
       .select("*") // Fetch all application fields
       .eq("application_id", currentProjectInfo.awarded_application_id)
       .single();
-  
+
     if (error) {
       console.error("Error fetching team details:", error);
       return;
     }
-  
+
     setAwardedTeam(data); // Store the fetched team data
   };
 
@@ -369,7 +376,6 @@ export default function ProjectDetail({
       </div>
 
       {/* Budget, Deadline and Start Term */}
-      {/* <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center"> */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-white my-4">
         {/* Budget */}
         <div className="space-y-2 w-full">
@@ -614,7 +620,7 @@ export default function ProjectDetail({
           <div className="space-x-2">
             <Button asChild className="text-md space-x-1">
               <Link
-                href={`/Employee/Projects/${project.project_id}/Applicants`}
+                href={`/ApplicationForm/${originalProjectInfo.application_link}/`}
               >
                 {" "}
                 {/* change this */}
@@ -637,23 +643,25 @@ export default function ProjectDetail({
         {currentProjectInfo.awarded_application_id && (
           <div>
             <h2 className="text-xl font-bold text-white py-2">Team Awarded</h2>
-            
-          <Dialog open={!!awardedTeam} onOpenChange={() => setAwardedTeam(null)}>
-            <DialogTrigger asChild>
-              <Button onClick={onViewDetails}>
-                View Team Details
-                <ChevronRight/>
-              </Button>
-            </DialogTrigger>
+            <Dialog
+              open={!!awardedTeam}
+              onOpenChange={() => setAwardedTeam(null)}
+            >
+              <DialogTrigger asChild>
+                <Button onClick={onViewDetails}>
+                  View Team Details
+                  <ChevronRight />
+                </Button>
+              </DialogTrigger>
 
-            <TeamDetailsDialog 
-              team={awardedTeam} 
-              onClose={() => setAwardedTeam(null)} 
-              onApprove={undefined} 
-              onReject={undefined} 
-              onPending={undefined} 
-            />
-          </Dialog>
+              <TeamDetailsDialog
+                team={awardedTeam}
+                onClose={() => setAwardedTeam(null)}
+                onApprove={undefined}
+                onReject={undefined}
+                onPending={undefined}
+              />
+            </Dialog>
           </div>
         )}
       </div>
