@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { Project, Project_Status, Employee, Universities } from "@/utils/types";
+import { Project, Employee, Universities } from "@/utils/types";
 import {
   Hand,
   Info,
@@ -36,7 +36,6 @@ import {
 } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
 import { createClient } from "@/utils/supabase/client";
-import { redirect } from "next/navigation";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
 import { TeamDetailsDialog } from "./team-detail";
 import { v4 as uuidv4 } from "uuid";
@@ -47,6 +46,7 @@ interface ProjectDetailProps {
   creatorName: string | null;
   approvalName: string | null;
   dispatcherName: string | null;
+  originalLastModifiedByName: string | null;
   initialSponsorInfo: Employee | null;
 }
 
@@ -56,6 +56,7 @@ export default function ProjectDetail({
   creatorName,
   approvalName,
   dispatcherName,
+  originalLastModifiedByName,
   initialSponsorInfo,
 }: ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -141,7 +142,15 @@ export default function ProjectDetail({
         setCurrentProjectInfo(originalProjectInfo);
         return;
       }
-      updatedData.modified_date = new Date().toISOString(); // include the date the data was last modified
+      // update last modofiied by to the time and the current user
+      const modifiedDate = new Date().toISOString();
+      updatedData.last_modified_date = modifiedDate; // include the date the data was last modified
+      currentProjectInfo.last_modified_date = modifiedDate;
+      if (originalProjectInfo.last_modified_user !== employeeInfo.email) {
+        currentProjectInfo.last_modified_user = employeeInfo.email;
+        updatedData.last_modified_user;
+      }
+
       await onUpdateProject(updatedData, project.project_id);
       setOriginalProjectInfo(currentProjectInfo);
     } catch (error) {
@@ -297,9 +306,12 @@ export default function ProjectDetail({
               {project.activation_date && (
                 <p>Project activated on: {project.activation_date}</p>
               )}
-              {/* {project.modified_date && (
-                <p>Project activated on: {project.activation_date}</p>
-              )} */}
+              {originalLastModifiedByName && (
+                <p>
+                  Last modified by: {originalLastModifiedByName} on{" "}
+                  {formatDateTime(project.last_modified_date)}
+                </p>
+              )}
             </div>
           </DialogHeader>
         </DialogContent>

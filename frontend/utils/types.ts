@@ -59,7 +59,8 @@ export interface Project {
     department: Department_Types; 
     created_date: string; 
     approved_date: string | null; 
-    modified_date: string | null;
+    last_modified_date: string | null;
+    last_modified_user: string | null; // email of the person who last modified the project
     activation_date: string | null;
     github: string | null;
     google_link: string | null;

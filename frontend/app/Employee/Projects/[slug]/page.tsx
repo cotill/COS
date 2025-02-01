@@ -43,23 +43,31 @@ export default async function ProjectPage({
       </div>
     );
   }
-  const [creatorName, approvalName, dispatcherName, sponsorInfo] =
-    await Promise.all([
-      await getEmployeeNameByEmail(supabase, project.creator_email),
-      project.approval_email
-        ? await getEmployeeNameByEmail(supabase, project.approval_email)
-        : Promise.resolve(null),
-      project.dispatcher_email
-        ? await getEmployeeNameByEmail(supabase, project.dispatcher_email)
-        : Promise.resolve(null),
-      project.sponsor_email
-        ? (await supabase)
-            .from("Employees")
-            .select("*")
-            .eq("email", project.sponsor_email)
-            .single()
-        : Promise.resolve(null),
-    ]);
+  const [
+    creatorName,
+    approvalName,
+    dispatcherName,
+    lastModidifiedByName,
+    sponsorInfo,
+  ] = await Promise.all([
+    await getEmployeeNameByEmail(supabase, project.creator_email),
+    project.approval_email
+      ? await getEmployeeNameByEmail(supabase, project.approval_email)
+      : Promise.resolve(null),
+    project.dispatcher_email
+      ? await getEmployeeNameByEmail(supabase, project.dispatcher_email)
+      : Promise.resolve(null),
+    project.last_modified_user
+      ? await getEmployeeNameByEmail(supabase, project.last_modified_user)
+      : Promise.resolve(null),
+    project.sponsor_email
+      ? (await supabase)
+          .from("Employees")
+          .select("*")
+          .eq("email", project.sponsor_email)
+          .single()
+      : Promise.resolve(null),
+  ]);
 
   return (
     <div>
@@ -71,6 +79,7 @@ export default async function ProjectPage({
         creatorName={creatorName}
         approvalName={approvalName}
         dispatcherName={dispatcherName}
+        originalLastModifiedByName={lastModidifiedByName}
         initialSponsorInfo={sponsorInfo?.data as Employee | null}
       />
     </div>
