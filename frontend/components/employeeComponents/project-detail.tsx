@@ -1,48 +1,65 @@
-"use client"
+"use client";
 
-import React from 'react'
-import { useState, useEffect } from 'react'
-import { Project, Project_Status, Employee, Universities } from '@/utils/types'
-import { Hand, Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from 'lucide-react';
+import React from "react";
+import { useState, useEffect } from "react";
+import { Project, Project_Status, Employee, Universities } from "@/utils/types";
+import {
+  Hand,
+  Info,
+  Pencil,
+  X,
+  Check,
+  ArrowUpRight,
+  ChevronRight,
+} from "lucide-react";
 import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
 import "./customDatePickerWidth.css";
 import ReactMarkdown from "react-markdown";
-import { Button } from '../ui/button';
-import Link from 'next/link';
-import {RoundSpinner} from "@/components/ui/spinner";
+import { Button } from "../ui/button";
+import Link from "next/link";
+import { RoundSpinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import date from 'date-and-time'; //npm i date-and-time
-import timezone from 'date-and-time/plugin/timezone'; //// Import plugin for date-time for more tokens
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import date from "date-and-time"; //npm i date-and-time
+import timezone from "date-and-time/plugin/timezone"; //// Import plugin for date-time for more tokens
 
-import { getChangedData, onUpdateProject } from '@/app/student_applications/project_detail_helper'; 
-import { ProjectStatusButton } from '../project-status-button';
-import { Http2ServerRequest } from 'http2';
-import { createClient } from '@/utils/supabase/client';
-import { redirect } from 'next/navigation';
+import {
+  getChangedData,
+  onUpdateProject,
+} from "@/app/student_applications/project_detail_helper";
+import { ProjectStatusButton } from "../project-status-button";
+import { Http2ServerRequest } from "http2";
+import { createClient } from "@/utils/supabase/client";
+import { redirect } from "next/navigation";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
+import { TeamDetailsDialog } from "./team-detail";
 
-
-interface ProjectDetailProps{
-  project: Project,
-  creatorName: string | null,
-  approvalName: string | null,
-  dispatcherName: string | null,
+interface ProjectDetailProps {
+  project: Project;
+  creatorName: string | null;
+  approvalName: string | null;
+  dispatcherName: string | null;
 }
 
-
-export default function ProjectDetail({project, creatorName, approvalName, dispatcherName } : ProjectDetailProps) {
+export default function ProjectDetail({
+  project,
+  creatorName,
+  approvalName,
+  dispatcherName,
+}: ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [sponsorData, setSponsorData] = useState<Employee | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isMessage, setMessage] = useState<string | null >(null);
+  const [isMessage, setMessage] = useState<string | null>(null);
+  const [awardedTeam, setAwardedTeam] = useState(null);
   const timeoutLength = 1000;
 
   useEffect(() => {
@@ -55,59 +72,65 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
   }, [isMessage]);
 
   // need to store the original data so that we can revert back
-  const [originalProjectInfo, setOriginalProjectInfo] = useState<Project>(project);
+  const [originalProjectInfo, setOriginalProjectInfo] =
+    useState<Project>(project);
 
-  // anything that is/ could be null or undefined is replaced 
-  const [currentProjectInfo, setCurrentProjectInfo] = useState<Project>(project);
+  // anything that is/ could be null or undefined is replaced
+  const [currentProjectInfo, setCurrentProjectInfo] =
+    useState<Project>(project);
 
-  function formatDateTime(raw_date: string | null): string{ 
+  function formatDateTime(raw_date: string | null): string {
     if (raw_date === null) return "N/A";
     date.plugin(timezone); // apply the plugin
     const dateTime = new Date(raw_date);
 
-    const pattern = date.compile('MMM D, YYYY hh:mm z')
+    const pattern = date.compile("MMM D, YYYY hh:mm z");
     const localDateTime = date.formatTZ(dateTime, pattern);
 
     return localDateTime;
   }
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({length: 5}, (_,i) => (currentYear+i).toString());
-  
-  // modifies the current project object
-  const onInputChange = (event : {target: {name: any, value: any}}) => {
-    const {name, value} = event.target;
-    setCurrentProjectInfo({
-      ...currentProjectInfo, [name]:value
-    });
-  }
+  const years = Array.from({ length: 5 }, (_, i) =>
+    (currentYear + i).toString()
+  );
 
-  async function handleSaveProject () {
+  // modifies the current project object
+  const onInputChange = (event: { target: { name: any; value: any } }) => {
+    const { name, value } = event.target;
+    setCurrentProjectInfo({
+      ...currentProjectInfo,
+      [name]: value,
+    });
+  };
+
+  async function handleSaveProject() {
     setIsSaving(true);
 
     // set timeout is async
     setTimeout(() => {
       setIsSaving(false);
-      setIsEditing(false)
+      setIsEditing(false);
     }, timeoutLength);
     // save logic
     try {
-      const updatedData: Partial<Project> = getChangedData(originalProjectInfo, currentProjectInfo); 
+      const updatedData: Partial<Project> = getChangedData(
+        originalProjectInfo,
+        currentProjectInfo
+      );
       if (Object.keys(updatedData).length === 0) {
         setMessage("No changes detected to update the project.");
-        setCurrentProjectInfo(originalProjectInfo)
+        setCurrentProjectInfo(originalProjectInfo);
         return;
       }
       await onUpdateProject(updatedData, project.project_id);
 
       setOriginalProjectInfo(currentProjectInfo);
-
     } catch (error) {
       alert(`Failed to update project ${error}`);
       setCurrentProjectInfo(originalProjectInfo);
-    }finally {
+    } finally {
     }
-
   }
   function handleCancelEdit() {
     setCurrentProjectInfo(originalProjectInfo);
@@ -115,7 +138,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
   }
   const handleProjectEdit = () => {
     setIsEditing(!isEditing);
-  }
+  };
 
   function updateDate(date: Date | undefined) {
     onInputChange({
@@ -123,9 +146,9 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         name: "application_deadline",
         value: date ? date.toISOString() : "",
       },
-    })
+    });
   }
-  
+
   const supabase = createClient();
   useEffect(() => {
     const fetchEmployeeDetails = async () => {
@@ -152,67 +175,82 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
-  
-    if ( userError || !user) {
-      redirect("/sign-in")
+
+    if (userError || !user) {
+      redirect("/sign-in");
     }
     const { data: employee } = await supabase
-    .from("Employees")
-    .select("level")
-    .eq("employee_id", user.id)
-    .single();
-    
-    if (employee?.level !== 3 ) {
+      .from("Employees")
+      .select("level")
+      .eq("employee_id", user.id)
+      .single();
+
+    if (employee?.level !== 3) {
       alert("You do not have permission to remove the sponsor.");
       return;
-    }
-    else{
+    } else {
       setSponsorData(null);
       onInputChange({
-        target: {name: "sponsor_email", value: null  }
-      })
-    }    
-  }
+        target: { name: "sponsor_email", value: null },
+      });
+    }
+  };
 
   const handleAutofill = async () => {
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
-  
-    if ( userError || !user) {
-      redirect("/sign-in")
+
+    if (userError || !user) {
+      redirect("/sign-in");
     }
 
     const { data, error } = await supabase
-    .from("Employees")
-    .select("*")
-    .eq("employee_id", user.id)
-    .single();
+      .from("Employees")
+      .select("*")
+      .eq("employee_id", user.id)
+      .single();
 
     if (error) {
       console.error("Supabase query error:", error.message);
       setError(error.message);
       return;
     }
-    
-    if (data.level == 3 ) {
+
+    if (data.level == 3) {
       setSponsorData(data as unknown as Employee);
       onInputChange({
-        target:{
+        target: {
           name: "sponsor_email",
-          value: data.email 
-        }
-      })
+          value: data.email,
+        },
+      });
       return;
-    }else{
+    } else {
       alert("You do not have permission to sponsor a project.");
       return;
     }
   };
 
+  const onViewDetails = async () => {
+    if (!currentProjectInfo.awarded_application_id) return;
   
+    // Fetch the awarded application from Supabase
+    const { data, error } = await supabase
+      .from("Applications")
+      .select("*") // Fetch all application fields
+      .eq("application_id", currentProjectInfo.awarded_application_id)
+      .single();
   
+    if (error) {
+      console.error("Error fetching team details:", error);
+      return;
+    }
+  
+    setAwardedTeam(data); // Store the fetched team data
+  };
+
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
@@ -227,7 +265,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
                 placeholder="Enter project title"
                 readOnly={!isEditing}
                 style={{
-                  width: `${currentProjectInfo.title.length +1}ch`,
+                  width: `${currentProjectInfo.title.length + 1}ch`,
                 }}
               />
             </div>
@@ -237,7 +275,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             </h1>
           )}
 
-          <div className='flex items-center space-x-0.5'>
+          <div className="flex items-center space-x-0.5">
             <h2 className="text-xl font-bold text-white py-2">
               Project Description
             </h2>
@@ -263,7 +301,14 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           </Button>
 
           {/* Project status button */}
-          <ProjectStatusButton initial_status={originalProjectInfo.status} status={currentProjectInfo.status} setProjStatus={(status) => onInputChange({target: {name: "status", value: status}})} allowClick={isEditing}/>
+          <ProjectStatusButton
+            initial_status={originalProjectInfo.status}
+            status={currentProjectInfo.status}
+            setProjStatus={(status) =>
+              onInputChange({ target: { name: "status", value: status } })
+            }
+            allowClick={isEditing}
+          />
         </div>
       </div>
       <Dialog
@@ -322,17 +367,16 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           </div>
         )}
       </div>
-      
+
       {/* Budget, Deadline and Start Term */}
       {/* <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center"> */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-white my-4">
-        
         {/* Budget */}
         <div className="space-y-2 w-full">
           <label htmlFor="budget">Budget</label>
           <div className="relative">
-          <span className="absolute left-3 top-1 text-black">$</span>
-          <input
+            <span className="absolute left-3 top-1 text-black">$</span>
+            <input
               type="number"
               min="0"
               placeholder="Enter budget"
@@ -347,7 +391,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
                 })
               }
               readOnly={!isEditing}
-              className={`p-1 pl-7 rounded-md text-black w-full outline-none ${!isEditing ? 'cursor-default' : ''}`}
+              className={`p-1 pl-7 rounded-md text-black w-full outline-none ${!isEditing ? "cursor-default" : ""}`}
             />
           </div>
         </div>
@@ -356,26 +400,26 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
         {/* <div className="relative flex flex-col items-center space-y-2"> */}
         <div className="space-y-2 w-full">
           <label className="text-base">Application deadline</label>
-            <div className="customDatePickerWidth">
+          <div className="customDatePickerWidth">
             <DatePicker
               name="application_deadline"
               selected={
-              currentProjectInfo.application_deadline
-                ? new Date(currentProjectInfo.application_deadline)
-                : null
+                currentProjectInfo.application_deadline
+                  ? new Date(currentProjectInfo.application_deadline)
+                  : null
               }
               onChange={(date) =>
-              onInputChange({
-                target: {
-                name: "application_deadline",
-                value: date ? date.toISOString() : "",
-                },
-              })
+                onInputChange({
+                  target: {
+                    name: "application_deadline",
+                    value: date ? date.toISOString() : "",
+                  },
+                })
               }
               dateFormat="MMM d, yyyy hh:mm aa "
               timeFormat="p"
               placeholderText="Select a date"
-              className={`bg-white text-black py-1 rounded-md outline-none w-full ${!isEditing ? 'cursor-default' : ''}`}
+              className={`bg-white text-black py-1 rounded-md outline-none w-full ${!isEditing ? "cursor-default" : ""}`}
               showTimeSelect
               minDate={new Date()}
               toggleCalendarOnIconClick
@@ -383,23 +427,31 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
               locale="mst-us"
               readOnly={!isEditing}
             />
-            </div>
+          </div>
         </div>
-        
+
         {/* Start Term */}
         <div className=" relative flex flex-col">
           <label className="text-base capitalize">start team</label>
           <div className="flex items-center space-x-2">
-            <select className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? 'cursor-default' : ''}`}
-              disabled={!isEditing}>
-              {["Jan","May", "Sept"].map((choice) => (
-                <option key={choice} value={choice}>{choice}</option>
+            <select
+              className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? "cursor-default" : ""}`}
+              disabled={!isEditing}
+            >
+              {["Jan", "May", "Sept"].map((choice) => (
+                <option key={choice} value={choice}>
+                  {choice}
+                </option>
               ))}
             </select>
-            <select className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? 'cursor-default' : ''}`}
-            disabled={!isEditing}>
+            <select
+              className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? "cursor-default" : ""}`}
+              disabled={!isEditing}
+            >
               {years.map((choice) => (
-                <option key={choice} value={choice}>{choice}</option>
+                <option key={choice} value={choice}>
+                  {choice}
+                </option>
               ))}
             </select>
           </div>
@@ -413,7 +465,9 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           {isEditing && (
             <Button
               className={`px-3 py-1 rounded-full ${
-                sponsorData ? "bg-[#F72E53] hover:bg-[#e8516d]" : "bg-[#81C26C] hover:bg-[#7cb36a]"
+                sponsorData
+                  ? "bg-[#F72E53] hover:bg-[#e8516d]"
+                  : "bg-[#81C26C] hover:bg-[#7cb36a]"
               } text-black`}
               onClick={sponsorData ? handleClearSponsor : handleAutofill}
             >
@@ -421,7 +475,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             </Button>
           )}
         </div>
-    
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
           <div className="flex flex-col">
             <label className="text-white">Name:</label>
@@ -437,7 +491,7 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
             <label className="text-white">Email:</label>
             <input
               type="text"
-              value= {sponsorData?.email || ""}
+              value={sponsorData?.email || ""}
               readOnly
               className="p-1 rounded-md bg-white text-black outline-none"
             />
@@ -464,15 +518,21 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
           </div>
         </div>
       </div>
-      
+
       {/* Dispatch Information */}
       <div>
         <div className="flex justify-between items-center mb-2 ">
-          <h2 className="text-xl font-bold text-white pt-4">Dispatch Information </h2>
+          <h2 className="text-xl font-bold text-white pt-4">
+            Dispatch Information{" "}
+          </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
           <div className="flex flex-col">
-            <label className="text-white flex items-center gap-2"> <FaGoogleDrive/>Google Drive Link:</label>
+            <label className="text-white flex items-center gap-2">
+              {" "}
+              <FaGoogleDrive />
+              Google Drive Link:
+            </label>
             <input
               type="text"
               placeholder="Enter Google Drive Link"
@@ -486,12 +546,16 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
                 })
               }
               readOnly={!isEditing}
-              className={`p-1 rounded-md text-black w-full outline-none ${!isEditing ? 'cursor-default' : ''}`}
+              className={`p-1 rounded-md text-black w-full outline-none ${!isEditing ? "cursor-default" : ""}`}
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-white flex items-center gap-2"> <FaGithub/>GitHub Link:</label>
+            <label className="text-white flex items-center gap-2">
+              {" "}
+              <FaGithub />
+              GitHub Link:
+            </label>
             <input
               type="text"
               placeholder="Enter GitHub Link"
@@ -528,46 +592,74 @@ export default function ProjectDetail({project, creatorName, approvalName, dispa
                 Select a university
               </option>
               <option value="null">None</option>
-              <option value="University of Calgary">University of Calgary (UofC)</option>
-              <option value="University of British Columbia">University of British Columbia (UBC)</option>
+              <option value="UofC">University of Calgary (UofC)</option>
+              <option value="UBC">University of British Columbia (UBC)</option>
             </select>
           </div>
 
           <div className="flex flex-col">
-            <label className="text-white">This is where the download buttons should be</label>
+            <label className="text-white">
+              This is where the download buttons should be
+            </label>
             <Button> Download as PDF </Button>
           </div>
         </div>
       </div>
 
-    
-      
-    
-
-      {/* Applications */}
-      <div>
-        <h2 className="text-xl font-bold text-white py-2">
-          Applications
-        </h2>
-        <div className='space-x-2'>
-          <Button asChild className='text-md space-x-1'>
-            <Link href={`/Employee/Projects/${project.project_id}/Applicants`}> {/* change this */}
-              <span>Application Link</span>
-              <ArrowUpRight/>
-            </Link>
-          </Button>
-          <Button asChild className='text-md space-x-1'>
-            <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>
-              <span>View Applicants</span>
-              <ChevronRight/>
-            </Link>
-          </Button>
+      {/* Applications and Team Awarded*/}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+        {/* applications */}
+        <div>
+          <h2 className="text-xl font-bold text-white py-2">Applications</h2>
+          <div className="space-x-2">
+            <Button asChild className="text-md space-x-1">
+              <Link
+                href={`/Employee/Projects/${project.project_id}/Applicants`}
+              >
+                {" "}
+                {/* change this */}
+                <span>Application Link</span>
+                <ArrowUpRight />
+              </Link>
+            </Button>
+            <Button asChild className="text-md space-x-1">
+              <Link
+                href={`/Employee/Projects/${project.project_id}/Applicants`}
+              >
+                <span>View Applicants</span>
+                <ChevronRight />
+              </Link>
+            </Button>
+          </div>
         </div>
+
+        {/* Team Awarded */}
+        {currentProjectInfo.awarded_application_id && (
+          <div>
+            <h2 className="text-xl font-bold text-white py-2">Team Awarded</h2>
+            
+          <Dialog open={!!awardedTeam} onOpenChange={() => setAwardedTeam(null)}>
+            <DialogTrigger asChild>
+              <Button onClick={onViewDetails}>
+                View Team Details
+                <ChevronRight/>
+              </Button>
+            </DialogTrigger>
+
+            <TeamDetailsDialog 
+              team={awardedTeam} 
+              onClose={() => setAwardedTeam(null)} 
+              onApprove={undefined} 
+              onReject={undefined} 
+              onPending={undefined} 
+            />
+          </Dialog>
+          </div>
+        )}
       </div>
-      
-      
+
       {/* error message */}
-      {isMessage && <div className='text-red-400 text-center'>{isMessage}</div>}
+      {isMessage && <div className="text-red-400 text-center">{isMessage}</div>}
       {isEditing && (
         <div className="flex justify-end space-x-2 mt-2">
           <Button
