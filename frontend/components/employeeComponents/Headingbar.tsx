@@ -12,7 +12,7 @@ const Headingbar: React.FC<HeadingbarProps> = ({ text }) => {
              background: "linear-gradient(to right, #1D1B23 55%, rgba(29,27,35,0.5) 75%, transparent 80%)"
            }}
       >
-        <p className="text-white text-2xl font-light tracking-[0.4em] ml-10">{text}</p> {/* Adjusted font size, weight, and letter spacing */}
+        <p className="text-white text-2xl font-light tracking-[0.2em] ml-10">{text}</p> {/* Adjusted font size, weight, and letter spacing */}
       </div>
       <div className="absolute right-0 top-0 w-[45%] h-full overflow-hidden" >
         <iframe

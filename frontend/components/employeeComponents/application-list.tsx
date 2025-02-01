@@ -1,197 +1,201 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Dialog } from "@/components/ui/dialog"
 import { TeamDetailsDialog } from './team-detail';
-import { Application_Status, Member,Application, Employee, EmployeeLevel, Project_Status } from '@/utils/types';
-import { fetchApplications, rejectOtherApplications, updateApplicationStatus, createStudentAccounts, deleteApplication, confirmEmployeeAuthorization, updateProjectStatus } from "@/app/student_applications/application";
+import { Application, Application_Status, Employee } from '@/utils/types';
 import ApplicationTable from "./applicationTable";
 import {ApplicationPagination} from "./applicationPagination";
-
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { ConfirmationDialog } from "../confirmationPopup";
+import { AlertDialog } from "../ui/alert-dialog";
+import { useApplications } from '@/hooks/useApplication';
+import { useSearchBar, FilterConfig } from "@/hooks/useSearchBar";
+import { useState } from "react";
+import { SearchBar } from "./genericType_searchbar";
 interface ApplicationListProps {
-  projectId: string,
+  projectId: number,
   employeeInfo: Employee
 }
 export default function ApplicationList({projectId, employeeInfo}:ApplicationListProps) {
-    const [isLoading, setIsLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1)
-    const applicationsPerPage = 5
-    const [projectApplications, setProjectApplications] = useState<Application[] | null> (null);
-    const totalPages = projectApplications ? Math.ceil(projectApplications.length / applicationsPerPage) : 0
+  const {
+    isLoading,
+    isRefreshingTable,
+    all_applications,
+    // currentPage,
+    // setCurrentPage,
+    // totalPages,
+    // currentApplications,
+    selectedTeam,
+    setSelectedTeam,
+    // isAnyApplicationApproved,
+    handleApprove,
+    handleReject,
+    handlePending,
+    handleDeleteApplication,
+    handleDeleteAllApps,
+    alertDialogOpen,
+    setAlertDialogOpen,
+    alertDialogProps} = useApplications ({project_id:projectId,employeeInfo, applicationPerPage: 5});
+
+    const filterConfigs: FilterConfig<Application>[] = [
+      {
+        key: 'submission_date',
+        type:'date',
+        label: 'Submission Date'
+      },
+      {
+        key:'team_name',
+        type: 'text',
+        label: 'Team Name',
+      },
+      {
+        key: 'size',
+        type: 'text',
+        label: 'Team Size'
+      }
+    ];
+  const {
+    searchTerm,
+    currentFilter,
+    dateRange,
+    handleSearchChange,
+    handleFilterChange,
+    handleDateRangeChange,
+    filterData
+  } = useSearchBar(filterConfigs[0], filterConfigs);
+
+  const [sortColumn, setSortColumn] = useState<keyof Application>('submission_date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const statusOptions = Object.values(Application_Status);
+  const [selectedStatus, setSelectedStatus] = useState<Application_Status[]>([]);
+
+  // sort applications
+  const sortedApplications = all_applications ? [...all_applications].sort((applicationA, applicationB) => {
+    const valueA = applicationA[sortColumn as keyof Application];
+    const valueB = applicationB[sortColumn as keyof Application];
+    if (valueA == null || valueB == null) return 0;
+    if (valueA < valueB) return sortOrder === 'asc' ? -1 : 1;
+    if (valueA > valueB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  }) : [];
+
+  // Apply filters
+  const filteredApplications = filterData(sortedApplications, selectedStatus);
   
-    const indexOfLastApplication = currentPage * applicationsPerPage
-    const indexOfFirstApplication = indexOfLastApplication - applicationsPerPage
-    const currentApplications = projectApplications ? projectApplications.slice(indexOfFirstApplication, indexOfLastApplication) : []
+  //pagination
+  const applicationsPerPage = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = filteredApplications ? Math.ceil(filteredApplications.length / applicationsPerPage) : 0
+  const currentApplications = filteredApplications ? filteredApplications.slice((currentPage-1) * applicationsPerPage, currentPage * applicationsPerPage) : [];
 
-    const [selectedTeam, setSelectedTeam] = useState<Application | null>(null);
-    const isAnyApplicationApproved = projectApplications?.some((application) => application.status === Application_Status.APPROVED);
-    /**
-     * The function will load all applications for a project
-     */
-    const loadApplications = async() =>{
-      setIsLoading(true);
-      try {
-        const application_result = await fetchApplications(projectId);
-        setProjectApplications(application_result);
-      
-      }catch(err){
-        setProjectApplications(null);
-        console.error(err);
-      
-      }finally{
-        setIsLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      loadApplications();
-    }, []);
-    
-    /**
-     * 
-     * @param application_id The application id to approve
-     * @param project_id The project id of the application
-     * @param university The university of the team
-     * @returns  void but the function will update the application status to approved, create student accounts for the approved team and reject all other applications for the same project.
-     */
-    const handleApprove = async (application_id: number, project_id: number, university: string) => {
-      if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
-        alert("Approval requires you to be level 2+");
-        return;
-      }
-
-      try {
-        await updateApplicationStatus(application_id,Application_Status.APPROVED, selectedTeam?.team_name);
-      } catch (error) {
-        alert(error)
-      }
-
-      try {
-        await rejectOtherApplications(application_id,project_id)
-        
-      } catch (error) {
-        alert(error)
-      }
-    
-      await loadApplications();
-
-      try {
-        const teamMembers = selectedTeam?.members as Member[];
-        await createStudentAccounts(teamMembers, project_id, university);
-      } catch (error) {
-        console.error(`Error creating student accounts:\n${error}`)
-        alert(`Error creating student accounts please contact system admin`)
-      }
-       
-      try {
-        await updateProjectStatus(projectId,Project_Status.AWARDED)
-      } catch (error) {
-        alert(error)
-      }
+  // handler functions
+  const handleSort = (column: keyof Application) => {
+    if (sortColumn === column) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortOrder('asc');
     }
+  };
+  
+  const handleClearFilters = () => {
+    setSelectedStatus([]);
+  };
+  
+  function handleSortOrder(order: 'asc' | 'desc'){
+    setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSortOrder(order);
+  }
 
-    /**
-     * 
-     * @param application_id The application id to reject
-     * @returns void but the function will update the application status to rejected and fetch the data after update
-     */
-    const handleReject = async (application_id: number) => {
-      // Handle reject logic
-      if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
-        alert("Rejection requires you to be level 2+");
-        return;
-      }
-      try {
-        await updateApplicationStatus(application_id,Application_Status.REJECTED, selectedTeam?.team_name);
-      } catch (error) {
-        alert(error)
-      }
-
-      await loadApplications();
-    }
-    
-    /**
-     * 
-     * @param application_id The application id to set to pending
-     * @returns void but the function will update the application status to pending and fetch the data after update
-    */
-    const handlePending = async (application_id: number) => {
-      // Handle pending logic
-      if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
-        alert("Set application to pending requires you to be level 2+");
-        return;
-      }
-      try {
-        await updateApplicationStatus(application_id,Application_Status.PENDING, selectedTeam?.team_name);
-      } catch (error) {
-        alert(error)
-      }
-
-      await loadApplications();
-    }
-
-    /**
-     * 
-     * @param application_id The application id to delete
-     * @returns void but the function will delete the application and fetch the data after deletion
-     */
-    const handleDeleteApplication = async (application_id: number) => {
-      // Handle delete logic
-      if (!confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
-        alert("Deleting an application requires you to be level 2+");
-        return;
-      }
-      if(selectedTeam?.status === Application_Status.APPROVED){
-        alert("Can't delete an application that is already approved");
-        return;
-      }
-      
-      try {
-        await deleteApplication(application_id);
-      } catch (error) {
-        alert(error);
-      }
-      
-      await loadApplications();
-    }
+  function handleSelectStatus(option: Application_Status){
+    setSelectedStatus((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+  );
+  }
+  const isAnyApplicationApproved = all_applications?.some(
+    (application) => application.status === Application_Status.APPROVED
+  );
 
   if(isLoading) {
     return <div className="text-center text-white">Loading...</div>;
   }
-  if (projectApplications == null){
+  if (all_applications == null){
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 text-white">
         Error retrieving applications for project with project id {projectId}! Please contact system admin
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Displays the application table */}
-      <ApplicationTable
-        currentApplications={currentApplications}
-        onViewDetails ={setSelectedTeam}
-        onDeleteApplication={handleDeleteApplication}
-        employeeInfo={employeeInfo}
-      />
-      {/* Display the pagination */}
-      <ApplicationPagination 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(page: number) => setCurrentPage(page)}
-      />
-
-      {/* Display the team application*/}
-      <Dialog open={selectedTeam !== null} onOpenChange={() => setSelectedTeam(null)}>
-        <TeamDetailsDialog
-          team={selectedTeam}
-          onClose={() => setSelectedTeam(null)}
-          onApprove={isAnyApplicationApproved ? undefined : handleApprove}
-          onReject={isAnyApplicationApproved ? undefined : handleReject}
-          onPending={isAnyApplicationApproved ? undefined : handlePending}
+    <>
+    <div className="pt-4 space-y-4">
+        <div className="flex justify-between">
+          <SearchBar 
+              value={searchTerm} 
+              onSearchChange={handleSearchChange} 
+              currentFilter={currentFilter} 
+              filterConfigs={filterConfigs}
+              onFilterChange={handleFilterChange} 
+              dateRange={dateRange}
+              onDateRangeChange={handleDateRangeChange}
+            />
+          <Button
+            style={{
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "16px",
+              width: "",
+              borderRadius: "20px",
+            }}
+            className="bg-red-400 hover:bg-red-500 flex items-center space-x-4"
+            onClick={() => {
+              handleDeleteAllApps();
+            }}
+          >
+            <span>Delete All (fix me)</span>
+            <Trash2 />
+          </Button>
+        </div>
+      <div className="space-y-4">
+        {/* Displays the application table */}
+        <ApplicationTable
+          currentApplications={currentApplications}
+          onViewDetails ={setSelectedTeam}
+          onDeleteApplication={handleDeleteApplication}
+          employeeInfo={employeeInfo}
+          isRefreshingTable={isRefreshingTable}
+          selectedStatus={selectedStatus}
+          handleClearFilters={handleClearFilters}
+          handleSelectStatus={handleSelectStatus}
+          sortOrder={sortOrder}
+          handleSortOrder={handleSortOrder}
+          handleSort={handleSort}
+          sortColumn={sortColumn}
         />
-      </Dialog>
+        {/* Display the pagination */}
+        <ApplicationPagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page: number) => setCurrentPage(page)}
+        />
+
+        {/* Display the team application*/}
+        <Dialog open={selectedTeam !== null} onOpenChange={() => setSelectedTeam(null)}>
+          <TeamDetailsDialog
+            team={selectedTeam}
+            onClose={() => setSelectedTeam(null)}
+            onApprove={isAnyApplicationApproved ? undefined : handleApprove}
+            onReject={isAnyApplicationApproved ? undefined : handleReject}
+            onPending={isAnyApplicationApproved ? undefined : handlePending}
+          />
+        </Dialog>
+      </div>
+      {/* Alert Dialog will display when the user clicks the deleteAll button */}
+      <AlertDialog open={alertDialogOpen} onOpenChange={()=> setAlertDialogOpen(false)}>
+        {alertDialogProps && <ConfirmationDialog {...alertDialogProps}/>}
+      </AlertDialog>
     </div>
+    </>
   )
 }
