@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { Project, Employee, Universities } from "@/utils/types";
+import { Project, Project_Status, Employee, Universities } from "@/utils/types";
 import {
   Hand,
   Info,
@@ -39,7 +39,7 @@ import { createClient } from "@/utils/supabase/client";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
 import { TeamDetailsDialog } from "./team-detail";
 import { v4 as uuidv4 } from "uuid";
-
+import "./project-details.css";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
@@ -200,7 +200,6 @@ export default function ProjectDetail({
   const onViewDetails = async () => {
     if (!currentProjectInfo.awarded_application_id) return;
 
-
     // Fetch the awarded application from Supabase
     const { data, error } = await supabase
       .from("Applications")
@@ -208,12 +207,10 @@ export default function ProjectDetail({
       .eq("application_id", currentProjectInfo.awarded_application_id)
       .single();
 
-
     if (error) {
       console.error("Error fetching team details:", error);
       return;
     }
-
 
     setAwardedTeam(data); // Store the fetched team data
   };
@@ -569,19 +566,16 @@ export default function ProjectDetail({
             </select>
           </div>
           {![
-              Project_Status.NEW,
-              Project_Status.DRAFT,
-              Project_Status.REVIEW,
-              Project_Status.REJECTED,
-            ].includes(currentProjectInfo.status) && (
+            Project_Status.NEW,
+            Project_Status.DRAFT,
+            Project_Status.REVIEW,
+            Project_Status.REJECTED,
+          ].includes(currentProjectInfo.status) && (
             <div className="flex flex-col">
-            <label className="text-white">
-              Download for Dispatch
-            </label>
-            <Button> Download as PDF </Button>
-          </div>
+              <label className="text-white">Download for Dispatch</label>
+              <Button> Download as PDF </Button>
+            </div>
           )}
-          
         </div>
       </div>
 
@@ -643,22 +637,22 @@ export default function ProjectDetail({
         {/* Application Status */}
         <div className="flex gap-2 items-start [&_label]:text-white [&_h2]:text-white">
           <h2 className="text-xl font-normal">Application Status:</h2>
-          <div className="text-md [&_label]:font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            <div className="flex items-center mb-3 space-x-2">
+          <div className="flex flex-col gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5">
+            <div className="flex items-center space-x-2">
               <input
                 type="radio"
-                className="w-4 h-4"
+                className={`${isEditing ? "enabledinput" : "disabledinput"}`}
                 id="project_link_open"
                 name="link_active"
                 checked={currentProjectInfo.link_active === true}
-                disabled={!isEditing}
                 onChange={() => {
-                  onInputChange({
-                    target: {
-                      name: "link_active",
-                      value: true,
-                    },
-                  });
+                  isEditing &&
+                    onInputChange({
+                      target: {
+                        name: "link_active",
+                        value: true,
+                      },
+                    });
                 }}
               />
               <label htmlFor="project_link_open">Open</label>
@@ -666,18 +660,18 @@ export default function ProjectDetail({
             <div className="flex items-center space-x-2">
               <input
                 type="radio"
-                className="w-4 h-4"
+                className={`${isEditing ? "enabledinput" : "disabledinput"}`}
                 id="project_link_closed"
                 name="link_active"
                 checked={currentProjectInfo.link_active === false}
-                disabled={!isEditing}
                 onChange={() => {
-                  onInputChange({
-                    target: {
-                      name: "link_active",
-                      value: false,
-                    },
-                  });
+                  isEditing &&
+                    onInputChange({
+                      target: {
+                        name: "link_active",
+                        value: false,
+                      },
+                    });
                 }}
               />
               <label htmlFor="project_link_closed">Closed</label>

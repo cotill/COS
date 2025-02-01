@@ -1,0 +1,22 @@
+.disabledinput {
+  opacity: 0.4;
+  filter: alpha(opacity=40); /*For IE8 and earlier */
+  /* pointer-events: none; */
+  cursor: not-allowed;
+}
+.disabledinput:checked {
+  accent-color: black; /* Pink color */
+}
+/* Remove hover effect when input is disabled */
+.disabledinput:hover {
+  opacity: 0.4; /* Keeps the same opacity */
+  filter: none; /* Prevents any hover effects */
+}
+
+.enabledinput {
+  opacity: 1;
+  filter: alpha(opacity=100); /* For IE8 and earlier */
+}
+.enabledinput:checked {
+  accent-color: black; /* Pink color */
+}
