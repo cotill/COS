@@ -42,22 +42,28 @@ import { TeamDetailsDialog } from "./team-detail";
 import { v4 as uuidv4 } from "uuid";
 
 interface ProjectDetailProps {
+  employeeInfo: Employee;
   project: Project;
   creatorName: string | null;
   approvalName: string | null;
   dispatcherName: string | null;
+  initialSponsorInfo: Employee | null;
 }
 
 export default function ProjectDetail({
+  employeeInfo,
   project,
   creatorName,
   approvalName,
   dispatcherName,
+  initialSponsorInfo,
 }: ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [sponsorData, setSponsorData] = useState<Employee | null>(null);
+  const [sponsorData, setSponsorData] = useState<Employee | null>(
+    initialSponsorInfo
+  );
   const [error, setError] = useState<string | null>(null);
   const [isMessage, setMessage] = useState<string | null>(null);
   const [awardedTeam, setAwardedTeam] = useState(null);
@@ -153,42 +159,9 @@ export default function ProjectDetail({
   };
 
   const supabase = createClient();
-  useEffect(() => {
-    const fetchEmployeeDetails = async () => {
-      if (!currentProjectInfo.sponsor_email) return;
-      const { data, error } = await supabase
-        .from("Employees")
-        .select("*")
-        .eq("email", currentProjectInfo.sponsor_email)
-        .single(); // Expect one record
-
-      if (error) {
-        setError(error.message);
-        setSponsorData(null);
-      } else {
-        setSponsorData(data as Employee); // Type assertion for safety
-      }
-    };
-
-    fetchEmployeeDetails();
-  }, []);
 
   const handleClearSponsor = async () => {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      redirect("/sign-in");
-    }
-    const { data: employee } = await supabase
-      .from("Employees")
-      .select("level")
-      .eq("employee_id", user.id)
-      .single();
-
-    if (employee?.level !== 3) {
+    if (employeeInfo.level !== 3) {
       alert("You do not have permission to remove the sponsor.");
       return;
     } else {
@@ -200,33 +173,12 @@ export default function ProjectDetail({
   };
 
   const handleAutofill = async () => {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      redirect("/sign-in");
-    }
-
-    const { data, error } = await supabase
-      .from("Employees")
-      .select("*")
-      .eq("employee_id", user.id)
-      .single();
-
-    if (error) {
-      console.error("Supabase query error:", error.message);
-      setError(error.message);
-      return;
-    }
-
-    if (data.level == 3) {
-      setSponsorData(data as unknown as Employee);
+    if (employeeInfo.level == 3) {
+      setSponsorData(employeeInfo);
       onInputChange({
         target: {
           name: "sponsor_email",
-          value: data.email,
+          value: employeeInfo.email,
         },
       });
       return;
