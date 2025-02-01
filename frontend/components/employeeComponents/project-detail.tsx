@@ -32,13 +32,14 @@ import timezone from "date-and-time/plugin/timezone"; //// Import plugin for dat
 import {
   getChangedData,
   onUpdateProject,
+  updateApplicationLink,
 } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
-import { Http2ServerRequest } from "http2";
 import { createClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
 import { TeamDetailsDialog } from "./team-detail";
+import { v4 as uuidv4 } from "uuid";
 
 interface ProjectDetailProps {
   project: Project;
@@ -114,6 +115,17 @@ export default function ProjectDetail({
     }, timeoutLength);
     // save logic
     try {
+      // logic for application link
+      const applicationLinkAction: "create" | "keep" | "delete" =
+        updateApplicationLink(
+          originalProjectInfo.status,
+          currentProjectInfo.status
+        );
+      if (applicationLinkAction === "create") {
+        currentProjectInfo.application_link = uuidv4();
+      } else if (applicationLinkAction === "delete") {
+        currentProjectInfo.application_link = null;
+      }
       const updatedData: Partial<Project> = getChangedData(
         originalProjectInfo,
         currentProjectInfo
@@ -123,8 +135,8 @@ export default function ProjectDetail({
         setCurrentProjectInfo(originalProjectInfo);
         return;
       }
+      updatedData.modified_date = new Date().toISOString(); // include the date the data was last modified
       await onUpdateProject(updatedData, project.project_id);
-
       setOriginalProjectInfo(currentProjectInfo);
     } catch (error) {
       alert(`Failed to update project ${error}`);
@@ -139,15 +151,6 @@ export default function ProjectDetail({
   const handleProjectEdit = () => {
     setIsEditing(!isEditing);
   };
-
-  function updateDate(date: Date | undefined) {
-    onInputChange({
-      target: {
-        name: "application_deadline",
-        value: date ? date.toISOString() : "",
-      },
-    });
-  }
 
   const supabase = createClient();
   useEffect(() => {
@@ -235,19 +238,19 @@ export default function ProjectDetail({
 
   const onViewDetails = async () => {
     if (!currentProjectInfo.awarded_application_id) return;
-  
+
     // Fetch the awarded application from Supabase
     const { data, error } = await supabase
       .from("Applications")
       .select("*") // Fetch all application fields
       .eq("application_id", currentProjectInfo.awarded_application_id)
       .single();
-  
+
     if (error) {
       console.error("Error fetching team details:", error);
       return;
     }
-  
+
     setAwardedTeam(data); // Store the fetched team data
   };
 
@@ -342,6 +345,9 @@ export default function ProjectDetail({
               {project.activation_date && (
                 <p>Project activated on: {project.activation_date}</p>
               )}
+              {/* {project.modified_date && (
+                <p>Project activated on: {project.activation_date}</p>
+              )} */}
             </div>
           </DialogHeader>
         </DialogContent>
@@ -369,7 +375,6 @@ export default function ProjectDetail({
       </div>
 
       {/* Budget, Deadline and Start Term */}
-      {/* <div className="flex items-center gap-10 text-white p-4 rounded-md justify-center"> */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-white my-4">
         {/* Budget */}
         <div className="space-y-2 w-full">
@@ -606,18 +611,21 @@ export default function ProjectDetail({
         </div>
       </div>
 
-      {/* Applications and Team Awarded*/}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+      {/* Applications, Team Awarded and Application Status*/}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
         {/* applications */}
         <div>
           <h2 className="text-xl font-bold text-white py-2">Applications</h2>
           <div className="space-x-2">
-            <Button asChild className="text-md space-x-1">
+            <Button
+              asChild
+              className="text-md space-x-1"
+              disabled={!originalProjectInfo.application_link}
+            >
               <Link
-                href={`/Employee/Projects/${project.project_id}/Applicants`}
+                href={`/ApplicationForm/${originalProjectInfo.application_link}/`}
               >
                 {" "}
-                {/* change this */}
                 <span>Application Link</span>
                 <ArrowUpRight />
               </Link>
@@ -637,25 +645,71 @@ export default function ProjectDetail({
         {currentProjectInfo.awarded_application_id && (
           <div>
             <h2 className="text-xl font-bold text-white py-2">Team Awarded</h2>
-            
-          <Dialog open={!!awardedTeam} onOpenChange={() => setAwardedTeam(null)}>
-            <DialogTrigger asChild>
-              <Button onClick={onViewDetails}>
-                View Team Details
-                <ChevronRight/>
-              </Button>
-            </DialogTrigger>
+            <Dialog
+              open={!!awardedTeam}
+              onOpenChange={() => setAwardedTeam(null)}
+            >
+              <DialogTrigger asChild>
+                <Button onClick={onViewDetails}>
+                  View Team Details
+                  <ChevronRight />
+                </Button>
+              </DialogTrigger>
 
-            <TeamDetailsDialog 
-              team={awardedTeam} 
-              onClose={() => setAwardedTeam(null)} 
-              onApprove={undefined} 
-              onReject={undefined} 
-              onPending={undefined} 
-            />
-          </Dialog>
+              <TeamDetailsDialog
+                team={awardedTeam}
+                onClose={() => setAwardedTeam(null)}
+                onApprove={undefined}
+                onReject={undefined}
+                onPending={undefined}
+              />
+            </Dialog>
           </div>
         )}
+        {/* Application Status */}
+        <div className="flex gap-2 items-start [&_label]:text-white [&_h2]:text-white">
+          <h2 className="text-xl font-normal">Application Status:</h2>
+          <div className="text-md [&_label]:font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <div className="flex items-center mb-3 space-x-2">
+              <input
+                type="radio"
+                className="w-4 h-4"
+                id="project_link_open"
+                name="link_active"
+                checked={currentProjectInfo.link_active === true}
+                disabled={!isEditing}
+                onChange={() => {
+                  onInputChange({
+                    target: {
+                      name: "link_active",
+                      value: true,
+                    },
+                  });
+                }}
+              />
+              <label htmlFor="project_link_open">Open</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="radio"
+                className="w-4 h-4"
+                id="project_link_closed"
+                name="link_active"
+                checked={currentProjectInfo.link_active === false}
+                disabled={!isEditing}
+                onChange={() => {
+                  onInputChange({
+                    target: {
+                      name: "link_active",
+                      value: false,
+                    },
+                  });
+                }}
+              />
+              <label htmlFor="project_link_closed">Closed</label>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* error message */}
