@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -22,8 +21,8 @@ import {
 
 import { createClient } from '@/utils/supabase/client'
 // import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
-import { Department_Types } from '@/utils/types';
 import { Project_Status } from '@/utils/types';
+import TeamMenu from '@/components/employeeComponents/team-menu';
 
 import {
   DropdownMenu,
@@ -34,49 +33,88 @@ import {
 
 type Project = {
   id: string;
-  date: string;
   name: string;
-  department: string;
+  team: string;
   status: string;
 };
 
-export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: string; filter: string, dateRange: { startDate: Date | null; endDate: Date | null } }) {
+type Members = {
+  full_name: string;
+  major: string;
+  email: string;
+  resume: string;
+};
+
+type Team = {
+  team_name: string;
+  university: string;
+  bio: string;
+  members: Members[];
+}
+
+export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filter: string;}) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortColumn, setSortColumn] = useState<'date' | 'name'>('date');
+  const [sortColumn, setSortColumn] = useState<'team' | 'name'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [teams, setTeams] = useState<Team | null>(null);
+  const [title, setTitle] = useState<string>();
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const [isOpenS, setIsOpenS] = useState(false);
-  const [isOpenD, setIsOpenD] = useState(false);
+  const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const supabase = createClient();
 
-  const departmentOptions = Object.values(Department_Types);
   const statusOptions = Object.values(Project_Status);
 
   const fetchProjects = async () => {
     console.log('Fetching projects...');
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('Projects')
-        .select('project_id, created_date, title, department, status');
+        const {
+            data: { session },
+            error: sessionError,
+        } = await supabase.auth.getSession();
+    
+        if (sessionError || !session) {
+            console.error("Error getting session:", sessionError);
+            return;
+        }
+    
+        const userId = session.user.id;
+        const { data: userData, error: userError } = await supabase
+        .from("Employees")
+        .select("email")
+        .eq("employee_id", userId)
+        .single();
+    
+        if (userError || !userData) {
+        console.error("Error getting user data:", userError);
+        return;
+        }
+    
+        const userEmail = userData.email;
+        console.log('Got user email: ', userEmail);
+
+        const { data, error } = await supabase
+            .from('Projects')
+            .select('project_id, title, Applications!Projects_awarded_application_id_fkey(team_name), status')
+            .eq('sponsor_email', userEmail);
   
-      if (error) {
-        console.error('Error fetching projects:', error);
-      } else if (data) {
-        console.log('Fetched projects:', data);
-        setProjects(
-          data.map((project) => ({
-            id: project.project_id,
-            date: project.created_date,
-            name: project.title,
-            department: project.department,
-            status: project.status,
-          }))
+        if (error) {
+            console.error('Error fetching projects:', error);
+        } else if (data) {
+            console.log('Fetched projects:', data);
+            console.log("CHECK: ", data[0].Applications.length)
+            console.log("Raw Supabase Response:", JSON.stringify(data, null, 2));
+            setProjects(
+              data.map((project) => ({
+                id: project.project_id,
+                name: project.title,
+                team: (project.Applications as unknown as { team_name: string } | null)?.team_name ?? '**Project Not Awarded**',
+                status: project.status,
+              }))
         );
       }
     } catch (err) {
@@ -84,7 +122,91 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
     } finally {
       setLoading(false);
     }
-  };  
+  };
+  
+  const fetchTitle = async ( projectId: string ) => {
+    console.log('Fetching title...');
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.error("Error getting session: ", sessionError);
+        return;
+      }
+
+      const { data: titleData, error: titleError } = await supabase
+        .from('Projects')
+        .select(`title`)
+        .eq('project_id', projectId)
+        .single()
+
+      if (titleError) {
+        console.error('Error fetching title:', titleError);
+      } else if (titleData) {
+        console.log('Fetched title:', titleData);
+
+        setTitle(titleData.title);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
+  };
+
+  const fetchTeams = async ( projectId: string ) => {
+    console.log('Fetching teams...');
+    try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          console.error("Error getting session: ", sessionError);
+          return;
+        }
+
+        const { data: teamsData, error: teamsError } = await supabase
+          .from('Applications')
+          .select(`
+            team_name,
+            university,
+            about_us,
+            members
+          `)
+          .eq('project_id', projectId)
+          .eq('status', 'APPROVED')
+          .single();
+            
+        if (!teamsData) {
+          console.warn("No approved team found for this project.");
+          setTeams(null);
+          return;
+        } else if (teamsError) {
+          console.error("Error fetching teams: ", teamsError);
+          setTeams(null);
+          return;
+        } else if (teamsData) {
+          const members = teamsData.members || [];
+          const memberDetails = members.map((member: any) => ({
+            full_name: member.full_name,
+            major: member.major,
+            email: member.email,
+            resume: member.resume,
+      }));
+          setTeams({
+            team_name: teamsData.team_name,
+            university: teamsData.university,
+            bio: teamsData.about_us,
+            members: memberDetails,
+          });
+        }
+    } catch (err) {
+      console.error('Unexpected error: ', err);
+    }
+  };
 
   useEffect(() => {
     fetchProjects();
@@ -92,7 +214,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
 
   const projectsPerPage = 4;
 
-  const handleSort = (column: 'date' | 'name') => {
+  const handleSort = (column: 'team' | 'name') => {
     if (sortColumn === column) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -111,25 +233,17 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
   });
 
   const filteredProjects = sortedProjects.filter((project) => {
-    const projectDate = new Date(project.date);
-
-    const matchesDate = (!dateRange.startDate || projectDate >= dateRange.startDate) &&
-      (!dateRange.endDate || projectDate <= dateRange.endDate)
-
-    const matchesDepartment =
-      selectedDepartments.length === 0 || selectedDepartments.includes(project.department);
-  
     const matchesStatus =
-      selectedStatus.length === 0 || selectedStatus.includes(project.status);
-  
-    const matchesSearchTerm = filter === 'date' ? true : project[filter as keyof Project]
+      selectedStatus.length === 0 ||
+      selectedStatus.includes(project.status);
+
+    const matchesSearchTerm = project[filter as keyof Project]
       ?.toString()
       ?.toLowerCase()
       ?.includes(searchTerm.toLowerCase());
-  
-    return matchesDate && matchesDepartment && matchesStatus && matchesSearchTerm;
+    
+    return matchesStatus && matchesSearchTerm;
   });
-  
 
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
@@ -142,35 +256,30 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
       : [];
 
   const handleClearFilters = () => {
-    setSelectedDepartments([]);
     setSelectedStatus([]);
   };
 
-  const departmentColors: { [key: string]: string } = {
-    ENGINEERING: '#FFA767',
-    COMPUTER_SCIENCE: '#63B3FF',
-    BIOMEDICAL: '#E75973',
-    SUSTAINABILITY: '#81C26C',
-  };
-
   const statusColors: { [key: string]: string } = {
-    DRAFT: 'white',
+    DRAFT: '#788292',
     REVIEW: '#D7B634',
     APPROVED: '#81C26C',
-    REJECTED: '#E75973',
-    DISPATCHED: '#000080',
+    REJECTED: '#FF6B6B',
+    DISPATCHED: '#000000',
     AWARDED: '#4B006E',
     ACTIVE: '#008080',
     COMPLETED: '#154406',
     CANCELLED: 'black',
   };
 
+  const handleTeamDetails = async (projectId: string) => {
+    await fetchTitle(projectId);
+    await fetchTeams(projectId);
+    setMenuOpen(true); // Open the menu
+    console.log('fetched team: ', teams);
+  };
+
   function handleSelectStatus(option: Project_Status){
     setSelectedStatus((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
-  );}
-
-  function handleSelectDepartment(option: Department_Types){
-    setSelectedDepartments((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
   );}
       
   return (
@@ -182,55 +291,22 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
           <Table>
             <TableHeader>
               <TableRow style={{ backgroundColor: '#1d1b23' }}>
-                <TableHead onClick={() => handleSort('date')} className="cursor-pointer rounded-tl-2xl rounded-bl-2xl text-white">
-                  {sortColumn === 'date'
-                    ? `Date ${sortOrder === 'asc' ? '▲' : '▼'}`
-                    : 'Date ▲▼'}
-                </TableHead>
-                <TableHead onClick={() => handleSort('name')} className="cursor-pointer text-white">
+                <TableHead onClick={() => handleSort('name')} className="cursor-pointer rounded-tl-2xl rounded-bl-2xl text-white">
                   {sortColumn === 'name'
                     ? `Project Name ${sortOrder === 'asc' ? '▲' : '▼'}`
                     : 'Project Name ▲▼'}
                 </TableHead>
-                <TableHead>
-                  <DropdownMenu open={isOpenD} onOpenChange={setIsOpenD}>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="text-white pr-4 py-2 rounded flex items-center justify-between focus:outline-none"
-                        onClick={() => setIsOpenD((prev) => !prev)}
-                      >
-                        <span>Department</span>
-                        <span
-                          className={`ml-2 ${
-                            selectedDepartments.length > 0 ? 'text-[#E75973]' : 'text-white'
-                          }`}
-                        >
-                          {isOpenD ? '▲' : '▼'}
-                        </span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="max-w-50 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
-                      {/* <DropdownMenuSeparator /> */}
-                      {departmentOptions.map((department) => (
-                        <DropdownMenuCheckboxItem
-                          key={department}
-                          checked={selectedDepartments.includes(department)}
-                          onCheckedChange={() => handleSelectDepartment(department)}
-                          onSelect={(e) => e.preventDefault()}
-                          className="text-white"
-                        >
-                          {department}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <TableHead onClick={() => handleSort('team')} className="cursor-pointer text-white">
+                  {sortColumn === 'team'
+                    ? `Team Name ${sortOrder === 'asc' ? '▲' : '▼'}`
+                    : 'Team Name ▲▼'}
                 </TableHead>
                 <TableHead>
-                  <DropdownMenu open={isOpenS} onOpenChange={setIsOpenS}>
+                  <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                     <DropdownMenuTrigger asChild>
                       <button
                         className="text-white pr-4 py-2 rounded flex items-center justify-between focus:outline-none"
-                        onClick={() => setIsOpenS((prev) => !prev)}
+                        onClick={() => setIsOpen((prev) => !prev)}
                       >
                         <span>Status</span>
                         <span
@@ -238,7 +314,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                             selectedStatus.length > 0 ? 'text-[#E75973]' : 'text-white'
                           }`}
                         >
-                          {isOpenS ? '▲' : '▼'}
+                          {isOpen ? '▲' : '▼'}
                         </span>
                       </button>
                     </DropdownMenuTrigger>
@@ -262,11 +338,11 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                   <button
                     className="px-4 py-2 rounded flex items-center space-x-2"
                     onClick={handleClearFilters}
-                    disabled={selectedDepartments.length === 0 && selectedStatus.length === 0} // Disable when no filters are selected
+                    disabled={ selectedStatus.length === 0} // Disable when no filters are selected
                   >
                     <span
                       className={`${
-                        selectedDepartments.length === 0 && selectedStatus.length === 0
+                        selectedStatus.length === 0
                           ? 'text-gray-400'
                           : 'text-white'
                       }`}
@@ -275,7 +351,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                     </span>
                     <span
                       className={`${
-                        selectedDepartments.length === 0 && selectedStatus.length === 0
+                        selectedStatus.length === 0
                           ? 'bg-gray-400 text-gray-200'
                           : 'bg-[#E75973] text-white'
                       } rounded-full h-4 w-4 flex items-center justify-center text-[12px]`}
@@ -297,33 +373,20 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                     }}
                   >
                     <TableCell 
-                      style={{
-                        borderTopLeftRadius: '0.5rem',
-                        borderBottomLeftRadius: '0.5rem',
+                      style={{ 
+                        borderTopLeftRadius: '0.5rem', 
+                        borderBottomLeftRadius: '0.5rem'
                       }}
                     >
-                      {new Date(project.date).toLocaleString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'}).substring(0,10)}
+                      {project.name}
                     </TableCell>
-                    <TableCell>{project.name}</TableCell>
-                    <TableCell>
-                      <div
-                        style={{
-                          backgroundColor: departmentColors[project.department],
-                          display: 'inline-block',
-                          color: 'white',
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '1.0rem',
-                        }}
-                      >
-                        {project.department}
-                      </div>
-                    </TableCell>
+                    <TableCell>{project.team}</TableCell>
                     <TableCell>
                       <div
                         style={{
                           backgroundColor: statusColors[project.status],
                           display: 'inline-block',
-                          color: project.status === 'DRAFT' ? 'black' : 'white',
+                          color: 'white',
                           padding: '0.25rem 0.75rem',
                           borderRadius: '1.0rem',
                         }}
@@ -337,9 +400,33 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                         borderBottomRightRadius: '0.5rem',
                       }}
                     >
-                      <Button variant="outline" asChild>
-                        <Link href={`/Employee/Projects/${project.id}`}>View Details</Link>
-                      </Button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <button className="outline rounded-lg p-0.5">
+                        <Link href={`/Employee/Projects/${project.id}`}>Project Details</Link>
+                        </button>
+                        <button
+                          className="outline rounded-lg p-0.5"
+                          onClick={() => handleTeamDetails(project.id)}
+                        >
+                          Team Details
+                        </button>
+                        {isMenuOpen && (
+                            <>
+                            {/* Backdrop */}
+                            <div
+                                className="fixed inset-0 bg-black opacity-10 z-40"
+                                onClick={() => setMenuOpen(false)} // Close modal when clicking backdrop
+                            />
+                            <div className="fixed top-0 right-0 z-50">
+                            <TeamMenu
+                              onClose={() => setMenuOpen(false)}
+                              teamsData={teams ?? null} // Pass null if teams is null
+                              title={title ?? 'Unknown Title'}
+                            />
+                            </div>
+                            </>
+                        )}
+                    </div>
                     </TableCell>
                   </TableRow>
                 ))
