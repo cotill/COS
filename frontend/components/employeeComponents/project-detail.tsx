@@ -191,6 +191,7 @@ export default function ProjectDetail({
   const onViewDetails = async () => {
     if (!currentProjectInfo.awarded_application_id) return;
 
+
     // Fetch the awarded application from Supabase
     const { data, error } = await supabase
       .from("Applications")
@@ -198,10 +199,12 @@ export default function ProjectDetail({
       .eq("application_id", currentProjectInfo.awarded_application_id)
       .single();
 
+
     if (error) {
       console.error("Error fetching team details:", error);
       return;
     }
+
 
     setAwardedTeam(data); // Store the fetched team data
   };
@@ -553,13 +556,20 @@ export default function ProjectDetail({
               <option value="UBC">University of British Columbia (UBC)</option>
             </select>
           </div>
-
-          <div className="flex flex-col">
+          {![
+              Project_Status.NEW,
+              Project_Status.DRAFT,
+              Project_Status.REVIEW,
+              Project_Status.REJECTED,
+            ].includes(currentProjectInfo.status) && (
+            <div className="flex flex-col">
             <label className="text-white">
-              This is where the download buttons should be
+              Download for Dispatch
             </label>
             <Button> Download as PDF </Button>
           </div>
+          )}
+          
         </div>
       </div>
 
