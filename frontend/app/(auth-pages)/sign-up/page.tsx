@@ -4,7 +4,6 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { SmtpMessage } from "../smtp-message";
 import {
   Select,
   SelectTrigger,
@@ -15,7 +14,7 @@ import {
 import { Department_Types } from "@/utils/types";
 import { FormMessageWithTimeout } from "@/components/form-message-with-timeout";
 import { PasswordInput } from "@/components/ui/password-input";
-import './signupPage.css'; 
+import "./signupPage.css";
 
 const departmentOptions: Department_Types[] = Object.values(Department_Types);
 
@@ -35,7 +34,9 @@ export default async function Signup(props: {
     <>
       <div className="signup-page min-h-screen flex mx-auto items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <form className="flex flex-col w-full max-w-3xl mx-auto text-white border-solid border-2 rounded-sm p-6 border-white">
-          <h1 className="text-xl font-bold  text-center">Tartigrade Employee Signup</h1>
+          <h1 className="text-xl font-bold  text-center">
+            Tartigrade Employee Signup
+          </h1>
           <p className="text-sm text text-foreground text-gray-400 text-center">
             Already have an account?{" "}
             <Link
@@ -116,7 +117,6 @@ export default async function Signup(props: {
           </div>
         </form>
       </div>
-      <SmtpMessage />
     </>
   );
 }
