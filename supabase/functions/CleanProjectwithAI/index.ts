@@ -29,7 +29,7 @@ export interface Project {
   modified_date: string | null;
   start_date: string | null;
   github: string | null;
-  status: "APPROVED" | "REJECTED" | "DRAFT" | "UNDER_REVIEW" | "DISPATCHED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "AWARDED";
+  status: "APPROVED" | "REJECTED" | "DRAFT" | "NEW" | "REVIEW" | "DISPATCHED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "AWARDED";
   university: "University of Calgary" | "University of British Columbia" | null;
   application_link: string | null;
   team_max_size: number | null;
@@ -55,7 +55,8 @@ Deno.serve(async (req) => {
   // call openAI
   const openai = new OpenAI({apiKey:apiKey,})
   const message = `Please clean and expand on the following project description:\n\n${payload.record.description}`;
-  
+  console.log("messaged sent to gpt-4o-mini was: ", message);
+
   // Documentation here: https://github.com/openai/openai-node
   const chatCompletion = await openai.chat.completions.create({
     messages: [{ role: 'user', content: message }],
@@ -64,11 +65,11 @@ Deno.serve(async (req) => {
     stream: false,
   })
 
-  const reply = chatCompletion.choices[0].message.content
+  const reply = chatCompletion.choices[0].message.content;
 
   const { data : updatedProject, error } = await supabase
   .from('Projects')
-  .update({ description: reply })
+  .update({ description: reply, status: 'DRAFT' })
   .eq('project_id', project_id)
   .select();
 
@@ -81,7 +82,10 @@ Deno.serve(async (req) => {
       },
     )
   }
-  console.log(`Project with id: ${project_id}, description was updated to: ${updatedProject[0].description}` );
+  // console.log(`Project with id: ${project_id}, description was updated to: ${updatedProject[0].description} `);
+  // console.log(`and status is now: ${updatedProject[0].status}` );
+  const {usage} = chatCompletion;
+  console.log(`Conversation tokens - Prompt: ${usage.prompt_tokens}, Completion: ${usage.completion_tokens}, Total: ${usage.total_tokens}`);
   return new Response(
     JSON.stringify(updatedProject),
     { headers: { "Content-Type": "application/json" },

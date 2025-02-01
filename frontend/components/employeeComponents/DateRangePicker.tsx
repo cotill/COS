@@ -1,0 +1,58 @@
+import React from 'react';
+import DatePicker from 'react-datepicker';
+import "@/components/employeeComponents/DateRangePicker.css";
+
+interface DateRangePickerProps {
+  startDate: Date | null;
+  endDate: Date | null;
+  onStartDateChange: (date: Date | null) => void;
+  onEndDateChange: (date: Date | null) => void;
+}
+
+const DateRangePicker: React.FC<DateRangePickerProps> = ({
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
+}) => {
+  // Function to handle setting the end date to 23:59:59
+  const handleEndDateChange = (date: Date | null) => {
+    if (date) {
+      date.setHours(23, 59, 59, 999);
+    }
+    onEndDateChange(date);
+  };
+
+  // Function to handle setting the start date to 00:00:00
+  const handleStartDateChange = (date: Date | null) => {
+    if (date) {
+      date.setHours(0, 0, 0, 0);
+    }
+    onStartDateChange(date);
+  };
+
+  return (
+    <div className="flex items-center space-x-2">
+      <DatePicker
+        selected={startDate}
+        onChange={handleStartDateChange}
+        dateFormat="yyyy-MM-dd"
+        placeholderText="Start Date"
+        showPopperArrow={false}
+        isClearable
+        className='w-full'
+      />
+      <DatePicker
+        selected={endDate}
+        onChange={handleEndDateChange}
+        dateFormat="yyyy-MM-dd"
+        placeholderText="End Date"
+        showPopperArrow={false}
+        isClearable
+        className='w-full'
+      />
+    </div>
+  );
+};
+
+export default DateRangePicker;

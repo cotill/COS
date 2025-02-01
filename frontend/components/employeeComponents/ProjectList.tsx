@@ -21,6 +21,16 @@ import {
 } from "@/components/ui/pagination"
 
 import { createClient } from '@/utils/supabase/client'
+// import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
+import { Department_Types } from '@/utils/types';
+import { Project_Status } from '@/utils/types';
+
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type Project = {
   id: string;
@@ -30,16 +40,25 @@ type Project = {
   status: string;
 };
 
-export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filter: string }) {
+export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: string; filter: string, dateRange: { startDate: Date | null; endDate: Date | null } }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<'date' | 'name'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [isOpenS, setIsOpenS] = useState(false);
+  const [isOpenD, setIsOpenD] = useState(false);
+
   const supabase = createClient();
 
+  const departmentOptions = Object.values(Department_Types);
+  const statusOptions = Object.values(Project_Status);
+
   const fetchProjects = async () => {
-    // console.log('Fetching projects...');
+    console.log('Fetching projects...');
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -49,7 +68,7 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
       if (error) {
         console.error('Error fetching projects:', error);
       } else if (data) {
-        // console.log('Fetched projects:', data);
+        console.log('Fetched projects:', data);
         setProjects(
           data.map((project) => ({
             id: project.project_id,
@@ -91,9 +110,26 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
     return 0;
   });
 
-  const filteredProjects = sortedProjects.filter((project) =>
-    project[filter as keyof Project]?.toString()?.toLowerCase()?.includes(searchTerm.toLowerCase())
-  );
+  const filteredProjects = sortedProjects.filter((project) => {
+    const projectDate = new Date(project.date);
+
+    const matchesDate = (!dateRange.startDate || projectDate >= dateRange.startDate) &&
+      (!dateRange.endDate || projectDate <= dateRange.endDate)
+
+    const matchesDepartment =
+      selectedDepartments.length === 0 || selectedDepartments.includes(project.department);
+  
+    const matchesStatus =
+      selectedStatus.length === 0 || selectedStatus.includes(project.status);
+  
+    const matchesSearchTerm = filter === 'date' ? true : project[filter as keyof Project]
+      ?.toString()
+      ?.toLowerCase()
+      ?.includes(searchTerm.toLowerCase());
+  
+    return matchesDate && matchesDepartment && matchesStatus && matchesSearchTerm;
+  });
+  
 
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
@@ -105,8 +141,40 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
         )
       : [];
 
+  const handleClearFilters = () => {
+    setSelectedDepartments([]);
+    setSelectedStatus([]);
+  };
+
+  const departmentColors: { [key: string]: string } = {
+    ENGINEERING: '#FFA767',
+    COMPUTER_SCIENCE: '#63B3FF',
+    BIOMEDICAL: '#E75973',
+    SUSTAINABILITY: '#81C26C',
+  };
+
+  const statusColors: { [key: string]: string } = {
+    DRAFT: 'white',
+    REVIEW: '#D7B634',
+    APPROVED: '#81C26C',
+    REJECTED: '#E75973',
+    DISPATCHED: '#000080',
+    AWARDED: '#4B006E',
+    ACTIVE: '#008080',
+    COMPLETED: '#154406',
+    CANCELLED: 'black',
+  };
+
+  function handleSelectStatus(option: Project_Status){
+    setSelectedStatus((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+  );}
+
+  function handleSelectDepartment(option: Department_Types){
+    setSelectedDepartments((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+  );}
+      
   return (
-    <div className="space-y-4 rounded-3xl mt-4 p-4" style={{ backgroundColor: '#c9c7ce' }}>
+    <div className="space-y-4 rounded-3xl mt-4 px-4 pb-4" style={{ backgroundColor: '#1d1b23' }}>
       {loading ? (
         <p>Loading projects...</p>
       ) : (
@@ -114,46 +182,159 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
           <Table>
             <TableHeader>
               <TableRow style={{ backgroundColor: '#1d1b23' }}>
-                <TableHead onClick={() => handleSort('date')} className="cursor-pointer rounded-tl-2xl rounded-bl-2xl">
+                <TableHead onClick={() => handleSort('date')} className="cursor-pointer rounded-tl-2xl rounded-bl-2xl text-white">
                   {sortColumn === 'date'
                     ? `Date ${sortOrder === 'asc' ? '▲' : '▼'}`
                     : 'Date ▲▼'}
                 </TableHead>
-                <TableHead onClick={() => handleSort('name')} className="cursor-pointer">
+                <TableHead onClick={() => handleSort('name')} className="cursor-pointer text-white">
                   {sortColumn === 'name'
                     ? `Project Name ${sortOrder === 'asc' ? '▲' : '▼'}`
                     : 'Project Name ▲▼'}
                 </TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="rounded-tr-2xl rounded-br-2xl">Action</TableHead>
+                <TableHead>
+                  <DropdownMenu open={isOpenD} onOpenChange={setIsOpenD}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="text-white pr-4 py-2 rounded flex items-center justify-between focus:outline-none"
+                        onClick={() => setIsOpenD((prev) => !prev)}
+                      >
+                        <span>Department</span>
+                        <span
+                          className={`ml-2 ${
+                            selectedDepartments.length > 0 ? 'text-[#E75973]' : 'text-white'
+                          }`}
+                        >
+                          {isOpenD ? '▲' : '▼'}
+                        </span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="max-w-50 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                      {/* <DropdownMenuSeparator /> */}
+                      {departmentOptions.map((department) => (
+                        <DropdownMenuCheckboxItem
+                          key={department}
+                          checked={selectedDepartments.includes(department)}
+                          onCheckedChange={() => handleSelectDepartment(department)}
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-white"
+                        >
+                          {department}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableHead>
+                <TableHead>
+                  <DropdownMenu open={isOpenS} onOpenChange={setIsOpenS}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="text-white pr-4 py-2 rounded flex items-center justify-between focus:outline-none"
+                        onClick={() => setIsOpenS((prev) => !prev)}
+                      >
+                        <span>Status</span>
+                        <span
+                          className={`ml-2 ${
+                            selectedStatus.length > 0 ? 'text-[#E75973]' : 'text-white'
+                          }`}
+                        >
+                          {isOpenS ? '▲' : '▼'}
+                        </span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="max-w-44 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                      {/* <DropdownMenuSeparator /> */}
+                      {statusOptions.map((status) => (
+                        <DropdownMenuCheckboxItem
+                          key={status}
+                          checked={selectedStatus.includes(status)}
+                          onCheckedChange={() => handleSelectStatus(status)}
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-white"
+                        >
+                          {status}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableHead>
+                <TableHead className="rounded-tr-2xl rounded-br-2xl">
+                  <button
+                    className="px-4 py-2 rounded flex items-center space-x-2"
+                    onClick={handleClearFilters}
+                    disabled={selectedDepartments.length === 0 && selectedStatus.length === 0} // Disable when no filters are selected
+                  >
+                    <span
+                      className={`${
+                        selectedDepartments.length === 0 && selectedStatus.length === 0
+                          ? 'text-gray-400'
+                          : 'text-white'
+                      }`}
+                    >
+                      Clear
+                    </span>
+                    <span
+                      className={`${
+                        selectedDepartments.length === 0 && selectedStatus.length === 0
+                          ? 'bg-gray-400 text-gray-200'
+                          : 'bg-[#E75973] text-white'
+                      } rounded-full h-4 w-4 flex items-center justify-center text-[12px]`}
+                    >
+                      ×
+                    </span>
+                  </button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {currentProjects.length > 0 ? (
-                currentProjects.map((project, index) => (
+                currentProjects.map((project) => (
                   <TableRow
                     key={project.id}
                     style={{
-                      backgroundColor: index % 2 === 0 ? 'white' : 'grey',
-                      color: index % 2 === 0 ? 'black' : 'white',
+                      backgroundColor: '#413F46',
+                      color: 'white',
                     }}
                   >
                     <TableCell 
-                      style={{ 
-                        borderTopLeftRadius: '1.5rem', 
-                        borderBottomLeftRadius: '1.5rem'
+                      style={{
+                        borderTopLeftRadius: '0.5rem',
+                        borderBottomLeftRadius: '0.5rem',
                       }}
                     >
-                      {project.date.substring(0, 10)}
+                      {new Date(project.date).toLocaleString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'}).substring(0,10)}
                     </TableCell>
                     <TableCell>{project.name}</TableCell>
-                    <TableCell>{project.department}</TableCell>
-                    <TableCell>{project.status}</TableCell>
+                    <TableCell>
+                      <div
+                        style={{
+                          backgroundColor: departmentColors[project.department],
+                          display: 'inline-block',
+                          color: 'white',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '1.0rem',
+                        }}
+                      >
+                        {project.department}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div
+                        style={{
+                          backgroundColor: statusColors[project.status],
+                          display: 'inline-block',
+                          color: project.status === 'DRAFT' ? 'black' : 'white',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '1.0rem',
+                        }}
+                      >
+                        {project.status}
+                      </div>
+                    </TableCell>
                     <TableCell
                       style={{
-                        borderTopRightRadius: '1.5rem',
-                        borderBottomRightRadius: '1.5rem',
+                        borderTopRightRadius: '0.5rem',
+                        borderBottomRightRadius: '0.5rem',
                       }}
                     >
                       <Button variant="outline" asChild>
@@ -164,14 +345,14 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-gray-500">
+                  <TableCell colSpan={5} className="py-7 text-center text-gray-500 rounded-2xl">
                     No matching projects
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-          <Pagination>
+          <Pagination className="text-white">
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
@@ -203,6 +384,5 @@ export function ProjectsList({ searchTerm, filter }: { searchTerm: string; filte
         </>
       )}
     </div>
-  )
+  );
 }
-
