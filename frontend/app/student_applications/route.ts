@@ -29,6 +29,5 @@ export async function POST(req:Request) {
         }
         return NextResponse.json({data}, {status: 201});// 201 means resource created
     } catch (err) {
-        console.error('Error creating user:', err);
         return NextResponse.json({ error: 'Theres an internal server error' }, { status: 500 });}
 }
