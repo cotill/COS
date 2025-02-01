@@ -72,6 +72,7 @@ export interface Project {
     application_deadline: string | null;
     applications_allowed: boolean | null;
     team_min_size: number | null;
+    project_budget: number | null;
 }
 
 export enum Universities{

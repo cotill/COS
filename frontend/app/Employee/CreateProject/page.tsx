@@ -10,6 +10,7 @@ interface FormData {
   title: string;
   department: string;
   description: string;
+  budget: string;
 }
 
 export default function CreateProjectPage() {
@@ -17,6 +18,7 @@ export default function CreateProjectPage() {
     title: "",
     department: "",
     description: "",
+    budget: "",
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -46,41 +48,88 @@ export default function CreateProjectPage() {
       title: "",
       department: "",
       description: "",
+      budget: "",
     });
     localStorage.removeItem("createProjectForm");
     setError(null);
   };
 
   const handleSubmit = () => {
-    if (!formData.title || !formData.department || !formData.description) {
-      setError("One or more fields are incomplete. Please fill them in before submitting.");
+    const errors = []
+    formData.budget = formData.budget.trim()
+    formData.budget = formData.budget.replace(/,/g, "");
+
+    if (!formData.title || !formData.department || !formData.description || !formData.budget) {
+      errors.push("One or more fields are incomplete. Please fill them in before submitting.");
+    }
+
+    const budgetValue = parseFloat(formData.budget)
+    if (isNaN(budgetValue)) {
+      errors.push("Budget must be a numeric value.");
+    }
+
+    if (budgetValue < 0) {
+      errors.push("Budget must be a positive value.");
+    }
+  
+    if (errors.length > 0) {
+      setError(errors.join(" "));
       return;
     }
     setError(null);
     setIsConfirming(true);
+
+    console.log("Data being submitted: ", formData)
   };
 
   const confirmSubmission = async () => {
     setIsConfirming(false);
-
     try {
-      // Stuff to enter projects into supabase
-      // const { data, error } = await supabase.from("Projects").insert([
-      //   {
-      //     title: formData.title,
-      //     department: formData.department,
-      //     description: formData.description,
-      //     creator_email: ???
-      //   },
-      // ]);
-
-      // if (error) {
-      //   console.error("Error inserting data:", error.message);
-      //   setError("Failed to submit the project. Please try again.");
-      //   return;
-      // }
-
-      // console.log("Inserted data:", data);
+      // Get creator email
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+  
+      if (sessionError || !session) {
+        console.error("Error getting session:", sessionError);
+        setError("Failed to fetch user session. Please try again.");
+        return;
+      }
+  
+      const userId = session.user.id;
+      const { data: userData, error: userError } = await supabase
+        .from("Employees")
+        .select("email")
+        .eq("employee_id", userId)
+        .single();
+  
+      if (userError || !userData) {
+        console.error("Error getting user data:", userError);
+        setError("Failed to fetch user data. Please try again.");
+        return;
+      }
+  
+      const userEmail = userData.email;
+  
+      // Insert project into Supabase
+      const { data, error: insertError } = await supabase.from("Projects").insert([
+        {
+          title: formData.title,
+          department: formData.department,
+          description: formData.description,
+          creator_email: userEmail,
+          project_budget: parseFloat(formData.budget).toFixed(2)
+        },
+      ]);
+  
+      if (insertError) {
+        console.error("Error inserting data:", insertError.message);
+        setError("Failed to submit the project. Please try again.");
+        return;
+      }
+  
+      console.log("Inserted data:", data);
       setIsSubmitted(true);
       localStorage.removeItem("createProjectForm"); // Clear localStorage on submit
     } catch (err) {
@@ -93,7 +142,7 @@ export default function CreateProjectPage() {
     <>
       <Headingbar text="Create Project" />
       <div className="space-y-4 rounded-3xl mt-4 p-8" style={{ backgroundColor: '#c9c7ce' }}>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Project Title</span>
           <input
             type="text"
@@ -103,7 +152,7 @@ export default function CreateProjectPage() {
             className="px-4 py-2 outline-none rounded-xl w-full"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Select Department</span>
           <select
             name="department"
@@ -119,7 +168,7 @@ export default function CreateProjectPage() {
             ))}
           </select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Project Description</span>
           <textarea
             name="description"
@@ -128,8 +177,18 @@ export default function CreateProjectPage() {
             className="px-4 py-2 outline-none rounded-xl w-full"
           />
         </div>
+        <div className="space-y-1">
+          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Estimated Budget</span>
+          <input
+            type="text"
+            name="budget"
+            value={formData.budget}
+            onChange={handleChange}
+            className="px-4 py-2 outline-none rounded-xl w-full"
+          />
+        </div>
         {error && <div className="text-red-500 font-bold">{error}</div>}
-        <div className="flex justify-between gap-4">
+        <div className="flex justify-between">
           <Button
             onClick={handleCancel}
             style={{
