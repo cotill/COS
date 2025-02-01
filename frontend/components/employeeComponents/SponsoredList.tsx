@@ -20,9 +20,16 @@ import {
 } from "@/components/ui/pagination"
 
 import { createClient } from '@/utils/supabase/client'
-import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
+// import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
 import { Project_Status } from '@/utils/types';
 import TeamMenu from '@/components/employeeComponents/team-menu';
+
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type Project = {
   id: string;
@@ -55,6 +62,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const supabase = createClient();
 
@@ -269,6 +277,10 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
     setMenuOpen(true); // Open the menu
     console.log('fetched team: ', teams);
   };
+
+  function handleSelectStatus(option: Project_Status){
+    setSelectedStatus((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+  );}
       
   return (
     <div className="space-y-4 rounded-3xl mt-4 px-4 pb-4" style={{ backgroundColor: '#1d1b23' }}>
@@ -290,20 +302,37 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
                     : 'Team Name ▲▼'}
                 </TableHead>
                 <TableHead>
-                  <DropdownFilter
-                    options={statusOptions}
-                    selectedOptions={selectedStatus}
-                    onSelect={(option) => {
-                      setSelectedStatus((prev) =>
-                        prev.includes(option)
-                          ? prev.filter((item) => item !== option)
-                          : [...prev, option]
-                      );
-                    }}
-                    title="Status"
-                    visibleProjectCount={currentProjects.length}
-                    height={100} 
-                  />
+                  <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="text-white pr-4 py-2 rounded flex items-center justify-between focus:outline-none"
+                        onClick={() => setIsOpen((prev) => !prev)}
+                      >
+                        <span>Status</span>
+                        <span
+                          className={`ml-2 ${
+                            selectedStatus.length > 0 ? 'text-[#E75973]' : 'text-white'
+                          }`}
+                        >
+                          {isOpen ? '▲' : '▼'}
+                        </span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="max-w-44 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                      {/* <DropdownMenuSeparator /> */}
+                      {statusOptions.map((status) => (
+                        <DropdownMenuCheckboxItem
+                          key={status}
+                          checked={selectedStatus.includes(status)}
+                          onCheckedChange={() => handleSelectStatus(status)}
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-white"
+                        >
+                          {status}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableHead>
                 <TableHead className="rounded-tr-2xl rounded-br-2xl">
                   <button
