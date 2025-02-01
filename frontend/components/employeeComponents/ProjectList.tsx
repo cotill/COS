@@ -21,9 +21,16 @@ import {
 } from "@/components/ui/pagination"
 
 import { createClient } from '@/utils/supabase/client'
-import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
+// import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
 import { Department_Types } from '@/utils/types';
 import { Project_Status } from '@/utils/types';
+
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type Project = {
   id: string;
@@ -41,6 +48,9 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [isOpenS, setIsOpenS] = useState(false);
+  const [isOpenD, setIsOpenD] = useState(false);
 
   const supabase = createClient();
 
@@ -154,6 +164,14 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
     COMPLETED: '#154406',
     CANCELLED: 'black',
   };
+
+  function handleSelectStatus(option: Project_Status){
+    setSelectedStatus((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+  );}
+
+  function handleSelectDepartment(option: Department_Types){
+    setSelectedDepartments((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+  );}
       
   return (
     <div className="space-y-4 rounded-3xl mt-4 px-4 pb-4" style={{ backgroundColor: '#1d1b23' }}>
@@ -175,36 +193,70 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                     : 'Project Name ▲▼'}
                 </TableHead>
                 <TableHead>
-                  <DropdownFilter
-                    options={departmentOptions}
-                    selectedOptions={selectedDepartments}
-                    onSelect={(option) => {
-                      setSelectedDepartments((prev) =>
-                        prev.includes(option)
-                          ? prev.filter((item) => item !== option)
-                          : [...prev, option]
-                      );
-                    }}
-                    title="Department"
-                    visibleProjectCount={currentProjects.length}
-                    height={84}
-                  />
+                  <DropdownMenu open={isOpenD} onOpenChange={setIsOpenD}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="text-white pr-4 py-2 rounded flex items-center justify-between focus:outline-none"
+                        onClick={() => setIsOpenD((prev) => !prev)}
+                      >
+                        <span>Department</span>
+                        <span
+                          className={`ml-2 ${
+                            selectedDepartments.length > 0 ? 'text-[#E75973]' : 'text-white'
+                          }`}
+                        >
+                          {isOpenD ? '▲' : '▼'}
+                        </span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="max-w-50 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                      {/* <DropdownMenuSeparator /> */}
+                      {departmentOptions.map((department) => (
+                        <DropdownMenuCheckboxItem
+                          key={department}
+                          checked={selectedDepartments.includes(department)}
+                          onCheckedChange={() => handleSelectDepartment(department)}
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-white"
+                        >
+                          {department}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableHead>
                 <TableHead>
-                  <DropdownFilter
-                    options={statusOptions}
-                    selectedOptions={selectedStatus}
-                    onSelect={(option) => {
-                      setSelectedStatus((prev) =>
-                        prev.includes(option)
-                          ? prev.filter((item) => item !== option)
-                          : [...prev, option]
-                      );
-                    }}
-                    title="Status"
-                    visibleProjectCount={currentProjects.length}
-                    height={84}
-                  />
+                  <DropdownMenu open={isOpenS} onOpenChange={setIsOpenS}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="text-white pr-4 py-2 rounded flex items-center justify-between focus:outline-none"
+                        onClick={() => setIsOpenS((prev) => !prev)}
+                      >
+                        <span>Status</span>
+                        <span
+                          className={`ml-2 ${
+                            selectedStatus.length > 0 ? 'text-[#E75973]' : 'text-white'
+                          }`}
+                        >
+                          {isOpenS ? '▲' : '▼'}
+                        </span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="max-w-44 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                      {/* <DropdownMenuSeparator /> */}
+                      {statusOptions.map((status) => (
+                        <DropdownMenuCheckboxItem
+                          key={status}
+                          checked={selectedStatus.includes(status)}
+                          onCheckedChange={() => handleSelectStatus(status)}
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-white"
+                        >
+                          {status}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableHead>
                 <TableHead className="rounded-tr-2xl rounded-br-2xl">
                   <button

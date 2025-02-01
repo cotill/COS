@@ -25,10 +25,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     switch (filter) {
       case 'name':
         return 'Search project name...';
-      case 'department':
-        return 'Search department...';
-      case 'status':
-        return 'Search status...';
+      // case 'department':
+      //   return 'Search department...';
+      // case 'status':
+      //   return 'Search status...';
     }
   };
 
@@ -49,9 +49,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         }}
       >
         <option value="name">Name</option>
-        <option value="department">Department</option>
+        {/* <option value="department">Department</option> */}
         <option value="date">Date</option>
-        <option value="status">Status</option>
+        {/* <option value="status">Status</option> */}
       </select>
       
       {showDatePicker ? (
