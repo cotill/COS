@@ -149,7 +149,7 @@ export default function CreateProjectPage() {
             name="title"
             value={formData.title}
             onChange={handleChange}
-            className="px-4 py-2 outline-none rounded-xl w-full"
+            className="px-4 py-2 outline-none rounded-xl w-full text-black"
           />
         </div>
         <div className="space-y-1">
@@ -158,7 +158,7 @@ export default function CreateProjectPage() {
             name="department"
             value={formData.department}
             onChange={handleChange}
-            className="px-3 py-2 outline-none rounded-xl w-full"
+            className="px-3 py-2 outline-none rounded-xl w-full text-black"
           >
             <option value="" disabled></option>
             {Object.values(Department_Types).map((dept) => (
@@ -174,17 +174,17 @@ export default function CreateProjectPage() {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="px-4 py-2 outline-none rounded-xl w-full"
+            className="px-4 py-2 outline-none rounded-xl w-full text-black"
           />
         </div>
         <div className="space-y-1">
           <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Estimated Budget</span>
           <input
-            type="text"
+            type="number"
             name="budget"
             value={formData.budget}
             onChange={handleChange}
-            className="px-4 py-2 outline-none rounded-xl w-full"
+            className="px-4 py-2 outline-none rounded-xl w-full text-black"
           />
         </div>
         {error && <div className="text-red-500 font-bold">{error}</div>}
