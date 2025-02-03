@@ -270,11 +270,20 @@ export default function TrainingPage() {
 
         {view === "failure" && (
           <div className="failure">
-            <h2>❌ Try Again ❌</h2>
-            <p>{message}</p>
-            <button type="button" onClick={handleRetry}>
+           <div className="flex flex-col items-center justify-center bg-gray-100 rounded-xl shadow-lg mt-4 pt-4 p-8 w-full max-w-md mx-auto">
+          
+          <h2 className="mt-6 text-2xl font-semibold text-gray-800">
+            Try Again
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+          {message}
+          </p>
+            <button type="button" 
+            onClick={handleRetry}
+            className="text-center text-3xl text-white bg-bluetext-3xl mt-4 pt-4 bg-blue-900 border-2 border-white text-white rounded-full px-6 py-3">
               Retry Quiz
             </button>
+          </div>
           </div>
         )}
       </div>
