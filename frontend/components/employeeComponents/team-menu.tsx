@@ -1,8 +1,17 @@
 import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/utils/supabase/client";
 
 type Members = {
   full_name: string;
-  major: string;
+  role: string;
   email: string;
   resume: string;
 };
@@ -12,7 +21,7 @@ type Team = {
   university: string;
   bio: string;
   members: Members[];
-}
+};
 
 interface TeamMenuProps {
   onClose: () => void;
@@ -20,93 +29,76 @@ interface TeamMenuProps {
   title: string;
 }
 
+async function openResume(resume_filepath: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase.storage
+    .from("applicants_resumes")
+    .createSignedUrl(resume_filepath, 600); // Link valid for 10 mins
+
+  if (data?.signedUrl) {
+    window.open(data.signedUrl, "_blank");
+  } else {
+    alert("Unable to fetch the resume. Please try again.");
+  }
+}
+
 const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
-  if (teamsData == null) {
-    return (
-      <div className="fixed inset-0 z-50 flex justify-center items-center">
-        <div
-          className="bg-gray-900 text-white rounded-lg shadow-lg w-auto max-w-[450px] max-h-[300px] overflow-y-auto"
-        >
-          <div className="sticky top-0 bg-gray-900 z-10 p-4 border-b border-gray-700">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{title}</h2>
-              <button className="text-2xl font-bold" onClick={onClose}>
-                &times;
-              </button>
-            </div>
-          </div>
-          <div className="p-4 space-y-3">
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="bg-gray-900 text-white rounded-lg shadow-lg max-w-[450px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          {teamsData ? (
+            <>
+              <div className='flex flex-col'>
+                <span className="text-gray-400">Team Name: </span>
+                <span>{teamsData.team_name}</span>
+              </div>
+              <div className='flex flex-col'>
+                <span className="text-gray-400">University: </span>
+                <span>{teamsData.university}</span>
+              </div>
+              <div className='flex flex-col'>
+                <span className="text-gray-400">Team detail: </span>
+                <span className="max-h-32 overflow-y-auto scrollbar bg-gray-800 rounded-md p-2">{teamsData.bio}</span>
+              </div>
+              <div>
+                <div>
+                  <span className="text-gray-400">Members:</span>
+                </div>
+                <div className={`space-y-2 ${teamsData.members.length > 3 ? "max-h-48 overflow-y-scroll scrollbar" : ""}`}>
+                  {teamsData.members.map((member, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-gray-800 p-2 rounded-md"
+                    >
+                      <div>
+                        <p>{member.full_name}</p>
+                        <p className="text-sm text-gray-400">{member.role}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openResume(member.resume)}
+                      >
+                        View Resume
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
             <div>
               <span>No team details available as the project has not been awarded at this time.</span>
             </div>
-          </div>
+          )}
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={onClose}
-      ></div>
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex justify-center items-center">
-        <div
-          className="bg-gray-900 text-white rounded-lg shadow-lg w-auto max-w-[450px] max-h-[300px] overflow-y-auto"
-        >
-          {/* Modal Header */}
-          <div className="sticky top-0 bg-gray-900 z-10 p-4 border-b border-gray-700">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{title}</h2>
-              <button className="text-2xl font-bold" onClick={onClose}>
-                &times;
-              </button>
-            </div>
-          </div>
-
-          {/* Modal Content */}
-          <div className="p-4 space-y-3">
-            <div>
-              <span>University: {teamsData.university}</span>
-            </div>
-            <div>
-              <span>Team Name: {teamsData.team_name}</span>
-            </div>
-            <div>
-              <span>About: {teamsData.bio}</span>
-            </div>
-            <div>
-              <span>Members:</span>
-            </div>
-            {teamsData.members.map((member, index) => (
-              <div
-                className="flex items-center justify-between"
-                key={index}
-              >
-                <span>
-                  {member.full_name}
-                </span>
-                <div className="flex space-x-4">
-                  <span>
-                    {member.email}
-                  </span>
-                  <button
-                    className="outline rounded-lg px-2 py-1"
-                    onClick={() => window.open(member.resume, "_blank")}
-                  >
-                    View Resume
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 };
 

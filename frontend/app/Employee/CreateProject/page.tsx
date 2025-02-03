@@ -141,7 +141,7 @@ export default function CreateProjectPage() {
   return (
     <>
       <Headingbar text="Create Project" />
-      <div className="space-y-4 rounded-3xl mt-4 p-8" style={{ backgroundColor: '#c9c7ce' }}>
+      <div className="space-y-4 rounded-3xl mt-4 p-8" style={{ backgroundColor: '#1d1b23' }}>
         <div className="space-y-1">
           <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Project Title</span>
           <input
@@ -150,6 +150,7 @@ export default function CreateProjectPage() {
             value={formData.title}
             onChange={handleChange}
             className="px-4 py-2 outline-none rounded-xl w-full text-black"
+            placeholder="Enter project title..."
           />
         </div>
         <div className="space-y-1">
@@ -158,9 +159,11 @@ export default function CreateProjectPage() {
             name="department"
             value={formData.department}
             onChange={handleChange}
-            className="px-3 py-2 outline-none rounded-xl w-full text-black"
+            className={`px-3 py-2 outline-none rounded-xl w-full ${
+              formData.department ? "text-black" : "text-gray-400"
+            }`}          
           >
-            <option value="" disabled></option>
+            <option value="" disabled>Select project department...</option>
             {Object.values(Department_Types).map((dept) => (
               <option key={dept} value={dept}>
                 {dept}
@@ -175,6 +178,7 @@ export default function CreateProjectPage() {
             value={formData.description}
             onChange={handleChange}
             className="px-4 py-2 outline-none rounded-xl w-full text-black"
+            placeholder="Enter project description..."
           />
         </div>
         <div className="space-y-1">
@@ -185,6 +189,7 @@ export default function CreateProjectPage() {
             value={formData.budget}
             onChange={handleChange}
             className="px-4 py-2 outline-none rounded-xl w-full text-black"
+            placeholder="Enter project budget..."
           />
         </div>
         {error && <div className="text-red-500 font-bold">{error}</div>}
@@ -220,8 +225,8 @@ export default function CreateProjectPage() {
 
       {isConfirming && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-3xl text-center space-y-4">
-            <h2 className="text-xl font-bold">Confirm Project Idea Submission:</h2>
+          <div className="bg-[#1d1b23] p-6 rounded-3xl text-center space-y-4">
+            <h2 className="text-xl font-bold text-white">Confirm Project Idea Submission:</h2>
             <div className="flex justify-around gap-4">
               <Button
                 onClick={confirmSubmission}
@@ -256,8 +261,8 @@ export default function CreateProjectPage() {
 
       {isSubmitted && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-3xl text-center space-y-4">
-            <h2 className="text-xl font-bold">Project Idea Submitted.</h2>
+          <div className="bg-[#1d1b23] p-6 rounded-3xl text-center space-y-4">
+            <h2 className="text-xl font-bold text-white">Project Idea Submitted.</h2>
             <Button
               onClick={() => {
                 setIsSubmitted(false);

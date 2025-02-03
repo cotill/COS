@@ -154,6 +154,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
   };
 
   const statusColors: { [key: string]: string } = {
+    NEW: '#788292',
     DRAFT: 'white',
     REVIEW: '#D7B634',
     APPROVED: '#81C26C',
@@ -209,7 +210,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                         </span>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="max-w-50 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                    <DropdownMenuContent className="max-w-50 bg-[#1D1B23] bg-opacity-100 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
                       {/* <DropdownMenuSeparator /> */}
                       {departmentOptions.map((department) => (
                         <DropdownMenuCheckboxItem
@@ -218,6 +219,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                           onCheckedChange={() => handleSelectDepartment(department)}
                           onSelect={(e) => e.preventDefault()}
                           className="text-white"
+                          colorMap={departmentColors}
                         >
                           {department}
                         </DropdownMenuCheckboxItem>
@@ -242,7 +244,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                         </span>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="max-w-44 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                    <DropdownMenuContent className="max-w-44 bg-[#1D1B23] bg-opacity-100 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
                       {/* <DropdownMenuSeparator /> */}
                       {statusOptions.map((status) => (
                         <DropdownMenuCheckboxItem
@@ -251,6 +253,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                           onCheckedChange={() => handleSelectStatus(status)}
                           onSelect={(e) => e.preventDefault()}
                           className="text-white"
+                          colorMap={statusColors}
                         >
                           {status}
                         </DropdownMenuCheckboxItem>
