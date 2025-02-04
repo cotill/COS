@@ -188,6 +188,44 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
     setAwardedTeam(data); // Store the fetched team data
   };
 
+  const handleDownloadPdf = async () => {
+
+    // Get the current session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      console.error('User not authenticated');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/pdf`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization: `Bearer ${session.access_token}`, // Pass the token
+        },
+        body:JSON.stringify({
+          project_id: currentProjectInfo.project_id
+        })
+      });
+      console.log(response)
+      if (!response.ok) {
+        console.error('Failed to fetch PDF');
+        return;
+      }
+
+      const result = await response.json();
+      console.log(result); // Process the result (PDF content or success message)
+
+    } catch (error) {
+      console.error('Error fetching PDF:', error);
+    }
+  };
+
+
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
@@ -482,7 +520,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
           {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(currentProjectInfo.status) && (
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
-              <Button> Download as PDF </Button>
+              <Button onClick={handleDownloadPdf}> Download as PDF </Button>
             </div>
           )}
         </div>
