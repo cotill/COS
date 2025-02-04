@@ -22,6 +22,7 @@ import { FaGithub, FaGoogleDrive } from "react-icons/fa";
 import { TeamDetailsDialog } from "./team-detail";
 import { v4 as uuidv4 } from "uuid";
 import "./project-details.css";
+import CreatePdf from "@/app/student_applications/createPdf";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
@@ -189,42 +190,39 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
   };
 
   const handleDownloadPdf = async () => {
-
     // Get the current session
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
     if (!session) {
-      console.error('User not authenticated');
+      console.error("User not authenticated");
       return;
     }
 
     try {
       const response = await fetch(`/pdf`, {
-        method: 'POST',
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           // Authorization: `Bearer ${session.access_token}`, // Pass the token
         },
-        body:JSON.stringify({
-          project_id: currentProjectInfo.project_id
-        })
+        body: JSON.stringify({
+          project_id: currentProjectInfo.project_id,
+        }),
       });
-      console.log(response)
+      console.log(response);
       if (!response.ok) {
-        console.error('Failed to fetch PDF');
+        console.error("Failed to fetch PDF");
         return;
       }
 
       const result = await response.json();
       console.log(result); // Process the result (PDF content or success message)
-
     } catch (error) {
-      console.error('Error fetching PDF:', error);
+      console.error("Error fetching PDF:", error);
     }
   };
-
 
   return (
     <div className="relative">
@@ -520,7 +518,8 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
           {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(currentProjectInfo.status) && (
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
-              <Button onClick={handleDownloadPdf}> Download as PDF </Button>
+              <CreatePdf />
+              {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
             </div>
           )}
         </div>
