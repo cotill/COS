@@ -69,7 +69,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
   }
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => (currentYear + i).toString());
+  const years = Array.from({ length: 3 }, (_, i) => (currentYear + i).toString());
 
   // modifies the current project object
   const onInputChange = (event: { target: { name: any; value: any } }) => {
@@ -90,13 +90,6 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
     }, timeoutLength);
     // save logic
     try {
-      // logic for application link
-      /*const applicationLinkAction: "create" | "keep" | "delete" = updateApplicationLink(originalProjectInfo.status, currentProjectInfo.status);
-      if (applicationLinkAction === "create") {
-        currentProjectInfo.application_link = uuidv4();
-      } else if (applicationLinkAction === "delete") {
-        currentProjectInfo.application_link = null;
-      }*/
       const updatedData: Partial<Project> = getChangedData(originalProjectInfo, currentProjectInfo, employeeInfo.email, employeeInfo.level);
       if (Object.keys(updatedData).length === 0) {
         setMessage("No changes detected to update the project.");
@@ -104,12 +97,22 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
         return;
       }
       // update last modified by to the time and the current user
-      const modifiedDate = new Date().toISOString();
-      updatedData.last_modified_date = modifiedDate; // include the date the data was last modified
-      currentProjectInfo.last_modified_date = modifiedDate;
-      if (originalProjectInfo.last_modified_user !== employeeInfo.email) {
-        currentProjectInfo.last_modified_user = employeeInfo.email;
-        updatedData.last_modified_user;
+      const dateNow = new Date().toISOString();
+      updatedData.last_modified_date = dateNow; // include the date the data was last modified
+      currentProjectInfo.last_modified_date = dateNow;
+      currentProjectInfo.last_modified_user = employeeInfo.email;
+      updatedData.last_modified_user;
+
+      // if the current status is APPROVED, set approve detail
+      if (originalProjectInfo.status !== currentProjectInfo.status) {
+        if (currentProjectInfo.status === Project_Status.APPROVED) {
+          updatedData.approval_email = employeeInfo.email;
+          updatedData.approved_date = dateNow;
+        }
+        if (currentProjectInfo.status === Project_Status.DISPATCHED) {
+          updatedData.dispatcher_email = employeeInfo.email;
+          updatedData.dispatched_date = updatedData.dispatched_date;
+        }
       }
 
       await onUpdateProject(updatedData, project.project_id);
@@ -247,7 +250,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
               </p>
               {approvalName && (
                 <p>
-                  Reviewed by: {approvalName} on {formatDateTime(project.approved_date)}
+                  Approved by: {approvalName} on {formatDateTime(project.approved_date)}
                 </p>
               )}
               {dispatcherName && (
