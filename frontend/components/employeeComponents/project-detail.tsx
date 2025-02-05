@@ -515,7 +515,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
               <option value="UBC">University of British Columbia (UBC)</option>
             </select>
           </div>
-          {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(currentProjectInfo.status) && (
+          {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(originalProjectInfo.status) && (
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
               <CreatePdf project={originalProjectInfo}/>
