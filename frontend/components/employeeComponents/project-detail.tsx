@@ -34,6 +34,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [sponsorData, setSponsorData] = useState<Employee | null>(initialSponsorInfo);
+  const [originalSponsorData, setOriginalSponsorData] = useState<Employee | null>(initialSponsorInfo);
   const [error, setError] = useState<string | null>(null);
   const [isMessage, setMessage] = useState<string | null>(null);
   const [awardedTeam, setAwardedTeam] = useState(null);
@@ -117,12 +118,14 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
   }
   function handleCancelEdit() {
     setCurrentProjectInfo(originalProjectInfo);
+    setSponsorData(originalSponsorData);
     setIsEditing(false);
   }
   const handleProjectEdit = () => {
     // check if the user can  edit
     if (canUserEditProject(employeeInfo.email, employeeInfo.level, project.creator_email)) {
       setIsEditing(true);
+      setOriginalSponsorData(sponsorData);
     } else {
       alert("You're are not authorized to edit this project! \nOnly the user that created the project, or employees lvl 2+ can edit this project");
     }
@@ -174,41 +177,6 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
     }
 
     setAwardedTeam(data); // Store the fetched team data
-  };
-
-  const handleDownloadPdf = async () => {
-    // Get the current session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      console.error("User not authenticated");
-      return;
-    }
-
-    try {
-      const response = await fetch(`/pdf`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Authorization: `Bearer ${session.access_token}`, // Pass the token
-        },
-        body: JSON.stringify({
-          project_id: currentProjectInfo.project_id,
-        }),
-      });
-      console.log(response);
-      if (!response.ok) {
-        console.error("Failed to fetch PDF");
-        return;
-      }
-
-      const result = await response.json();
-      console.log(result); // Process the result (PDF content or success message)
-    } catch (error) {
-      console.error("Error fetching PDF:", error);
-    }
   };
 
   return (
