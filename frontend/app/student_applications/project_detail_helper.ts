@@ -27,23 +27,24 @@ export const getChangedData = (originalProjectInfo: Project, currentProjectInfo:
   Object.keys(originalProjectInfo).forEach((key) => {
     if (originalProjectInfo[key as keyof Project] !== currentProjectInfo[key as keyof Project]) {
       if (currentProjectInfo[key as keyof Project] === Project_Status.APPROVED) {
-        // if the current status is approved the check
-        checkApproverInfo(originalProjectInfo.creator_email, user_email, user_level);
-
-        // check that the current status is less than original
-        const applicationLinkAction: "create" | "delete" | "keep" = updateApplicationLink(originalProjectInfo.status, originalProjectInfo.application_link, currentProjectInfo.status);
-        if (applicationLinkAction === "create") {
-          changedData.application_link = uuidv4();
-          console.log(`application_link was created -value: ${changedData.application_link}`);
-        } else if (applicationLinkAction === "delete") {
-          changedData.application_link = null;
-          console.log(`application_link was 'deleted'-value: ${changedData.application_link}`);
+        if (!checkApproverInfo(originalProjectInfo.creator_email, user_email, user_level)) {
+          return;
         }
-      } else {
-        const value = currentProjectInfo[key as keyof Project];
-        (changedData as any)[key as keyof Project] = value;
-        console.log(`Key: ${key} was modified to value: ${value}`);
+
+        // if the current status is approved the check
+        // check that the current status is less than original
+        // const applicationLinkAction: "create" | "delete" | "keep" = updateApplicationLink(originalProjectInfo.status, originalProjectInfo.application_link, currentProjectInfo.status);
+        // if (applicationLinkAction === "create") {
+        changedData.application_link = uuidv4();
+        console.log(`application_link was created -value: ${changedData.application_link}`);
+        // } else if (applicationLinkAction === "delete") {
+        // changedData.application_link = null;
+        // console.log(`application_link was 'deleted'-value: ${changedData.application_link}`);
+        // }
       }
+      const value = currentProjectInfo[key as keyof Project];
+      (changedData as any)[key as keyof Project] = value;
+      console.log(`Key: ${key} was modified to value: ${value}`);
     }
   });
 
@@ -55,10 +56,12 @@ export const onUpdateProject = async (updatedProject: Partial<Project>, project_
   const { data, error } = await supabase
     .from("Projects")
     .update({ ...updatedProject })
-    .eq("project_id", project_id);
+    .eq("project_id", project_id)
+    .select();
   if (error) {
     throw new Error(`Error updating project info: ${error?.message}`);
   }
+  return data[0] as Project;
 };
 
 /**
@@ -116,6 +119,9 @@ export const canUserEditProject = (user_email: string, user_level: number, creat
  * the user level is too low to approve, or the the level is not a problem but the user is try to approve their own project
  */
 const checkApproverInfo = (creator_email: string, user_email: string, user_level: number) => {
-  if (user_level < 2 || user_email === creator_email) return false;
+  if (user_level < 2 || user_email === creator_email) {
+    alert("You're are not authorized to edit approve this project! \nOnly employees lvl 2+ can");
+    return false;
+  }
   return true;
 };

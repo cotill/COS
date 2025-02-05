@@ -64,6 +64,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
       ...currentProjectInfo,
       [name]: value,
     });
+    console.log(`${name} was updated to ${value}`);
   };
 
   async function handleSaveProject() {
@@ -85,8 +86,8 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
       // update last modified by to the time and the current user
       const dateNow = new Date().toISOString();
       updatedData.last_modified_date = dateNow; // include the date the data was last modified
-      currentProjectInfo.last_modified_date = dateNow;
-      currentProjectInfo.last_modified_user = employeeInfo.email;
+      // currentProjectInfo.last_modified_date = dateNow;
+      // currentProjectInfo.last_modified_user = employeeInfo.email;
       updatedData.last_modified_user = employeeInfo.email;
 
       // if the current status is APPROVED, set approve detail
@@ -101,11 +102,12 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         }
       }
 
-      await onUpdateProject(updatedData, project.project_id);
-      setOriginalProjectInfo({
-        ...originalProjectInfo,
-        ...updatedData,
-        application_link: updatedData.application_link !== undefined ? updatedData.application_link : originalProjectInfo.application_link,
+      await onUpdateProject(updatedData, project.project_id).then((updatedProjectedFromDB) => {
+        console.log(`updated from db is... ${updatedProjectedFromDB.status}`);
+        if (updatedProjectedFromDB) {
+          setCurrentProjectInfo(updatedProjectedFromDB);
+          setOriginalProjectInfo(updatedProjectedFromDB);
+        }
       });
     } catch (error) {
       alert(`${error}`);
@@ -122,7 +124,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
     if (canUserEditProject(employeeInfo.email, employeeInfo.level, project.creator_email)) {
       setIsEditing(true);
     } else {
-      alert("You're are not authorized to edit this project! \nOnly the user that created the project, or user's lvl 2+ can edit this project");
+      alert("You're are not authorized to edit this project! \nOnly the user that created the project, or employees lvl 2+ can edit this project");
     }
   };
 
@@ -322,14 +324,14 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
               name="application_deadline"
               selected={currentProjectInfo.application_deadline ? new Date(currentProjectInfo.application_deadline) : null}
               onChange={(date) => {
-                if (date){
-                  date.setUTCHours(23 + 7, 59, 0, 0) // saves 11:59pm MST in UTC
+                if (date) {
+                  date.setUTCHours(23 + 7, 59, 0, 0); // saves 11:59pm MST in UTC
                   onInputChange({
                     target: {
                       name: "application_deadline",
                       value: date ? date.toISOString() : "",
                     },
-                  })
+                  });
                 }
               }}
               dateFormat="MMM d, yyyy"
