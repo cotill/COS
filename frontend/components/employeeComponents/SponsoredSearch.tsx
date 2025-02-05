@@ -29,7 +29,7 @@ export const SponsoredSearch: React.FC<SponsoredSearchProps> = ({
         type="text"
         value={value}
         onChange={onSearchChange}
-        className="px-4 py-2 outline-none rounded-3xl w-full"
+        className="px-4 py-2 outline-none rounded-3xl w-full text-black"
         placeholder={placeholder}
       />
     </div>

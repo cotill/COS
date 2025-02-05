@@ -42,7 +42,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         placeholderText="Start Date"
         showPopperArrow={false}
         isClearable
-        className='w-full'
+        className='w-full text-black'
       />
       <DatePicker
         selected={endDate}
@@ -51,7 +51,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         placeholderText="End Date"
         showPopperArrow={false}
         isClearable
-        className='w-full'
+        className='w-full text-black'
       />
     </div>
   );

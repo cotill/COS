@@ -48,7 +48,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           color: 'grey',
         }}
       >
-        <option value="name">Name</option>
+        <option value="name">Project Name</option>
         {/* <option value="department">Department</option> */}
         <option value="date">Date</option>
         {/* <option value="status">Status</option> */}
@@ -72,7 +72,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           type="text"
           value={value}
           onChange={onSearchChange}
-          className="px-4 py-2 outline-none rounded-3xl w-full"
+          className="px-4 py-2 outline-none rounded-3xl w-full text-black"
           placeholder={getPlaceholderText(filter)}
         />
       )}
