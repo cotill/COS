@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
 
 });
 
-const MyDocument = ({ project }: { project: Project }) => (
+const MyDocument = ({ project }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
@@ -55,7 +55,7 @@ const MyDocument = ({ project }: { project: Project }) => (
   </Document>
 );
 
-function CreatePdf({ project }: { project: Project }) {
+function CreatePdf({ project }) {
   const [loading, setLoading] = useState(true);
   if (!project) {
     return <p>Failed to load project.</p>;
