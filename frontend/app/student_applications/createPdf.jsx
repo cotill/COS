@@ -77,7 +77,7 @@ function CreatePdf({ project }) {
       >
         {/* {({ blob, url, loading, error }) => (loading ? "Loading document..." : "Download now!")} */}
         {({ blob, url, loading, error }) => (
-          <Button className="bg-black hover:bg-slate-600">
+          <Button variant='outline'>
             {loading ? "Loading document..." : "Download now!"}
           </Button>
         )}

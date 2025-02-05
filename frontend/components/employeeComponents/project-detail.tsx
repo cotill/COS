@@ -210,7 +210,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         </div>
         {/* Project edit button */}
         <div className="flex items-center gap-6 justify-center">
-          <Button
+          <Button variant="outline"
             className={`flex flex-row rounded-full w-24 gap-3 font-medium h-9 focus:outline-none 
           hover:bg-opacity-10 hover:bg-white transition-colors duration-100 ease-in-out
           ${isEditing ? "hidden" : ""}`}
@@ -455,7 +455,9 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
           {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(originalProjectInfo.status) && (
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
+              <div className="flex justify-center items-center space-x-2">
               <CreatePdf project={originalProjectInfo}/>
+              </div>
               {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
             </div>
           )}
@@ -468,14 +470,14 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         <div>
           <h2 className="text-xl font-bold text-white py-2">Applications</h2>
           <div className="space-x-2">
-            <Button asChild className="text-md space-x-1" disabled={!originalProjectInfo.application_link}>
+            <Button asChild variant="outline" className="text-md space-x-1" disabled={!originalProjectInfo.application_link}>
               <Link href={`/ApplicationForm/${originalProjectInfo.application_link}/`}>
                 {" "}
                 <span>Application Link</span>
                 <ArrowUpRight />
               </Link>
             </Button>
-            <Button asChild className="text-md space-x-1">
+            <Button asChild variant="outline" className="text-md space-x-1">
               <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>
                 <span>View Applicants</span>
                 <ChevronRight />
