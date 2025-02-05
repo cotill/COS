@@ -134,7 +134,10 @@ export default function TrainingPage() {
       } else {
         setEmail(data.email);
         setLevel(data.level as Level);
-        setAnswers(new Array(quizzes[data.level as Level].questions.length).fill(""));
+
+        if (data.level as Level <= 2) {
+          setAnswers(new Array(quizzes[data.level as Level].questions.length).fill(""));
+        }
       }
     };
 
@@ -176,6 +179,14 @@ export default function TrainingPage() {
 
   if (level === null) return <div>Loading...</div>;
 
+  if (level === null || level > 2) return (
+    <>
+      <Headingbar text="Training" />
+      <div className="text-center mt-16 mb-16 text-3xl text-white">Youre Max level!</div>
+      
+    </>
+  );
+
   return (
     <>
       <Headingbar text="Training" />
@@ -198,9 +209,9 @@ export default function TrainingPage() {
             
           </div>
           <div className="flex items-center justify-center mt-4 p-4">
-          <button type="button"  className="text-center text-3xl text-white bg-bluetext-3xl bg-blue-900 border-2 border-white text-white rounded-full px-6 py-3" onClick={() => setView("quiz")}>
+          <Button variant="outline" onClick={() => setView("quiz")}>
               Start Quiz
-            </button>
+            </Button>
           </div>
           </div>
         )}
@@ -212,10 +223,11 @@ export default function TrainingPage() {
             <form>
               {quizzes[level]?.questions.map((question, index) => (
                 <div key={index}>
-                  <p>{question.question}</p>
+                  <p className="ml-4 mt-4">{question.question}</p>
                   {question.choices.map((choice, choiceIndex) => (
                     <label key={choiceIndex} style={{ display: "block" }}>
                       <input
+                        className="ml-4"
                         type="radio"
                         name={`question-${index}`}
                         value={choice}
@@ -234,9 +246,9 @@ export default function TrainingPage() {
             </form>
             </div>
             <div className="flex items-center justify-center mt-4 p-4">
-            <button type="button" className="text-center text-3xl text-white bg-bluetext-3xl bg-blue-900 border-2 border-white text-white rounded-full px-6 py-3" onClick={handleSubmit}>
+            <Button variant="outline" onClick={handleSubmit}>
               Submit Quiz
-            </button>
+            </Button>
             </div>
           </div>
         )}
@@ -258,23 +270,31 @@ export default function TrainingPage() {
           
         </div>
         <div className="flex items-center justify-center mt-4 p-4">
-        <button
+        <Button variant="outline"
             onClick={() => setView("training")}
-            className="text-center text-3xl text-white bg-bluetext-3xl bg-blue-900 border-2 border-white text-white rounded-full px-6 py-3"
           >
             Continue
-          </button>
+          </Button>
         </div>
         </div>
         )}
 
         {view === "failure" && (
           <div className="failure">
-            <h2>❌ Try Again ❌</h2>
-            <p>{message}</p>
-            <button type="button" onClick={handleRetry}>
+           <div className="flex flex-col items-center justify-center bg-gray-100 rounded-xl shadow-lg mt-4 pt-4 p-8 w-full max-w-md mx-auto">
+          
+          <h2 className="mt-6 text-2xl font-semibold text-gray-800">
+            Try Again
+          </h2>
+          <p className="mt-10 mb-10 text-sm text-gray-600">
+          {message}
+          </p>
+            <Button variant="outline"
+            onClick={handleRetry}
+            >
               Retry Quiz
-            </button>
+            </Button>
+          </div>
           </div>
         )}
       </div>

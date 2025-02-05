@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useState } from 'react';
 import { ProjectsList } from '@/components/employeeComponents/ProjectList';
@@ -6,8 +6,11 @@ import Headingbar from '@/components/employeeComponents/Headingbar';
 import { SearchBar } from '@/components/employeeComponents/Searchbar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useEmployee } from "@/context/EmployeeContext"; // Import the context
 
 export default function ProjectPage() {
+  const { employeeLevel } = useEmployee(); // Get employee level from context
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('name'); // Default filter is by name
   const [dateRange, setDateRange] = useState<{ startDate: Date | null; endDate: Date | null }>({
@@ -21,12 +24,9 @@ export default function ProjectPage() {
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newFilter = event.target.value;
-
-    // Reset date range if the filter changes from "date" to something else
-    if (filter == 'date' && newFilter !== 'date') {
+    if (filter === 'date' && newFilter !== 'date') {
       setDateRange({ startDate: null, endDate: null });
     }
-
     setSearchTerm('');
     setFilter(newFilter);
   };
@@ -34,6 +34,7 @@ export default function ProjectPage() {
   const handleDateRangeChange = (range: { startDate: Date | null; endDate: Date | null }) => {
     setDateRange(range);
   };
+
 
   return (
     <>
@@ -45,21 +46,23 @@ export default function ProjectPage() {
             onSearchChange={handleSearchChange}
             filter={filter}
             onFilterChange={handleFilterChange}
-            dateRange={dateRange} // Pass the date range to the SearchBar
-            onDateRangeChange={handleDateRangeChange} // Pass the handler to update the date range
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
           />
-          <Button
-            style={{
-              backgroundColor: "#81c26c",
-              color: "white",
-              fontWeight: "bold",
-              fontSize: "16px",
-              width: "17.5%",
-              borderRadius: "20px",
-            }}
-          >
-            <Link href={`/Employee/CreateProject/`}>Create Project</Link>
-          </Button>
+          {employeeLevel !== 0 && (
+            <Button
+              style={{
+                backgroundColor: "#81c26c",
+                color: "white",
+                fontWeight: "bold",
+                fontSize: "16px",
+                width: "17.5%",
+                borderRadius: "20px",
+              }}
+            >
+              <Link href={`/Employee/CreateProject/`}>Create Project</Link>
+            </Button>
+          )}
         </div>
         <ProjectsList searchTerm={searchTerm} filter={filter} dateRange={dateRange} />
       </div>
