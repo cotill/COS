@@ -40,9 +40,10 @@ type Project = {
 
 type Members = {
   full_name: string;
-  major: string;
+  role: string;
   email: string;
   resume: string;
+  ttg: string;
 };
 
 type Team = {
@@ -192,7 +193,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
           const members = teamsData.members || [];
           const memberDetails = members.map((member: any) => ({
             full_name: member.full_name,
-            major: member.major,
+            role: member.role,
             email: member.email,
             resume: member.resume,
       }));
@@ -260,11 +261,12 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
   };
 
   const statusColors: { [key: string]: string } = {
-    DRAFT: '#788292',
+    NEW: '#788292',
+    DRAFT: 'white',
     REVIEW: '#D7B634',
     APPROVED: '#81C26C',
-    REJECTED: '#FF6B6B',
-    DISPATCHED: '#000000',
+    REJECTED: '#E75973',
+    DISPATCHED: '#000080',
     AWARDED: '#4B006E',
     ACTIVE: '#008080',
     COMPLETED: '#154406',
@@ -318,7 +320,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
                         </span>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="max-w-44 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                    <DropdownMenuContent className="max-w-44 bg-[#1D1B23] bg-opacity-100 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
                       {/* <DropdownMenuSeparator /> */}
                       {statusOptions.map((status) => (
                         <DropdownMenuCheckboxItem
@@ -327,6 +329,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
                           onCheckedChange={() => handleSelectStatus(status)}
                           onSelect={(e) => e.preventDefault()}
                           className="text-white"
+                          colorMap={statusColors}
                         >
                           {status}
                         </DropdownMenuCheckboxItem>
@@ -386,7 +389,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
                         style={{
                           backgroundColor: statusColors[project.status],
                           display: 'inline-block',
-                          color: 'white',
+                          color: project.status === 'DRAFT' ? 'black' : 'white',
                           padding: '0.25rem 0.75rem',
                           borderRadius: '1.0rem',
                         }}

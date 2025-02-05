@@ -48,7 +48,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           color: 'grey',
         }}
       >
-        <option value="name">Name</option>
+        <option value="name">Project Name</option>
         {/* <option value="department">Department</option> */}
         <option value="date">Date</option>
         {/* <option value="status">Status</option> */}
