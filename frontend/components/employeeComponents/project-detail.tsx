@@ -1,17 +1,9 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Project, Project_Status, Employee, Universities } from "@/utils/types";
-import {
-  Hand,
-  Info,
-  Pencil,
-  X,
-  Check,
-  ArrowUpRight,
-  ChevronRight,
-} from "lucide-react";
+import { Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from "lucide-react";
 import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
 import "./customDatePickerWidth.css";
@@ -19,52 +11,30 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { RoundSpinner } from "@/components/ui/spinner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import date from "date-and-time"; //npm i date-and-time
-import timezone from "date-and-time/plugin/timezone"; //// Import plugin for date-time for more tokens
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
-import {
-  getChangedData,
-  onUpdateProject,
-  updateApplicationLink,
-} from "@/app/student_applications/project_detail_helper";
+import { getChangedData, onUpdateProject, updateApplicationLink, canUserEditProject } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
 import { createClient } from "@/utils/supabase/client";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
 import { TeamDetailsDialog } from "./team-detail";
-import { v4 as uuidv4 } from "uuid";
 import "./project-details.css";
+import CreatePdf from "@/app/student_applications/createPdf";
+import dynamic from "next/dynamic";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
-  creatorName: string | null;
-  approvalName: string | null;
-  dispatcherName: string | null;
-  originalLastModifiedByName: string | null;
   initialSponsorInfo: Employee | null;
 }
+// lazy laod employee, therefore, it could imported when needed
+const ProjectLogInfo = dynamic(() => import("@/components/employeeComponents/project-info-dialog"), {});
 
-export default function ProjectDetail({
-  employeeInfo,
-  project,
-  creatorName,
-  approvalName,
-  dispatcherName,
-  originalLastModifiedByName,
-  initialSponsorInfo,
-}: ProjectDetailProps) {
+export default function ProjectDetail({ employeeInfo, project, initialSponsorInfo }: ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [sponsorData, setSponsorData] = useState<Employee | null>(
-    initialSponsorInfo
-  );
+  const [sponsorData, setSponsorData] = useState<Employee | null>(initialSponsorInfo);
+  const [originalSponsorData, setOriginalSponsorData] = useState<Employee | null>(initialSponsorInfo);
   const [error, setError] = useState<string | null>(null);
   const [isMessage, setMessage] = useState<string | null>(null);
   const [awardedTeam, setAwardedTeam] = useState(null);
@@ -80,28 +50,13 @@ export default function ProjectDetail({
   }, [isMessage]);
 
   // need to store the original data so that we can revert back
-  const [originalProjectInfo, setOriginalProjectInfo] =
-    useState<Project>(project);
+  const [originalProjectInfo, setOriginalProjectInfo] = useState<Project>(project);
 
   // anything that is/ could be null or undefined is replaced
-  const [currentProjectInfo, setCurrentProjectInfo] =
-    useState<Project>(project);
-
-  function formatDateTime(raw_date: string | null): string {
-    if (raw_date === null) return "N/A";
-    date.plugin(timezone); // apply the plugin
-    const dateTime = new Date(raw_date);
-
-    const pattern = date.compile("MMM D, YYYY hh:mm z");
-    const localDateTime = date.formatTZ(dateTime, pattern);
-
-    return localDateTime;
-  }
+  const [currentProjectInfo, setCurrentProjectInfo] = useState<Project>(project);
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) =>
-    (currentYear + i).toString()
-  );
+  const years = Array.from({ length: 3 }, (_, i) => (currentYear + i).toString());
 
   // modifies the current project object
   const onInputChange = (event: { target: { name: any; value: any } }) => {
@@ -110,6 +65,7 @@ export default function ProjectDetail({
       ...currentProjectInfo,
       [name]: value,
     });
+    console.log(`${name} was updated to ${value}`);
   };
 
   async function handleSaveProject() {
@@ -122,55 +78,63 @@ export default function ProjectDetail({
     }, timeoutLength);
     // save logic
     try {
-      // logic for application link
-      const applicationLinkAction: "create" | "keep" | "delete" =
-        updateApplicationLink(
-          originalProjectInfo.status,
-          currentProjectInfo.status
-        );
-      if (applicationLinkAction === "create") {
-        currentProjectInfo.application_link = uuidv4();
-      } else if (applicationLinkAction === "delete") {
-        currentProjectInfo.application_link = null;
-      }
-      const updatedData: Partial<Project> = getChangedData(
-        originalProjectInfo,
-        currentProjectInfo
-      );
+      const updatedData: Partial<Project> = getChangedData(originalProjectInfo, currentProjectInfo, employeeInfo.email, employeeInfo.level);
       if (Object.keys(updatedData).length === 0) {
         setMessage("No changes detected to update the project.");
         setCurrentProjectInfo(originalProjectInfo);
         return;
       }
-      // update last modofiied by to the time and the current user
-      const modifiedDate = new Date().toISOString();
-      updatedData.last_modified_date = modifiedDate; // include the date the data was last modified
-      currentProjectInfo.last_modified_date = modifiedDate;
-      if (originalProjectInfo.last_modified_user !== employeeInfo.email) {
-        currentProjectInfo.last_modified_user = employeeInfo.email;
-        updatedData.last_modified_user;
+      // update last modified by to the time and the current user
+      const dateNow = new Date().toISOString();
+      updatedData.last_modified_date = dateNow; // include the date the data was last modified
+      // currentProjectInfo.last_modified_date = dateNow;
+      // currentProjectInfo.last_modified_user = employeeInfo.email;
+      updatedData.last_modified_user = employeeInfo.email;
+
+      // if the current status is APPROVED, set approve detail
+      if (originalProjectInfo.status !== currentProjectInfo.status) {
+        if (currentProjectInfo.status === Project_Status.APPROVED) {
+          updatedData.approval_email = employeeInfo.email;
+          updatedData.approved_date = dateNow;
+        }
+        if (currentProjectInfo.status === Project_Status.DISPATCHED) {
+          updatedData.dispatcher_email = employeeInfo.email;
+          updatedData.dispatched_date = updatedData.dispatched_date;
+        }
       }
 
-      await onUpdateProject(updatedData, project.project_id);
-      setOriginalProjectInfo(currentProjectInfo);
+      await onUpdateProject(updatedData, project.project_id).then((updatedProjectedFromDB) => {
+        console.log(`updated from db is... ${updatedProjectedFromDB.status}`);
+        if (updatedProjectedFromDB) {
+          setCurrentProjectInfo(updatedProjectedFromDB);
+          setOriginalProjectInfo(updatedProjectedFromDB);
+        }
+      });
     } catch (error) {
-      alert(`Failed to update project ${error}`);
+      alert(`${error}`);
       setCurrentProjectInfo(originalProjectInfo);
     } finally {
     }
   }
   function handleCancelEdit() {
     setCurrentProjectInfo(originalProjectInfo);
+    setSponsorData(originalSponsorData);
     setIsEditing(false);
   }
   const handleProjectEdit = () => {
-    setIsEditing(!isEditing);
+    // check if the user can  edit
+    if (canUserEditProject(employeeInfo.email, employeeInfo.level, project.creator_email)) {
+      setIsEditing(true);
+      setOriginalSponsorData(sponsorData);
+    } else {
+      alert("You're are not authorized to edit this project! \nOnly the user that created the project, or employees lvl 2+ can edit this project");
+    }
   };
 
   const supabase = createClient();
 
   const handleClearSponsor = async () => {
-    if (employeeInfo.level !== 3) {
+    if (employeeInfo.level < 2) {
       alert("You do not have permission to remove the sponsor.");
       return;
     } else {
@@ -234,20 +198,12 @@ export default function ProjectDetail({
               />
             </div>
           ) : (
-            <h1 className="text-2xl underline font-bold text-white py-2">
-              {currentProjectInfo.title}
-            </h1>
+            <h1 className="text-2xl underline font-bold text-white py-2">{currentProjectInfo.title}</h1>
           )}
 
           <div className="flex items-center space-x-0.5">
-            <h2 className="text-xl font-bold text-white py-2">
-              Project Description
-            </h2>
-            <button
-              onClick={() => setIsPopupOpen(true)}
-              className="flex text-sm text-gray-300 hover:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none px-1"
-              aria-label="More Information"
-            >
+            <h2 className="text-xl font-bold text-white py-2">Project Description</h2>
+            <button onClick={() => setIsPopupOpen(true)} className="flex text-sm text-gray-300 hover:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none px-1" aria-label="More Information">
               <Info className="w-5 h-5" />
             </button>
           </div>
@@ -268,54 +224,18 @@ export default function ProjectDetail({
           <ProjectStatusButton
             initial_status={originalProjectInfo.status}
             status={currentProjectInfo.status}
-            setProjStatus={(status) =>
-              onInputChange({ target: { name: "status", value: status } })
-            }
+            setProjStatus={(status) => onInputChange({ target: { name: "status", value: status } })}
             allowClick={isEditing}
           />
         </div>
       </div>
-      <Dialog
-        open={isPopupOpen === true}
-        onOpenChange={() => setIsPopupOpen(false)}
-      >
-        <DialogContent className="bg-[#1D1B23] text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-center">
-              {project.title}
-            </DialogTitle>
-            <DialogTitle className="text-lg mb-2">Project Details</DialogTitle>
-            <div>
-              <p>Department: {project.department}</p>
-              <p>
-                Created by: {creatorName} on{" "}
-                {formatDateTime(project.created_date)}
-              </p>
-              {approvalName && (
-                <p>
-                  Reviewed by: {approvalName} on{" "}
-                  {formatDateTime(project.approved_date)}
-                </p>
-              )}
-              {dispatcherName && (
-                <p>
-                  Dispatched by: {dispatcherName} on{" "}
-                  {formatDateTime(project.dispatched_date)}
-                </p>
-              )}
-              {project.activation_date && (
-                <p>Project activated on: {project.activation_date}</p>
-              )}
-              {originalLastModifiedByName && (
-                <p>
-                  Last modified by: {originalLastModifiedByName} on{" "}
-                  {formatDateTime(project.last_modified_date)}
-                </p>
-              )}
-            </div>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      {isPopupOpen && (
+        <Suspense fallback={<p className="text-white text-center">Loading...</p>}>
+          <Dialog open={isPopupOpen === true} onOpenChange={() => setIsPopupOpen(false)}>
+            <ProjectLogInfo currentProject={originalProjectInfo} />
+          </Dialog>
+        </Suspense>
+      )}
 
       <div>
         {isEditing ? (
@@ -330,10 +250,8 @@ export default function ProjectDetail({
             />
           </div>
         ) : (
-          <div className="relative bg-gray-300 p-4 rounded-xl text-sm max-h-48 h-48 overflow-y-auto">
-            <ReactMarkdown className="markdown-content">
-              {currentProjectInfo.description}
-            </ReactMarkdown>
+          <div className="relative bg-gray-300 p-4 rounded-xl text-sm max-h-48 h-48 overflow-y-auto text-black">
+            <ReactMarkdown className="markdown-content">{currentProjectInfo.description}</ReactMarkdown>
           </div>
         )}
       </div>
@@ -372,24 +290,22 @@ export default function ProjectDetail({
           <div className="customDatePickerWidth">
             <DatePicker
               name="application_deadline"
-              selected={
-                currentProjectInfo.application_deadline
-                  ? new Date(currentProjectInfo.application_deadline)
-                  : null
-              }
-              onChange={(date) =>
-                onInputChange({
-                  target: {
-                    name: "application_deadline",
-                    value: date ? date.toISOString() : "",
-                  },
-                })
-              }
-              dateFormat="MMM d, yyyy hh:mm aa "
+              selected={currentProjectInfo.application_deadline ? new Date(currentProjectInfo.application_deadline) : null}
+              onChange={(date) => {
+                if (date) {
+                  date.setUTCHours(23 + 7, 59, 0, 0); // saves 11:59pm MST in UTC
+                  onInputChange({
+                    target: {
+                      name: "application_deadline",
+                      value: date ? date.toISOString() : "",
+                    },
+                  });
+                }
+              }}
+              dateFormat="MMM d, yyyy"
               timeFormat="p"
               placeholderText="Select a date"
               className={`bg-white text-black py-1 rounded-md outline-none w-full ${!isEditing ? "cursor-default" : ""}`}
-              showTimeSelect
               minDate={new Date()}
               toggleCalendarOnIconClick
               showIcon
@@ -403,20 +319,14 @@ export default function ProjectDetail({
         <div className=" relative flex flex-col">
           <label className="text-base capitalize">start team</label>
           <div className="flex items-center space-x-2">
-            <select
-              className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? "cursor-default" : ""}`}
-              disabled={!isEditing}
-            >
+            <select className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? "cursor-default" : ""}`} disabled={!isEditing}>
               {["Jan", "May", "Sept"].map((choice) => (
                 <option key={choice} value={choice}>
                   {choice}
                 </option>
               ))}
             </select>
-            <select
-              className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? "cursor-default" : ""}`}
-              disabled={!isEditing}
-            >
+            <select className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? "cursor-default" : ""}`} disabled={!isEditing}>
               {years.map((choice) => (
                 <option key={choice} value={choice}>
                   {choice}
@@ -433,14 +343,10 @@ export default function ProjectDetail({
           <h2 className="text-xl font-bold text-white pt-4">Sponsor</h2>
           {isEditing && (
             <Button
-              className={`px-3 py-1 rounded-full ${
-                sponsorData
-                  ? "bg-[#F72E53] hover:bg-[#e8516d]"
-                  : "bg-[#81C26C] hover:bg-[#7cb36a]"
-              } text-black`}
+              className={`px-3 py-1 rounded-full ${sponsorData ? "bg-[#F72E53] hover:bg-[#e8516d]" : "bg-[#81C26C] hover:bg-[#7cb36a]"} text-black`}
               onClick={sponsorData ? handleClearSponsor : handleAutofill}
             >
-              {sponsorData ? "Remove" : "Sponsor"}
+              {sponsorData ? "Remove" : "Sponsor Project"}
             </Button>
           )}
         </div>
@@ -448,42 +354,22 @@ export default function ProjectDetail({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
           <div className="flex flex-col">
             <label className="text-white">Name:</label>
-            <input
-              type="text"
-              value={sponsorData?.full_name ?? ""}
-              readOnly
-              className="p-1 rounded-md bg-white text-black outline-none"
-            />
+            <input type="text" value={sponsorData?.full_name ?? ""} readOnly className="p-1 rounded-md bg-white text-black outline-none" />
           </div>
 
           <div className="flex flex-col">
             <label className="text-white">Email:</label>
-            <input
-              type="text"
-              value={sponsorData?.email || ""}
-              readOnly
-              className="p-1 rounded-md bg-white text-black outline-none"
-            />
+            <input type="text" value={sponsorData?.email || ""} readOnly className="p-1 rounded-md bg-white text-black outline-none" />
           </div>
 
           <div className="flex flex-col">
             <label className="text-white">Department:</label>
-            <input
-              type="text"
-              value={sponsorData?.department ?? ""}
-              readOnly
-              className="p-1 rounded-md bg-white text-black outline-none"
-            />
+            <input type="text" value={sponsorData?.department ?? ""} readOnly className="p-1 rounded-md bg-white text-black outline-none" />
           </div>
 
           <div className="flex flex-col">
             <label className="text-white">Title:</label>
-            <input
-              type="text"
-              value={sponsorData?.title ?? ""}
-              readOnly
-              className="p-1 rounded-md bg-white text-black outline-none"
-            />
+            <input type="text" value={sponsorData?.title ?? ""} readOnly className="p-1 rounded-md bg-white text-black outline-none" />
           </div>
         </div>
       </div>
@@ -491,9 +377,7 @@ export default function ProjectDetail({
       {/* Dispatch Information */}
       <div>
         <div className="flex justify-between items-center mb-2 ">
-          <h2 className="text-xl font-bold text-white pt-4">
-            Dispatch Information{" "}
-          </h2>
+          <h2 className="text-xl font-bold text-white pt-4">Dispatch Information </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
           <div className="flex flex-col">
@@ -550,7 +434,7 @@ export default function ProjectDetail({
                 onInputChange({
                   target: {
                     name: "university",
-                    value: event.target.value as Universities,
+                    value: Object.values(Universities).includes(event.target.value as Universities) ? (event.target.value as Universities) : null,
                   },
                 })
               }
@@ -561,19 +445,18 @@ export default function ProjectDetail({
                 Select a university
               </option>
               <option value="null">None</option>
-              <option value="UofC">University of Calgary (UofC)</option>
-              <option value="UBC">University of British Columbia (UBC)</option>
+              {Object.values(Universities).map((uni) => (
+                <option value={uni} key={uni}>
+                  {uni}
+                </option>
+              ))}
             </select>
           </div>
-          {![
-            Project_Status.NEW,
-            Project_Status.DRAFT,
-            Project_Status.REVIEW,
-            Project_Status.REJECTED,
-          ].includes(currentProjectInfo.status) && (
+          {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(originalProjectInfo.status) && (
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
-              <Button> Download as PDF </Button>
+              <CreatePdf />
+              {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
             </div>
           )}
         </div>
@@ -585,23 +468,15 @@ export default function ProjectDetail({
         <div>
           <h2 className="text-xl font-bold text-white py-2">Applications</h2>
           <div className="space-x-2">
-            <Button
-              asChild
-              className="text-md space-x-1"
-              disabled={!originalProjectInfo.application_link}
-            >
-              <Link
-                href={`/ApplicationForm/${originalProjectInfo.application_link}/`}
-              >
+            <Button asChild className="text-md space-x-1" disabled={!originalProjectInfo.application_link}>
+              <Link href={`/ApplicationForm/${originalProjectInfo.application_link}/`}>
                 {" "}
                 <span>Application Link</span>
                 <ArrowUpRight />
               </Link>
             </Button>
             <Button asChild className="text-md space-x-1">
-              <Link
-                href={`/Employee/Projects/${project.project_id}/Applicants`}
-              >
+              <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>
                 <span>View Applicants</span>
                 <ChevronRight />
               </Link>
@@ -613,10 +488,7 @@ export default function ProjectDetail({
         {currentProjectInfo.awarded_application_id && (
           <div>
             <h2 className="text-xl font-bold text-white py-2">Team Awarded</h2>
-            <Dialog
-              open={!!awardedTeam}
-              onOpenChange={() => setAwardedTeam(null)}
-            >
+            <Dialog open={!!awardedTeam} onOpenChange={() => setAwardedTeam(null)}>
               <DialogTrigger asChild>
                 <Button onClick={onViewDetails}>
                   View Team Details
@@ -624,13 +496,7 @@ export default function ProjectDetail({
                 </Button>
               </DialogTrigger>
 
-              <TeamDetailsDialog
-                team={awardedTeam}
-                onClose={() => setAwardedTeam(null)}
-                onApprove={undefined}
-                onReject={undefined}
-                onPending={undefined}
-              />
+              <TeamDetailsDialog team={awardedTeam} onClose={() => setAwardedTeam(null)} onApprove={undefined} onReject={undefined} onPending={undefined} />
             </Dialog>
           </div>
         )}
@@ -684,11 +550,7 @@ export default function ProjectDetail({
       {isMessage && <div className="text-red-400 text-center">{isMessage}</div>}
       {isEditing && (
         <div className="flex justify-end space-x-2 mt-2">
-          <Button
-            variant="outline"
-            onClick={handleCancelEdit}
-            className="flex items-center"
-          >
+          <Button variant="outline" onClick={handleCancelEdit} className="flex items-center">
             <X className="mr-1 h-4 w-4" /> Cancel
           </Button>
           <Button onClick={handleSaveProject} className="flex items-center">
