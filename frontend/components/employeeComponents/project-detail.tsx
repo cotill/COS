@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Project, Project_Status, Employee, Universities } from "@/utils/types";
-import { Hand, Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from "lucide-react";
+import { Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from "lucide-react";
 import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
 import "./customDatePickerWidth.css";
@@ -11,29 +11,25 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { RoundSpinner } from "@/components/ui/spinner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import date from "date-and-time"; //npm i date-and-time
-import timezone from "date-and-time/plugin/timezone"; //// Import plugin for date-time for more tokens
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
 import { getChangedData, onUpdateProject, updateApplicationLink, canUserEditProject } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
 import { createClient } from "@/utils/supabase/client";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
 import { TeamDetailsDialog } from "./team-detail";
-import { v4 as uuidv4 } from "uuid";
 import "./project-details.css";
 import CreatePdf from "@/app/student_applications/createPdf";
+import dynamic from "next/dynamic";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
-  creatorName: string | null;
-  approvalName: string | null;
-  dispatcherName: string | null;
-  originalLastModifiedByName: string | null;
   initialSponsorInfo: Employee | null;
 }
+// lazy laod employee, therefore, it could imported when needed
+const ProjectLogInfo = dynamic(() => import("@/components/employeeComponents/project-info-dialog"), {});
 
-export default function ProjectDetail({ employeeInfo, project, creatorName, approvalName, dispatcherName, originalLastModifiedByName, initialSponsorInfo }: ProjectDetailProps) {
+export default function ProjectDetail({ employeeInfo, project, initialSponsorInfo }: ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -57,17 +53,6 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
 
   // anything that is/ could be null or undefined is replaced
   const [currentProjectInfo, setCurrentProjectInfo] = useState<Project>(project);
-
-  function formatDateTime(raw_date: string | null): string {
-    if (raw_date === null) return "N/A";
-    date.plugin(timezone); // apply the plugin
-    const dateTime = new Date(raw_date);
-
-    const pattern = date.compile("MMM D, YYYY hh:mm z");
-    const localDateTime = date.formatTZ(dateTime, pattern);
-
-    return localDateTime;
-  }
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 3 }, (_, i) => (currentYear + i).toString());
@@ -102,7 +87,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
       updatedData.last_modified_date = dateNow; // include the date the data was last modified
       currentProjectInfo.last_modified_date = dateNow;
       currentProjectInfo.last_modified_user = employeeInfo.email;
-      updatedData.last_modified_user;
+      updatedData.last_modified_user = employeeInfo.email;
 
       // if the current status is APPROVED, set approve detail
       if (originalProjectInfo.status !== currentProjectInfo.status) {
@@ -144,7 +129,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
   const supabase = createClient();
 
   const handleClearSponsor = async () => {
-    if (employeeInfo.level !== 3) {
+    if (employeeInfo.level < 2) {
       alert("You do not have permission to remove the sponsor.");
       return;
     } else {
@@ -274,36 +259,13 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
           />
         </div>
       </div>
-      <Dialog open={isPopupOpen === true} onOpenChange={() => setIsPopupOpen(false)}>
-        <DialogContent className="bg-[#1D1B23] text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-center">{project.title}</DialogTitle>
-            <DialogTitle className="text-lg mb-2">Project Details</DialogTitle>
-            <div>
-              <p>Department: {project.department}</p>
-              <p>
-                Created by: {creatorName} on {formatDateTime(project.created_date)}
-              </p>
-              {approvalName && (
-                <p>
-                  Approved by: {approvalName} on {formatDateTime(project.approved_date)}
-                </p>
-              )}
-              {dispatcherName && (
-                <p>
-                  Dispatched by: {dispatcherName} on {formatDateTime(project.dispatched_date)}
-                </p>
-              )}
-              {project.activation_date && <p>Project activated on: {project.activation_date}</p>}
-              {originalLastModifiedByName && (
-                <p>
-                  Last modified by: {originalLastModifiedByName} on {formatDateTime(project.last_modified_date)}
-                </p>
-              )}
-            </div>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      {isPopupOpen && (
+        <Suspense fallback={<p className="text-white text-center">Loading...</p>}>
+          <Dialog open={isPopupOpen === true} onOpenChange={() => setIsPopupOpen(false)}>
+            <ProjectLogInfo currentProject={originalProjectInfo} />
+          </Dialog>
+        </Suspense>
+      )}
 
       <div>
         {isEditing ? (
@@ -515,7 +477,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
               <option value="UBC">University of British Columbia (UBC)</option>
             </select>
           </div>
-          {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(currentProjectInfo.status) && (
+          {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(originalProjectInfo.status) && (
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
               <CreatePdf />

@@ -50,6 +50,7 @@ export const getChangedData = (originalProjectInfo: Project, currentProjectInfo:
 };
 
 export const onUpdateProject = async (updatedProject: Partial<Project>, project_id: number) => {
+  console.log(`updataData modified user is ... ${updatedProject.last_modified_user}`);
   const { data, error } = await supabase
     .from("Projects")
     .update({ ...updatedProject })
