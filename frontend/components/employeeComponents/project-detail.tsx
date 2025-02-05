@@ -280,7 +280,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             />
           </div>
         ) : (
-          <div className="relative bg-gray-300 p-4 rounded-xl text-sm max-h-48 h-48 overflow-y-auto">
+          <div className="relative bg-gray-300 p-4 rounded-xl text-sm max-h-48 h-48 overflow-y-auto text-black">
             <ReactMarkdown className="markdown-content">{currentProjectInfo.description}</ReactMarkdown>
           </div>
         )}
@@ -321,19 +321,21 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             <DatePicker
               name="application_deadline"
               selected={currentProjectInfo.application_deadline ? new Date(currentProjectInfo.application_deadline) : null}
-              onChange={(date) =>
-                onInputChange({
-                  target: {
-                    name: "application_deadline",
-                    value: date ? date.toISOString() : "",
-                  },
-                })
-              }
-              dateFormat="MMM d, yyyy hh:mm aa "
+              onChange={(date) => {
+                if (date){
+                  date.setUTCHours(23 + 7, 59, 0, 0) // saves 11:59pm MST in UTC
+                  onInputChange({
+                    target: {
+                      name: "application_deadline",
+                      value: date ? date.toISOString() : "",
+                    },
+                  })
+                }
+              }}
+              dateFormat="MMM d, yyyy"
               timeFormat="p"
               placeholderText="Select a date"
               className={`bg-white text-black py-1 rounded-md outline-none w-full ${!isEditing ? "cursor-default" : ""}`}
-              showTimeSelect
               minDate={new Date()}
               toggleCalendarOnIconClick
               showIcon
@@ -374,7 +376,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
               className={`px-3 py-1 rounded-full ${sponsorData ? "bg-[#F72E53] hover:bg-[#e8516d]" : "bg-[#81C26C] hover:bg-[#7cb36a]"} text-black`}
               onClick={sponsorData ? handleClearSponsor : handleAutofill}
             >
-              {sponsorData ? "Remove" : "Sponsor"}
+              {sponsorData ? "Remove" : "Sponsor Project"}
             </Button>
           )}
         </div>
