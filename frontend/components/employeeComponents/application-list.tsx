@@ -153,7 +153,7 @@ export default function ApplicationList({projectId, employeeInfo}:ApplicationLis
               handleDeleteAllApps();
             }}
           >
-            <span>Delete All (fix me)</span>
+            <span>Delete All</span>
             <Trash2 />
           </Button>
         </div>

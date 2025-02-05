@@ -287,7 +287,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         {/* <div className="relative flex flex-col items-center space-y-2"> */}
         <div className="space-y-2 w-full">
           <label className="text-base">Application deadline</label>
-          <div className="customDatePickerWidth">
+          <div className="w-full">
             <DatePicker
               name="application_deadline"
               selected={currentProjectInfo.application_deadline ? new Date(currentProjectInfo.application_deadline) : null}
@@ -555,7 +555,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
           <Button variant="outline" onClick={handleCancelEdit} className="flex items-center">
             <X className="mr-1 h-4 w-4" /> Cancel
           </Button>
-          <Button onClick={handleSaveProject} className="flex items-center">
+          <Button onClick={handleSaveProject} variant = "outline" className="flex items-center">
             {isSaving ? (
               <>
                 <RoundSpinner size="xs" color="white" />
