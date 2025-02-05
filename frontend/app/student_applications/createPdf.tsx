@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Image, Svg } from "@react-pdf/renderer";
 import { Project } from "@/utils/types";
+import { Button } from "@/components/ui/button";
 
 // Create styles
 const styles = StyleSheet.create({
@@ -63,7 +64,12 @@ function CreatePdf({ project }: { project: Project }) {
   return (
     <div className="App">
       <PDFDownloadLink document={<MyDocument project={project} />} fileName={`Capstone-${project.title}.pdf`}>
-        {({ blob, url, loading, error }) => (loading ? "Loading document..." : "Download now!")}
+          {/* {({ blob, url, loading, error }) => (loading ? "Loading document..." : "Download now!")} */}
+          {({ blob, url, loading, error }) => (
+            <Button className="bg-black hover:bg-slate-600">
+              {loading ? "Loading document..." : "Download now!"}
+            </Button>
+          )}
       </PDFDownloadLink>
     </div>
   );
