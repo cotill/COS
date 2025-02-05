@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client'
 
 export default function ProjectPage() {
-  const { employeeLevel } = useEmployee(); // Get employee level from context
+  // const { employeeLevel } = useEmployee(); // Get employee level from context
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('name'); // Default filter is by name
