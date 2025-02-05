@@ -1,42 +1,70 @@
 "use client";
-import React from "react";
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from "@react-pdf/renderer";
-import ReactPDF from "@react-pdf/renderer";
+
+import React, { useState } from "react";
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Image, Svg } from "@react-pdf/renderer";
+import { Project } from "@/utils/types";
 
 // Create styles
 const styles = StyleSheet.create({
   page: {
-    flexDirection: "row",
-    backgroundColor: "#E4E4E4",
+    flexDirection: "column",
+    padding: 30,
   },
   section: {
-    margin: 10,
-    padding: 10,
-    flexGrow: 1,
+    marginBottom: 0,
   },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  text: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  image: {
+    width: 100, 
+    height: 40, 
+  },
+  header: {
+    flexDirection: "row",  // Arrange items in a row
+    justifyContent: "space-between",  // Push items to the sides
+    alignItems: "center",  // Align vertically in the center
+    marginBottom: 10,
+  },
+
 });
 
-// Create Document Component
-const MyDocument = () => (
+const MyDocument = ({ project }: { project: Project }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-        <Text>Section #1</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Project Details</Text>
+        <Image style={styles.image} src="/ttg-pdf.png" />
       </View>
       <View style={styles.section}>
-        <Text>Section #2</Text>
+        <Text style={styles.text}>Project ID: {project.project_id}</Text>
+        <Text style={styles.text}>Sponsor: {project.sponsor_email}</Text>
+        <Text style={styles.text}>{project.description}</Text>
       </View>
     </Page>
   </Document>
 );
 
-function CreatePdf() {
+function CreatePdf({ project }: { project: Project }) {
+  const [loading, setLoading] = useState(true);
+  if (!project) {
+    return <p>Failed to load project.</p>;
+  }
+  
   return (
     <div className="App">
-      <PDFDownloadLink document={<MyDocument />} fileName="somename.pdf">
+      <PDFDownloadLink document={<MyDocument project={project} />} fileName={`Capstone-${project.title}.pdf`}>
         {({ blob, url, loading, error }) => (loading ? "Loading document..." : "Download now!")}
       </PDFDownloadLink>
     </div>
   );
 }
 export default CreatePdf;
+
+
