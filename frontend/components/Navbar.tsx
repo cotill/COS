@@ -31,7 +31,7 @@ export default function Navbar({
 
   return (
     <nav className="w-full flex justify-center border-b-foreground/10 h-16">
-      <div className="w-full max-w-8xl flex justify-between items-center px-6 text-sm text-white">
+      <div className="w-full max-w-8xl flex justify-between items-center pr-6 pl-3 text-sm text-white">
         <div className="flex items-center gap-6">
           {/* Sidebar Toggle Button */}
           <Button size={"icon"} onClick={toggleSidebar}>

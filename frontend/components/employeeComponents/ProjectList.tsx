@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   Pagination,
   PaginationContent,
@@ -18,19 +18,19 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "@/components/ui/pagination";
 
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from "@/utils/supabase/client";
 // import { DropdownFilter } from '@/components/employeeComponents/Projectfilter';
-import { Department_Types } from '@/utils/types';
-import { Project_Status } from '@/utils/types';
+import { Department_Types } from "@/utils/types";
+import { Project_Status } from "@/utils/types";
 
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
 type Project = {
   id: string;
@@ -40,10 +40,18 @@ type Project = {
   status: string;
 };
 
-export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: string; filter: string, dateRange: { startDate: Date | null; endDate: Date | null } }) {
+export function ProjectsList({
+  searchTerm,
+  filter,
+  dateRange,
+}: {
+  searchTerm: string;
+  filter: string;
+  dateRange: { startDate: Date | null; endDate: Date | null };
+}) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortColumn, setSortColumn] = useState<'date' | 'name'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortColumn, setSortColumn] = useState<"date" | "name">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
@@ -58,17 +66,17 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
   const statusOptions = Object.values(Project_Status);
 
   const fetchProjects = async () => {
-    console.log('Fetching projects...');
+    // console.log('Fetching projects...');
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('Projects')
-        .select('project_id, created_date, title, department, status');
-  
+        .from("Projects")
+        .select("project_id, created_date, title, department, status");
+
       if (error) {
-        console.error('Error fetching projects:', error);
+        // console.error('Error fetching projects:', error);
       } else if (data) {
-        console.log('Fetched projects:', data);
+        // console.log('Fetched projects:', data);
         setProjects(
           data.map((project) => ({
             id: project.project_id,
@@ -80,11 +88,11 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
         );
       }
     } catch (err) {
-      console.error('Unexpected error:', err);
+      // console.error('Unexpected error:', err);
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
   useEffect(() => {
     fetchProjects();
@@ -92,12 +100,12 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
 
   const projectsPerPage = 4;
 
-  const handleSort = (column: 'date' | 'name') => {
+  const handleSort = (column: "date" | "name") => {
     if (sortColumn === column) {
-      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortColumn(column);
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
   };
 
@@ -105,31 +113,37 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
     const valueA = a[sortColumn];
     const valueB = b[sortColumn];
 
-    if (valueA < valueB) return sortOrder === 'asc' ? -1 : 1;
-    if (valueA > valueB) return sortOrder === 'asc' ? 1 : -1;
+    if (valueA < valueB) return sortOrder === "asc" ? -1 : 1;
+    if (valueA > valueB) return sortOrder === "asc" ? 1 : -1;
     return 0;
   });
 
   const filteredProjects = sortedProjects.filter((project) => {
     const projectDate = new Date(project.date);
 
-    const matchesDate = (!dateRange.startDate || projectDate >= dateRange.startDate) &&
-      (!dateRange.endDate || projectDate <= dateRange.endDate)
+    const matchesDate =
+      (!dateRange.startDate || projectDate >= dateRange.startDate) &&
+      (!dateRange.endDate || projectDate <= dateRange.endDate);
 
     const matchesDepartment =
-      selectedDepartments.length === 0 || selectedDepartments.includes(project.department);
-  
+      selectedDepartments.length === 0 ||
+      selectedDepartments.includes(project.department);
+
     const matchesStatus =
       selectedStatus.length === 0 || selectedStatus.includes(project.status);
-  
-    const matchesSearchTerm = filter === 'date' ? true : project[filter as keyof Project]
-      ?.toString()
-      ?.toLowerCase()
-      ?.includes(searchTerm.toLowerCase());
-  
-    return matchesDate && matchesDepartment && matchesStatus && matchesSearchTerm;
+
+    const matchesSearchTerm =
+      filter === "date"
+        ? true
+        : project[filter as keyof Project]
+            ?.toString()
+            ?.toLowerCase()
+            ?.includes(searchTerm.toLowerCase());
+
+    return (
+      matchesDate && matchesDepartment && matchesStatus && matchesSearchTerm
+    );
   });
-  
 
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
@@ -147,50 +161,68 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
   };
 
   const departmentColors: { [key: string]: string } = {
-    ENGINEERING: '#FFA767',
-    COMPUTER_SCIENCE: '#63B3FF',
-    BIOMEDICAL: '#E75973',
-    SUSTAINABILITY: '#81C26C',
+    ENGINEERING: "#FFA767",
+    COMPUTER_SCIENCE: "#63B3FF",
+    BIOMEDICAL: "#E75973",
+    SUSTAINABILITY: "#81C26C",
   };
 
   const statusColors: { [key: string]: string } = {
-    DRAFT: 'white',
-    REVIEW: '#D7B634',
-    APPROVED: '#81C26C',
-    REJECTED: '#E75973',
-    DISPATCHED: '#000080',
-    AWARDED: '#4B006E',
-    ACTIVE: '#008080',
-    COMPLETED: '#154406',
-    CANCELLED: 'black',
+    NEW: "#788292",
+    DRAFT: "white",
+    REVIEW: "#D7B634",
+    APPROVED: "#81C26C",
+    REJECTED: "#E75973",
+    DISPATCHED: "#000080",
+    AWARDED: "#4B006E",
+    ACTIVE: "#008080",
+    COMPLETED: "#154406",
+    CANCELLED: "black",
   };
 
-  function handleSelectStatus(option: Project_Status){
-    setSelectedStatus((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
-  );}
+  function handleSelectStatus(option: Project_Status) {
+    setSelectedStatus((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
+    );
+  }
 
-  function handleSelectDepartment(option: Department_Types){
-    setSelectedDepartments((prev) => prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
-  );}
-      
+  function handleSelectDepartment(option: Department_Types) {
+    setSelectedDepartments((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option]
+    );
+  }
+
   return (
-    <div className="space-y-4 rounded-3xl mt-4 px-4 pb-4" style={{ backgroundColor: '#1d1b23' }}>
+    <div
+      className="space-y-4 rounded-3xl mt-4 px-4 pb-4"
+      style={{ backgroundColor: "#1d1b23" }}
+    >
       {loading ? (
         <p>Loading projects...</p>
       ) : (
         <>
           <Table>
             <TableHeader>
-              <TableRow style={{ backgroundColor: '#1d1b23' }}>
-                <TableHead onClick={() => handleSort('date')} className="cursor-pointer rounded-tl-2xl rounded-bl-2xl text-white">
-                  {sortColumn === 'date'
-                    ? `Date ${sortOrder === 'asc' ? '▲' : '▼'}`
-                    : 'Date ▲▼'}
+              <TableRow style={{ backgroundColor: "#1d1b23" }}>
+                <TableHead
+                  onClick={() => handleSort("date")}
+                  className="cursor-pointer rounded-tl-2xl rounded-bl-2xl text-white"
+                >
+                  {sortColumn === "date"
+                    ? `Date ${sortOrder === "asc" ? "▲" : "▼"}`
+                    : "Date ▲▼"}
                 </TableHead>
-                <TableHead onClick={() => handleSort('name')} className="cursor-pointer text-white">
-                  {sortColumn === 'name'
-                    ? `Project Name ${sortOrder === 'asc' ? '▲' : '▼'}`
-                    : 'Project Name ▲▼'}
+                <TableHead
+                  onClick={() => handleSort("name")}
+                  className="cursor-pointer text-white"
+                >
+                  {sortColumn === "name"
+                    ? `Project Name ${sortOrder === "asc" ? "▲" : "▼"}`
+                    : "Project Name ▲▼"}
                 </TableHead>
                 <TableHead>
                   <DropdownMenu open={isOpenD} onOpenChange={setIsOpenD}>
@@ -201,23 +233,27 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                       >
                         <span>Department</span>
                         <span
-                          className={`ml-2 ${
-                            selectedDepartments.length > 0 ? 'text-[#E75973]' : 'text-white'
-                          }`}
+                          className={`ml-2 ${selectedDepartments.length > 0 ? "text-[#E75973]" : "text-white"}`}
                         >
-                          {isOpenD ? '▲' : '▼'}
+                          {isOpenD ? "▲" : "▼"}
                         </span>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="max-w-50 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                    <DropdownMenuContent
+                      className="max-w-50 bg-[#1D1B23] bg-opacity-100 mt-2"
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                    >
                       {/* <DropdownMenuSeparator /> */}
                       {departmentOptions.map((department) => (
                         <DropdownMenuCheckboxItem
                           key={department}
                           checked={selectedDepartments.includes(department)}
-                          onCheckedChange={() => handleSelectDepartment(department)}
+                          onCheckedChange={() =>
+                            handleSelectDepartment(department)
+                          }
                           onSelect={(e) => e.preventDefault()}
                           className="text-white"
+                          colorMap={departmentColors}
                         >
                           {department}
                         </DropdownMenuCheckboxItem>
@@ -234,15 +270,16 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                       >
                         <span>Status</span>
                         <span
-                          className={`ml-2 ${
-                            selectedStatus.length > 0 ? 'text-[#E75973]' : 'text-white'
-                          }`}
+                          className={`ml-2 ${selectedStatus.length > 0 ? "text-[#E75973]" : "text-white"}`}
                         >
-                          {isOpenS ? '▲' : '▼'}
+                          {isOpenS ? "▲" : "▼"}
                         </span>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="max-w-44 bg-[#1D1B23] bg-opacity-80 mt-2" onCloseAutoFocus={(e) => e.preventDefault()}>
+                    <DropdownMenuContent
+                      className="max-w-44 bg-[#1D1B23] bg-opacity-100 mt-2"
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                    >
                       {/* <DropdownMenuSeparator /> */}
                       {statusOptions.map((status) => (
                         <DropdownMenuCheckboxItem
@@ -251,6 +288,7 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                           onCheckedChange={() => handleSelectStatus(status)}
                           onSelect={(e) => e.preventDefault()}
                           className="text-white"
+                          colorMap={statusColors}
                         >
                           {status}
                         </DropdownMenuCheckboxItem>
@@ -262,22 +300,22 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                   <button
                     className="px-4 py-2 rounded flex items-center space-x-2"
                     onClick={handleClearFilters}
-                    disabled={selectedDepartments.length === 0 && selectedStatus.length === 0} // Disable when no filters are selected
+                    disabled={
+                      selectedDepartments.length === 0 &&
+                      selectedStatus.length === 0
+                    } // Disable when no filters are selected
                   >
                     <span
-                      className={`${
-                        selectedDepartments.length === 0 && selectedStatus.length === 0
-                          ? 'text-gray-400'
-                          : 'text-white'
-                      }`}
+                      className={`${selectedDepartments.length === 0 && selectedStatus.length === 0 ? "text-gray-400" : "text-white"}`}
                     >
                       Clear
                     </span>
                     <span
                       className={`${
-                        selectedDepartments.length === 0 && selectedStatus.length === 0
-                          ? 'bg-gray-400 text-gray-200'
-                          : 'bg-[#E75973] text-white'
+                        selectedDepartments.length === 0 &&
+                        selectedStatus.length === 0
+                          ? "bg-gray-400 text-gray-200"
+                          : "bg-[#E75973] text-white"
                       } rounded-full h-4 w-4 flex items-center justify-center text-[12px]`}
                     >
                       ×
@@ -292,27 +330,33 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                   <TableRow
                     key={project.id}
                     style={{
-                      backgroundColor: '#413F46',
-                      color: 'white',
+                      backgroundColor: "#413F46",
+                      color: "white",
                     }}
                   >
-                    <TableCell 
+                    <TableCell
                       style={{
-                        borderTopLeftRadius: '0.5rem',
-                        borderBottomLeftRadius: '0.5rem',
+                        borderTopLeftRadius: "0.5rem",
+                        borderBottomLeftRadius: "0.5rem",
                       }}
                     >
-                      {new Date(project.date).toLocaleString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'}).substring(0,10)}
+                      {new Date(project.date)
+                        .toLocaleString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                        })
+                        .substring(0, 10)}
                     </TableCell>
                     <TableCell>{project.name}</TableCell>
                     <TableCell>
                       <div
                         style={{
                           backgroundColor: departmentColors[project.department],
-                          display: 'inline-block',
-                          color: 'white',
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '1.0rem',
+                          display: "inline-block",
+                          color: "white",
+                          padding: "0.25rem 0.75rem",
+                          borderRadius: "1.0rem",
                         }}
                       >
                         {project.department}
@@ -322,10 +366,10 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                       <div
                         style={{
                           backgroundColor: statusColors[project.status],
-                          display: 'inline-block',
-                          color: project.status === 'DRAFT' ? 'black' : 'white',
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '1.0rem',
+                          display: "inline-block",
+                          color: project.status === "DRAFT" ? "black" : "white",
+                          padding: "0.25rem 0.75rem",
+                          borderRadius: "1.0rem",
                         }}
                       >
                         {project.status}
@@ -333,19 +377,24 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
                     </TableCell>
                     <TableCell
                       style={{
-                        borderTopRightRadius: '0.5rem',
-                        borderBottomRightRadius: '0.5rem',
+                        borderTopRightRadius: "0.5rem",
+                        borderBottomRightRadius: "0.5rem",
                       }}
                     >
                       <Button variant="outline" asChild>
-                        <Link href={`/Employee/Projects/${project.id}`}>View Details</Link>
+                        <Link href={`/Employee/Projects/${project.id}`}>
+                          View Details
+                        </Link>
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-7 text-center text-gray-500 rounded-2xl">
+                  <TableCell
+                    colSpan={5}
+                    className="py-7 text-center text-gray-500 rounded-2xl"
+                  >
                     No matching projects
                   </TableCell>
                 </TableRow>
@@ -357,8 +406,12 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  className={
+                    currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                  }
                 />
               </PaginationItem>
               {[...Array(totalPages)].map((_, index) => (
@@ -375,8 +428,14 @@ export function ProjectsList({ searchTerm, filter, dateRange }: { searchTerm: st
               <PaginationItem>
                 <PaginationNext
                   href="#"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
                 />
               </PaginationItem>
             </PaginationContent>

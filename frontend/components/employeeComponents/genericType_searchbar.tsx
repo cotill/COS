@@ -55,7 +55,7 @@ export function SearchBar<T>({ value, onSearchChange, currentFilter,  filterConf
           type="text"
           value={value}
           onChange={onSearchChange}
-          className="px-4 py-2 outline-none rounded-3xl w-full"
+          className="px-4 py-2 outline-none rounded-3xl w-full text-black"
           placeholder={`Search by ${currentFilter.label}...`}
         />
       )}

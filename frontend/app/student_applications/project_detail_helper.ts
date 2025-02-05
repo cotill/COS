@@ -27,18 +27,20 @@ export const getChangedData = (originalProjectInfo: Project, currentProjectInfo:
   Object.keys(originalProjectInfo).forEach((key) => {
     if (originalProjectInfo[key as keyof Project] !== currentProjectInfo[key as keyof Project]) {
       if (currentProjectInfo[key as keyof Project] === Project_Status.APPROVED) {
-        // if the current status is approved the check
-        checkApproverInfo(originalProjectInfo.creator_email, user_email, user_level);
-
-        // check that the current status is less than original
-        const applicationLinkAction: "create" | "delete" | "keep" = updateApplicationLink(originalProjectInfo.status, originalProjectInfo.application_link, currentProjectInfo.status);
-        if (applicationLinkAction === "create") {
-          changedData.application_link = uuidv4();
-          console.log(`application_link was created -value: ${changedData.application_link}`);
-        } else if (applicationLinkAction === "delete") {
-          changedData.application_link = null;
-          console.log(`application_link was 'deleted'-value: ${changedData.application_link}`);
+        if (!checkApproverInfo(originalProjectInfo.creator_email, user_email, user_level)) {
+          return;
         }
+
+        // if the current status is approved the check
+        // check that the current status is less than original
+        // const applicationLinkAction: "create" | "delete" | "keep" = updateApplicationLink(originalProjectInfo.status, originalProjectInfo.application_link, currentProjectInfo.status);
+        // if (applicationLinkAction === "create") {
+        changedData.application_link = uuidv4();
+        console.log(`application_link was created -value: ${changedData.application_link}`);
+        // } else if (applicationLinkAction === "delete") {
+        // changedData.application_link = null;
+        // console.log(`application_link was 'deleted'-value: ${changedData.application_link}`);
+        // }
       }
       const value = currentProjectInfo[key as keyof Project];
       (changedData as any)[key as keyof Project] = value;
@@ -50,13 +52,16 @@ export const getChangedData = (originalProjectInfo: Project, currentProjectInfo:
 };
 
 export const onUpdateProject = async (updatedProject: Partial<Project>, project_id: number) => {
+  console.log(`updataData modified user is ... ${updatedProject.last_modified_user}`);
   const { data, error } = await supabase
     .from("Projects")
     .update({ ...updatedProject })
-    .eq("project_id", project_id);
+    .eq("project_id", project_id)
+    .select();
   if (error) {
     throw new Error(`Error updating project info: ${error?.message}`);
   }
+  return data[0] as Project;
 };
 
 /**
@@ -72,6 +77,7 @@ export const updateApplicationLink = (originalStatus: Project_Status, originalAp
   console.log(`The original status is: ${originalStatusIndex} and ${currentStatusIndex}`);
   // if original status is less than current status,and the current status is approved generate a new link
   if (currentStatus == Project_Status.APPROVED && originalStatusIndex < currentStatusIndex) {
+    console.log("returning create application link");
     return "create";
   }
 
@@ -82,12 +88,15 @@ export const updateApplicationLink = (originalStatus: Project_Status, originalAp
       return "keep";
     }
     // if there's not existing link, create one
+    console.log("returning create application link");
+
     return "create";
   }
 
   // If the current status is less than the original status, delete the link
   // if the original status is approved(or higher) and the user moves it back to delete, review, draft or new. Then delete the original link
   if (originalStatus >= Project_Status.APPROVED && currentStatusIndex < originalStatusIndex) {
+    console.log("returning delete application link");
     return "delete";
   }
 
@@ -110,6 +119,13 @@ export const canUserEditProject = (user_email: string, user_level: number, creat
  * the user level is too low to approve, or the the level is not a problem but the user is try to approve their own project
  */
 const checkApproverInfo = (creator_email: string, user_email: string, user_level: number) => {
-  if (user_level < 2 || user_email === creator_email) return false;
+  if (user_level < 2) {
+    alert("You're are not authorized to approve this project! \n Only employees lvl 2+ can");
+    return false;
+  }
+  if (user_email === creator_email) {
+    alert("You're are not authorized to approve a project you created");
+    return false;
+  }
   return true;
 };

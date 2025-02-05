@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Project, Project_Status, Employee, Universities } from "@/utils/types";
-import { Hand, Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from "lucide-react";
+import { Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from "lucide-react";
 import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
 import "./customDatePickerWidth.css";
@@ -11,33 +11,30 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { RoundSpinner } from "@/components/ui/spinner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import date from "date-and-time"; //npm i date-and-time
-import timezone from "date-and-time/plugin/timezone"; //// Import plugin for date-time for more tokens
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
 import { getChangedData, onUpdateProject, updateApplicationLink, canUserEditProject } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
 import { createClient } from "@/utils/supabase/client";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
 import { TeamDetailsDialog } from "./team-detail";
-import { v4 as uuidv4 } from "uuid";
 import "./project-details.css";
 import CreatePdf from "@/app/student_applications/createPdf";
+import dynamic from "next/dynamic";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
-  creatorName: string | null;
-  approvalName: string | null;
-  dispatcherName: string | null;
-  originalLastModifiedByName: string | null;
   initialSponsorInfo: Employee | null;
 }
+// lazy laod employee, therefore, it could imported when needed
+const ProjectLogInfo = dynamic(() => import("@/components/employeeComponents/project-info-dialog"), {});
 
-export default function ProjectDetail({ employeeInfo, project, creatorName, approvalName, dispatcherName, originalLastModifiedByName, initialSponsorInfo }: ProjectDetailProps) {
+export default function ProjectDetail({ employeeInfo, project, initialSponsorInfo }: ProjectDetailProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [sponsorData, setSponsorData] = useState<Employee | null>(initialSponsorInfo);
+  const [originalSponsorData, setOriginalSponsorData] = useState<Employee | null>(initialSponsorInfo);
   const [error, setError] = useState<string | null>(null);
   const [isMessage, setMessage] = useState<string | null>(null);
   const [awardedTeam, setAwardedTeam] = useState(null);
@@ -58,17 +55,6 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
   // anything that is/ could be null or undefined is replaced
   const [currentProjectInfo, setCurrentProjectInfo] = useState<Project>(project);
 
-  function formatDateTime(raw_date: string | null): string {
-    if (raw_date === null) return "N/A";
-    date.plugin(timezone); // apply the plugin
-    const dateTime = new Date(raw_date);
-
-    const pattern = date.compile("MMM D, YYYY hh:mm z");
-    const localDateTime = date.formatTZ(dateTime, pattern);
-
-    return localDateTime;
-  }
-
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 3 }, (_, i) => (currentYear + i).toString());
 
@@ -79,6 +65,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
       ...currentProjectInfo,
       [name]: value,
     });
+    console.log(`${name} was updated to ${value}`);
   };
 
   async function handleSaveProject() {
@@ -100,9 +87,9 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
       // update last modified by to the time and the current user
       const dateNow = new Date().toISOString();
       updatedData.last_modified_date = dateNow; // include the date the data was last modified
-      currentProjectInfo.last_modified_date = dateNow;
-      currentProjectInfo.last_modified_user = employeeInfo.email;
-      updatedData.last_modified_user;
+      // currentProjectInfo.last_modified_date = dateNow;
+      // currentProjectInfo.last_modified_user = employeeInfo.email;
+      updatedData.last_modified_user = employeeInfo.email;
 
       // if the current status is APPROVED, set approve detail
       if (originalProjectInfo.status !== currentProjectInfo.status) {
@@ -116,35 +103,38 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
         }
       }
 
-      await onUpdateProject(updatedData, project.project_id);
-      setOriginalProjectInfo({
-        ...originalProjectInfo,
-        ...updatedData,
-        application_link: updatedData.application_link !== undefined ? updatedData.application_link : originalProjectInfo.application_link,
+      await onUpdateProject(updatedData, project.project_id).then((updatedProjectedFromDB) => {
+        console.log(`updated from db is... ${updatedProjectedFromDB.status}`);
+        if (updatedProjectedFromDB) {
+          setCurrentProjectInfo(updatedProjectedFromDB);
+          setOriginalProjectInfo(updatedProjectedFromDB);
+        }
       });
     } catch (error) {
-      alert(`Failed to update project ${error}`);
+      alert(`${error}`);
       setCurrentProjectInfo(originalProjectInfo);
     } finally {
     }
   }
   function handleCancelEdit() {
     setCurrentProjectInfo(originalProjectInfo);
+    setSponsorData(originalSponsorData);
     setIsEditing(false);
   }
   const handleProjectEdit = () => {
     // check if the user can  edit
     if (canUserEditProject(employeeInfo.email, employeeInfo.level, project.creator_email)) {
       setIsEditing(true);
+      setOriginalSponsorData(sponsorData);
     } else {
-      alert("You're are not authorized to edit this project! \nOnly the user that created the project, or user's lvl 2+ can edit this project");
+      alert("You're are not authorized to edit this project! \nOnly the user that created the project, or employees lvl 2+ can edit this project");
     }
   };
 
   const supabase = createClient();
 
   const handleClearSponsor = async () => {
-    if (employeeInfo.level !== 3) {
+    if (employeeInfo.level < 2) {
       alert("You do not have permission to remove the sponsor.");
       return;
     } else {
@@ -187,41 +177,6 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
     }
 
     setAwardedTeam(data); // Store the fetched team data
-  };
-
-  const handleDownloadPdf = async () => {
-    // Get the current session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      console.error("User not authenticated");
-      return;
-    }
-
-    try {
-      const response = await fetch(`/pdf`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Authorization: `Bearer ${session.access_token}`, // Pass the token
-        },
-        body: JSON.stringify({
-          project_id: currentProjectInfo.project_id,
-        }),
-      });
-      console.log(response);
-      if (!response.ok) {
-        console.error("Failed to fetch PDF");
-        return;
-      }
-
-      const result = await response.json();
-      console.log(result); // Process the result (PDF content or success message)
-    } catch (error) {
-      console.error("Error fetching PDF:", error);
-    }
   };
 
   return (
@@ -274,36 +229,13 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
           />
         </div>
       </div>
-      <Dialog open={isPopupOpen === true} onOpenChange={() => setIsPopupOpen(false)}>
-        <DialogContent className="bg-[#1D1B23] text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-center">{project.title}</DialogTitle>
-            <DialogTitle className="text-lg mb-2">Project Details</DialogTitle>
-            <div>
-              <p>Department: {project.department}</p>
-              <p>
-                Created by: {creatorName} on {formatDateTime(project.created_date)}
-              </p>
-              {approvalName && (
-                <p>
-                  Approved by: {approvalName} on {formatDateTime(project.approved_date)}
-                </p>
-              )}
-              {dispatcherName && (
-                <p>
-                  Dispatched by: {dispatcherName} on {formatDateTime(project.dispatched_date)}
-                </p>
-              )}
-              {project.activation_date && <p>Project activated on: {project.activation_date}</p>}
-              {originalLastModifiedByName && (
-                <p>
-                  Last modified by: {originalLastModifiedByName} on {formatDateTime(project.last_modified_date)}
-                </p>
-              )}
-            </div>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      {isPopupOpen && (
+        <Suspense fallback={<p className="text-white text-center">Loading...</p>}>
+          <Dialog open={isPopupOpen === true} onOpenChange={() => setIsPopupOpen(false)}>
+            <ProjectLogInfo currentProject={originalProjectInfo} />
+          </Dialog>
+        </Suspense>
+      )}
 
       <div>
         {isEditing ? (
@@ -318,7 +250,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
             />
           </div>
         ) : (
-          <div className="relative bg-gray-300 p-4 rounded-xl text-sm max-h-48 h-48 overflow-y-auto">
+          <div className="relative bg-gray-300 p-4 rounded-xl text-sm max-h-48 h-48 overflow-y-auto text-black">
             <ReactMarkdown className="markdown-content">{currentProjectInfo.description}</ReactMarkdown>
           </div>
         )}
@@ -359,19 +291,21 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
             <DatePicker
               name="application_deadline"
               selected={currentProjectInfo.application_deadline ? new Date(currentProjectInfo.application_deadline) : null}
-              onChange={(date) =>
-                onInputChange({
-                  target: {
-                    name: "application_deadline",
-                    value: date ? date.toISOString() : "",
-                  },
-                })
-              }
-              dateFormat="MMM d, yyyy hh:mm aa "
+              onChange={(date) => {
+                if (date) {
+                  date.setUTCHours(23 + 7, 59, 0, 0); // saves 11:59pm MST in UTC
+                  onInputChange({
+                    target: {
+                      name: "application_deadline",
+                      value: date ? date.toISOString() : "",
+                    },
+                  });
+                }
+              }}
+              dateFormat="MMM d, yyyy"
               timeFormat="p"
               placeholderText="Select a date"
               className={`bg-white text-black py-1 rounded-md outline-none w-full ${!isEditing ? "cursor-default" : ""}`}
-              showTimeSelect
               minDate={new Date()}
               toggleCalendarOnIconClick
               showIcon
@@ -412,7 +346,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
               className={`px-3 py-1 rounded-full ${sponsorData ? "bg-[#F72E53] hover:bg-[#e8516d]" : "bg-[#81C26C] hover:bg-[#7cb36a]"} text-black`}
               onClick={sponsorData ? handleClearSponsor : handleAutofill}
             >
-              {sponsorData ? "Remove" : "Sponsor"}
+              {sponsorData ? "Remove" : "Sponsor Project"}
             </Button>
           )}
         </div>
@@ -500,7 +434,7 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
                 onInputChange({
                   target: {
                     name: "university",
-                    value: event.target.value as Universities,
+                    value: Object.values(Universities).includes(event.target.value as Universities) ? (event.target.value as Universities) : null,
                   },
                 })
               }
@@ -511,8 +445,11 @@ export default function ProjectDetail({ employeeInfo, project, creatorName, appr
                 Select a university
               </option>
               <option value="null">None</option>
-              <option value="UofC">University of Calgary (UofC)</option>
-              <option value="UBC">University of British Columbia (UBC)</option>
+              {Object.values(Universities).map((uni) => (
+                <option value={uni} key={uni}>
+                  {uni}
+                </option>
+              ))}
             </select>
           </div>
           {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(originalProjectInfo.status) && (
