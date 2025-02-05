@@ -455,7 +455,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
           {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(originalProjectInfo.status) && (
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
-              <CreatePdf />
+              <CreatePdf project={originalProjectInfo}/>
               {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
             </div>
           )}
