@@ -321,19 +321,21 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             <DatePicker
               name="application_deadline"
               selected={currentProjectInfo.application_deadline ? new Date(currentProjectInfo.application_deadline) : null}
-              onChange={(date) =>
-                onInputChange({
-                  target: {
-                    name: "application_deadline",
-                    value: date ? date.toISOString() : "",
-                  },
-                })
-              }
-              dateFormat="MMM d, yyyy hh:mm aa "
+              onChange={(date) => {
+                if (date){
+                  date.setUTCHours(23 + 7, 59, 0, 0) // saves 11:59pm MST in UTC
+                  onInputChange({
+                    target: {
+                      name: "application_deadline",
+                      value: date ? date.toISOString() : "",
+                    },
+                  })
+                }
+              }}
+              dateFormat="MMM d, yyyy"
               timeFormat="p"
               placeholderText="Select a date"
               className={`bg-white text-black py-1 rounded-md outline-none w-full ${!isEditing ? "cursor-default" : ""}`}
-              showTimeSelect
               minDate={new Date()}
               toggleCalendarOnIconClick
               showIcon
