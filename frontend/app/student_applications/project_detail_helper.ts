@@ -119,8 +119,12 @@ export const canUserEditProject = (user_email: string, user_level: number, creat
  * the user level is too low to approve, or the the level is not a problem but the user is try to approve their own project
  */
 const checkApproverInfo = (creator_email: string, user_email: string, user_level: number) => {
-  if (user_level < 2 || user_email === creator_email) {
-    alert("You're are not authorized to edit approve this project! \nOnly employees lvl 2+ can");
+  if (user_level < 2) {
+    alert("You're are not authorized to approve this project! \n Only employees lvl 2+ can");
+    return false;
+  }
+  if (user_email === creator_email) {
+    alert("You're are not authorized to approve a project you created");
     return false;
   }
   return true;

@@ -28,8 +28,17 @@ const statusConfig: Record<Project_Status, { color: string }> = {
 const checkStatusSelectable = (initial_status: Project_Status, targetStatus: Project_Status): boolean => {
   const initialIndex = ProjectStatusOrder.indexOf(initial_status);
   const targetIndex = ProjectStatusOrder.indexOf(targetStatus);
-
+  /*
   return targetIndex >= initialIndex ? true : false; // if target index is less than or equal to the initial index, then the target status is not selectable
+*/
+  // the status  in front is selectable
+  if (targetIndex === initialIndex + 1) return true;
+  if (initialIndex === targetIndex) return true; // if the user want to set the status to original status, allow them to
+  if (initial_status === Project_Status.REVIEW && (targetStatus === Project_Status.REJECTED || targetStatus === Project_Status.APPROVED)) return true;
+
+  // if rejected, you can set it back to review
+  if (initial_status === Project_Status.REJECTED && targetStatus === Project_Status.REVIEW) true;
+  return false;
 };
 
 function getNextStatus(currentStatus: Project_Status): Project_Status {
@@ -48,7 +57,10 @@ export function ProjectStatusButton({ initial_status, status, setProjStatus, all
   const borderColor = status === Project_Status.DRAFT ? "border-black text-black" : "border-white text-white";
 
   const handleNextStatus = () => {
-    setProjStatus(getNextStatus(status));
+    const nextStatus = getNextStatus(status);
+    if (checkStatusSelectable(initial_status, nextStatus)) {
+      setProjStatus(nextStatus);
+    }
   };
   return (
     <div className="flex">
