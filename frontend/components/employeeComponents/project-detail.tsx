@@ -492,7 +492,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             <h2 className="text-xl font-bold text-white py-2">Team Awarded</h2>
             <Dialog open={!!awardedTeam} onOpenChange={() => setAwardedTeam(null)}>
               <DialogTrigger asChild>
-                <Button onClick={onViewDetails}>
+                <Button variant="outline" onClick={onViewDetails}>
                   View Team Details
                   <ChevronRight />
                 </Button>
