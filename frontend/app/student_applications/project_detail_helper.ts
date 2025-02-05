@@ -39,10 +39,11 @@ export const getChangedData = (originalProjectInfo: Project, currentProjectInfo:
           changedData.application_link = null;
           console.log(`application_link was 'deleted'-value: ${changedData.application_link}`);
         }
+      } else {
+        const value = currentProjectInfo[key as keyof Project];
+        (changedData as any)[key as keyof Project] = value;
+        console.log(`Key: ${key} was modified to value: ${value}`);
       }
-      const value = currentProjectInfo[key as keyof Project];
-      (changedData as any)[key as keyof Project] = value;
-      console.log(`Key: ${key} was modified to value: ${value}`);
     }
   });
 
@@ -73,6 +74,7 @@ export const updateApplicationLink = (originalStatus: Project_Status, originalAp
   console.log(`The original status is: ${originalStatusIndex} and ${currentStatusIndex}`);
   // if original status is less than current status,and the current status is approved generate a new link
   if (currentStatus == Project_Status.APPROVED && originalStatusIndex < currentStatusIndex) {
+    console.log("returning create application link");
     return "create";
   }
 
@@ -83,12 +85,15 @@ export const updateApplicationLink = (originalStatus: Project_Status, originalAp
       return "keep";
     }
     // if there's not existing link, create one
+    console.log("returning create application link");
+
     return "create";
   }
 
   // If the current status is less than the original status, delete the link
   // if the original status is approved(or higher) and the user moves it back to delete, review, draft or new. Then delete the original link
   if (originalStatus >= Project_Status.APPROVED && currentStatusIndex < originalStatusIndex) {
+    console.log("returning delete application link");
     return "delete";
   }
 

@@ -108,7 +108,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         application_link: updatedData.application_link !== undefined ? updatedData.application_link : originalProjectInfo.application_link,
       });
     } catch (error) {
-      alert(`Failed to update project ${error}`);
+      alert(`${error}`);
       setCurrentProjectInfo(originalProjectInfo);
     } finally {
     }
@@ -462,7 +462,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
                 onInputChange({
                   target: {
                     name: "university",
-                    value: event.target.value as Universities,
+                    value: Object.values(Universities).includes(event.target.value as Universities) ? (event.target.value as Universities) : null,
                   },
                 })
               }
@@ -473,8 +473,11 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
                 Select a university
               </option>
               <option value="null">None</option>
-              <option value="UofC">University of Calgary (UofC)</option>
-              <option value="UBC">University of British Columbia (UBC)</option>
+              {Object.values(Universities).map((uni) => (
+                <option value={uni} key={uni}>
+                  {uni}
+                </option>
+              ))}
             </select>
           </div>
           {![Project_Status.NEW, Project_Status.DRAFT, Project_Status.REVIEW, Project_Status.REJECTED].includes(originalProjectInfo.status) && (
