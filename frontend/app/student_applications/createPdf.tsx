@@ -8,7 +8,10 @@ import { Project } from "@/utils/types";
 const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
-    padding: 30,
+    paddingTop: 50,
+    paddingBottom: 50,
+    paddingLeft: 50,   
+    paddingRight: 50,  
   },
   section: {
     marginBottom: 0,
