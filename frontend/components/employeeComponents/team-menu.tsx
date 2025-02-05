@@ -14,6 +14,7 @@ type Members = {
   role: string;
   email: string;
   resume: string;
+  ttg: string;
 };
 
 type Team = {
@@ -69,12 +70,13 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
                 <div>
                   <span className="text-gray-400">Members:</span>
                 </div>
-                <div className={`space-y-2 ${teamsData.members.length > 3 ? "max-h-48 overflow-y-scroll scrollbar" : ""}`}>
+                <div className={`space-y-2 ${teamsData.members.length > 2 ? "max-h-48 overflow-y-scroll scrollbar" : ""}`}>
                   {teamsData.members.map((member, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between bg-gray-800 p-2 rounded-md"
+                      className="flex flex-col bg-gray-800 p-2 rounded-md"
                     >
+                      <div className='flex items-center justify-between'>
                       <div>
                         <p>{member.full_name}</p>
                         <p className="text-sm text-gray-400">{member.role}</p>
@@ -86,15 +88,74 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
                       >
                         View Resume
                       </Button>
+                      </div>
+                      <div className='flex'>
+                        <p className='text-sm text-gray-400'>Email:&nbsp;</p>
+                        <p className='text-sm'> {member.email}</p>
+                      </div>
+                      <div className='flex'>
+                        <p className='text-sm text-gray-400'>TTG:&nbsp;</p>
+                        <p className='text-sm'>**TTG Email Will Go Here**</p>
+                      </div>
                     </div>
                   ))}
+                  <div>
+                  </div>
                 </div>
               </div>
             </>
           ) : (
-            <div>
-              <span>No team details available as the project has not been awarded at this time.</span>
-            </div>
+            // <div>
+            //   <span>No team details available as the project has not been awarded at this time.</span>
+            // </div>
+            <>
+              <div className='flex flex-col'>
+                <span className="text-gray-400">Team Name: </span>
+                <span>N/A</span>
+              </div>
+              <div className='flex flex-col'>
+                <span className="text-gray-400">University: </span>
+                <span>N/A</span>
+              </div>
+              <div className='flex flex-col'>
+                <span className="text-gray-400">Team detail: </span>
+                <span className="max-h-32 overflow-y-auto scrollbar bg-gray-800 rounded-md p-2">No team details are available as the project has not yet been awarded at this time</span>
+              </div>
+              <div>
+                <div>
+                  <span className="text-gray-400">Members:</span>
+                </div>
+                <div className={`space-y-2 "max-h-48 overflow-y-scroll scrollbar" : ""}`}>
+                    <div
+                      className="flex flex-col bg-gray-800 p-2 rounded-md"
+                    >
+                      <div className='flex items-center justify-between'>
+                      <div>
+                        <p>No team assigned</p>
+                        <p className="text-sm text-gray-400">N/A</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled
+                      >
+                        View Resume
+                      </Button>
+                      </div>
+                      <div className='flex'>
+                        <p className='text-sm text-gray-400'>Email:&nbsp;</p>
+                        <p className='text-sm'>N/A</p>
+                      </div>
+                      <div className='flex'>
+                        <p className='text-sm text-gray-400'>TTG:&nbsp;</p>
+                        <p className='text-sm'>N/A</p>
+                      </div>
+                    </div>
+                  <div>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </DialogContent>

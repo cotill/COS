@@ -65,7 +65,7 @@ const isWithinRange = (itemDate: Date): boolean => {
 }
   const filterData = (data: T[], selectedStatus: Application_Status[]) : T[] => {
     return data.filter((item) => {
-      let dateInRange=false;
+      let dateInRange=true;
       if (currentFilter.type === 'date') {
         const itemDate = new Date(item[currentFilter.key] as string) // extracts the date  using the key converts it to a Date object
          dateInRange = isWithinRange(itemDate);
@@ -73,14 +73,18 @@ const isWithinRange = (itemDate: Date): boolean => {
       // else
     // Filter by search term
     const value = item[currentFilter.key];
+    console.log('Value: ', value)
+    console.log('Search term: ', searchTerm)
     if (value == null) return false;
     const matchesSearch = value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+    console.log('Matches search: ', matchesSearch)
 
     // Filter by selected status (if any statuses are selected)
     const matchesStatus =
       selectedStatus.length === 0 || // If no status is selected, include all items
       selectedStatus.includes(item["status" as keyof T] as Application_Status);
 
+    console.log('Matches status: ', matchesStatus)
     return matchesSearch && matchesStatus && dateInRange;
 
     });

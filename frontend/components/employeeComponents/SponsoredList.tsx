@@ -43,6 +43,7 @@ type Members = {
   role: string;
   email: string;
   resume: string;
+  ttg: string;
 };
 
 type Team = {
