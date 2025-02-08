@@ -98,8 +98,8 @@ const DropdownMenuCheckboxItem = React.forwardRef<
     colorMap?: { [key: string]: string };
   }
 >(({ className, children, checked, colorMap = {}, ...props }, ref) => {
-  const statusText = String(children); // Ensure children is treated as text
-  const circleColor = colorMap[statusText] || "white"; // Default to white if no match
+  const statusText = String(children);
+  const circleColor = colorMap[statusText] || "#99a1af";
 
   return (
     <DropdownMenuPrimitive.CheckboxItem

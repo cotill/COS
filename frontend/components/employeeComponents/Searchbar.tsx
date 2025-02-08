@@ -49,9 +49,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         }}
       >
         <option value="name">Project Name</option>
-        {/* <option value="department">Department</option> */}
         <option value="date">Date</option>
-        {/* <option value="status">Status</option> */}
+        <option value="term" disabled>Term</option>
       </select>
       
       {showDatePicker ? (

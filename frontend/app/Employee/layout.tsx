@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     return <UnauthorizedPage />;
   }
 
-  console.log('Employee Info:', employeeInfo);
+  // console.log('Employee Info:', employeeInfo);
 
   const [firstName, lastName] = employeeInfo.full_name ? employeeInfo.full_name.split(" ") : ["N/A", "N/A"];
 

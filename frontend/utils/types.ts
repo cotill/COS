@@ -80,6 +80,11 @@ export interface Project {
 export enum Universities {
   UofC = "University of Calgary",
   UBC = "University of British Columbia",
+  UofT = "University of Toronto",
+  York = "York University",
+  ONTech = "Ontario Tech University",
+  UofA = "University of Alberta",
+  SAIT = "Southern Alberta Institute of Technology"
 }
 
 export enum Project_Status {

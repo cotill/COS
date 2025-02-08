@@ -31,6 +31,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { VisuallyHidden } from "radix-ui";
 
 type Project = {
   id: string;
@@ -38,23 +39,28 @@ type Project = {
   name: string;
   department: string;
   status: string;
+  sponsor: string;
+  term: string;
 };
 
 export function ProjectsList({
   searchTerm,
   filter,
   dateRange,
+  userLevel
 }: {
   searchTerm: string;
   filter: string;
   dateRange: { startDate: Date | null; endDate: Date | null };
+  userLevel: number;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortColumn, setSortColumn] = useState<"date" | "name">("date");
+  const [sortColumn, setSortColumn] = useState<"date" | "name" | "term">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [sponsorToggle, setSponsorToggle] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [isOpenS, setIsOpenS] = useState(false);
@@ -71,7 +77,7 @@ export function ProjectsList({
     try {
       const { data, error } = await supabase
         .from("Projects")
-        .select("project_id, created_date, title, department, status");
+        .select("project_id, created_date, title, department, status, sponsor_email, start_term");
 
       if (error) {
         // console.error('Error fetching projects:', error);
@@ -84,6 +90,8 @@ export function ProjectsList({
             name: project.title,
             department: project.department,
             status: project.status,
+            sponsor: project.sponsor_email,
+            term: project.start_term
           }))
         );
       }
@@ -98,9 +106,9 @@ export function ProjectsList({
     fetchProjects();
   }, []);
 
-  const projectsPerPage = 4;
+  const projectsPerPage = 6;
 
-  const handleSort = (column: "date" | "name") => {
+  const handleSort = (column: "date" | "name" | "term") => {
     if (sortColumn === column) {
       setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
@@ -140,8 +148,10 @@ export function ProjectsList({
             ?.toLowerCase()
             ?.includes(searchTerm.toLowerCase());
 
+    const matchesSponsor = sponsorToggle ? project.sponsor === null : true;
+
     return (
-      matchesDate && matchesDepartment && matchesStatus && matchesSearchTerm
+      matchesDate && matchesDepartment && matchesStatus && matchesSearchTerm && matchesSponsor
     );
   });
 
@@ -159,6 +169,10 @@ export function ProjectsList({
     setSelectedDepartments([]);
     setSelectedStatus([]);
   };
+
+  const handleSetSponsorToggle = () => {
+    setSponsorToggle(!sponsorToggle);
+  }
 
   const departmentColors: { [key: string]: string } = {
     ENGINEERING: "#FFA767",
@@ -198,33 +212,46 @@ export function ProjectsList({
 
   return (
     <div
-      className="space-y-4 rounded-3xl mt-4 px-4 pb-4"
+      className="space-y-1 rounded-3xl mt-4 px-4 pb-4"
       style={{ backgroundColor: "#1d1b23" }}
     >
       {loading ? (
         <p>Loading projects...</p>
       ) : (
         <>
-          <Table>
+          <Table
+            style={{ tableLayout: 'fixed', width: '100%'}}
+          >
             <TableHeader>
               <TableRow style={{ backgroundColor: "#1d1b23" }}>
                 <TableHead
                   onClick={() => handleSort("date")}
                   className="cursor-pointer rounded-tl-2xl rounded-bl-2xl text-white"
+                  style={{ width: '11%' }}
                 >
                   {sortColumn === "date"
                     ? `Date ${sortOrder === "asc" ? "▲" : "▼"}`
                     : "Date ▲▼"}
                 </TableHead>
                 <TableHead
+                  onClick={() => handleSort("term")}
+                  className="cursor-pointer rounded-tl-2xl rounded-bl-2xl text-white"
+                  style={{ width: '9.5%' }}
+                >
+                  {sortColumn === "term"
+                    ? `Term ${sortOrder === "asc" ? "▲" : "▼"}`
+                    : "Term ▲▼"}
+                </TableHead>
+                <TableHead
                   onClick={() => handleSort("name")}
                   className="cursor-pointer text-white"
+                  style={{ width: '33%' }}
                 >
                   {sortColumn === "name"
                     ? `Project Name ${sortOrder === "asc" ? "▲" : "▼"}`
                     : "Project Name ▲▼"}
                 </TableHead>
-                <TableHead>
+                <TableHead style={{ width: '17.5%' }}>
                   <DropdownMenu open={isOpenD} onOpenChange={setIsOpenD}>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -261,7 +288,7 @@ export function ProjectsList({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableHead>
-                <TableHead>
+                <TableHead style={{ width: '12.5%' }}>
                   <DropdownMenu open={isOpenS} onOpenChange={setIsOpenS}>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -296,31 +323,43 @@ export function ProjectsList({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableHead>
-                <TableHead className="rounded-tr-2xl rounded-br-2xl">
-                  <button
-                    className="px-4 py-2 rounded flex items-center space-x-2"
-                    onClick={handleClearFilters}
-                    disabled={
-                      selectedDepartments.length === 0 &&
-                      selectedStatus.length === 0
-                    } // Disable when no filters are selected
-                  >
-                    <span
-                      className={`${selectedDepartments.length === 0 && selectedStatus.length === 0 ? "text-gray-400" : "text-white"}`}
-                    >
-                      Clear
-                    </span>
-                    <span
-                      className={`${
+                <TableHead className="rounded-tr-2xl rounded-br-2xl"
+                  style={{ width: '16.5%' }}
+                >
+                  <div className="flex justify-between">
+                    <button
+                      className="rounded flex items-center space-x-2"
+                      onClick={handleClearFilters}
+                      disabled={
                         selectedDepartments.length === 0 &&
                         selectedStatus.length === 0
-                          ? "bg-gray-400 text-gray-200"
-                          : "bg-[#E75973] text-white"
-                      } rounded-full h-4 w-4 flex items-center justify-center text-[12px]`}
+                      } // Disable when no filters are selected
                     >
-                      ×
-                    </span>
-                  </button>
+                      <span
+                        className={`${selectedDepartments.length === 0 && selectedStatus.length === 0 ? "text-gray-400" : "text-white"}`}
+                      >
+                        Clear
+                      </span>
+                      <span
+                        className={`${
+                          selectedDepartments.length === 0 &&
+                          selectedStatus.length === 0
+                            ? "bg-gray-400 text-gray-200"
+                            : "bg-[#E75973] text-white"
+                        } rounded-full h-4 w-4 flex items-center justify-center text-[12px]`}
+                      >
+                        ×
+                      </span>
+                    </button>
+                    {userLevel >= 3 && <div>
+                      <button
+                        onClick={handleSetSponsorToggle}
+                        className={`${sponsorToggle === false ? "bg-[#1d1b23]" : "bg-gray-600"} outline rounded-lg p-1 ml-2 hover:bg-gray-600 `}
+                      >
+                        Sponsor
+                      </button>
+                    </div>}
+                  </div>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -338,6 +377,9 @@ export function ProjectsList({
                       style={{
                         borderTopLeftRadius: "0.5rem",
                         borderBottomLeftRadius: "0.5rem",
+                        width: "11%",
+                        padding: "10px",
+                        paddingLeft: "20px"
                       }}
                     >
                       {new Date(project.date)
@@ -348,8 +390,30 @@ export function ProjectsList({
                         })
                         .substring(0, 10)}
                     </TableCell>
-                    <TableCell>{project.name}</TableCell>
-                    <TableCell>
+                    <TableCell
+                      style={{
+                        width: "9.5%",
+                        padding: "10px",
+                      }}
+                    >
+                      {"20??/??"}
+                    </TableCell>
+                    <TableCell
+                      style={{
+                        width: '33%',
+                        padding: '10px',
+                        overflow: 'auto',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {project.name}
+                    </TableCell>
+                    <TableCell 
+                      style={{
+                        width: '17.5%',
+                        padding: '10px'
+                      }}
+                    >
                       <div
                         style={{
                           backgroundColor: departmentColors[project.department],
@@ -362,7 +426,12 @@ export function ProjectsList({
                         {project.department}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell
+                      style={{
+                        width: '12.5%',
+                        padding: '10px'
+                      }}
+                    >
                       <div
                         style={{
                           backgroundColor: statusColors[project.status],
@@ -379,13 +448,14 @@ export function ProjectsList({
                       style={{
                         borderTopRightRadius: "0.5rem",
                         borderBottomRightRadius: "0.5rem",
+                        width: '16.5%',
+                        padding: '10px',
+                        // paddingRight: '20px'
                       }}
                     >
-                      <Button variant="outline" asChild>
-                        <Link href={`/Employee/Projects/${project.id}`}>
-                          View Details
-                        </Link>
-                      </Button>
+                      <button className="outline rounded-lg p-0.5 px-2 bg-[#1D1B23]">
+                        <Link href={`/Employee/Projects/${project.id}`}>Project Details</Link>
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))
