@@ -17,7 +17,7 @@ export default function ProjectPage() {
     startDate: null,
     endDate: null,
   });
-  const [userLevel, setUserLevel] = useState<number | null>(null);
+  const [userLevel, setUserLevel] = useState<number>(0);
 
   const supabase = createClient();
 
@@ -104,12 +104,12 @@ export default function ProjectPage() {
             <Link href={`/Employee/CreateProject/`} passHref>
               Create Project
             </Link>
-            <span className='bg-white isButtonDisabled ? text-[#c9c7ce] : text-[#81c26c] rounded-full h-4 w-4 ml-2 flex items-center justify-center text-[16px]'>
+            <span className={`${isButtonDisabled ? "text-[#c9c7ce]" : "text-[#81c26c]"} bg-white rounded-full h-4 w-4 ml-2 flex items-center justify-center text-[16px]`}>
               +
             </span>
           </Button>
         </div>
-        <ProjectsList searchTerm={searchTerm} filter={filter} dateRange={dateRange} />
+        <ProjectsList searchTerm={searchTerm} filter={filter} dateRange={dateRange} userLevel={userLevel} />
       </div>
     </>
   );
