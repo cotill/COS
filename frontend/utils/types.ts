@@ -75,6 +75,8 @@ export interface Project {
   dispatched_date: string | null;
   project_budget: number;
   start_term: string | null;
+  rejector_email: string | null;
+  rejector_date: string | null;
 }
 
 export enum Universities {
@@ -84,7 +86,7 @@ export enum Universities {
   York = "York University",
   ONTech = "Ontario Tech University",
   UofA = "University of Alberta",
-  SAIT = "Southern Alberta Institute of Technology"
+  SAIT = "Southern Alberta Institute of Technology",
 }
 
 export enum Project_Status {

@@ -1,5 +1,9 @@
 "use client";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ProjectStatusOrder } from "@/app/student_applications/project_detail_helper";
 import { Application_Status, Project_Status } from "@/utils/types";
 import { cn } from "@/lib/utils";
@@ -25,7 +29,10 @@ const statusConfig: Record<Project_Status, { color: string }> = {
   COMPLETED: { color: "bg-[#154406]" },
   CANCELLED: { color: "bg-black" },
 };
-const checkStatusSelectable = (initial_status: Project_Status, targetStatus: Project_Status): boolean => {
+const checkStatusSelectable = (
+  initial_status: Project_Status,
+  targetStatus: Project_Status
+): boolean => {
   const initialIndex = ProjectStatusOrder.indexOf(initial_status);
   const targetIndex = ProjectStatusOrder.indexOf(targetStatus);
   /*
@@ -34,18 +41,33 @@ const checkStatusSelectable = (initial_status: Project_Status, targetStatus: Pro
   // the status  in front is selectable
   if (targetIndex === initialIndex + 1) return true;
   if (initialIndex === targetIndex) return true; // if the user want to set the status to original status, allow them to
-  if (initial_status === Project_Status.REVIEW && (targetStatus === Project_Status.REJECTED || targetStatus === Project_Status.APPROVED)) return true;
+  if (
+    initial_status === Project_Status.REVIEW &&
+    (targetStatus === Project_Status.REJECTED || targetStatus === Project_Status.APPROVED)
+  )
+    return true;
+  if (initial_status === Project_Status.REJECTED && targetStatus === Project_Status.REVIEW)
+    return true;
 
   // if rejected, you can set it back to review
   if (initial_status === Project_Status.REJECTED && targetStatus === Project_Status.REVIEW) true;
+  if (initial_status === Project_Status.APPROVED && targetStatus === Project_Status.REJECTED)
+    return true;
   return false;
 };
 
 function getNextStatus(currentStatus: Project_Status): Project_Status {
   const currentStatusIndex = ProjectStatusOrder.indexOf(currentStatus);
-  return currentStatusIndex < ProjectStatusOrder.length - 1 ? ProjectStatusOrder[currentStatusIndex + 1] : currentStatus;
+  return currentStatusIndex < ProjectStatusOrder.length - 1
+    ? ProjectStatusOrder[currentStatusIndex + 1]
+    : currentStatus;
 }
-export function ProjectStatusButton({ initial_status, status, setProjStatus, allowClick }: ProjectStatusButtonProp) {
+export function ProjectStatusButton({
+  initial_status,
+  status,
+  setProjStatus,
+  allowClick,
+}: ProjectStatusButtonProp) {
   const currentConfig = statusConfig[status];
   function handleStatusChange(target_status: Project_Status) {
     if (target_status !== status) {
@@ -54,7 +76,8 @@ export function ProjectStatusButton({ initial_status, status, setProjStatus, all
     }
   }
 
-  const borderColor = status === Project_Status.DRAFT ? "border-black text-black" : "border-white text-white";
+  const borderColor =
+    status === Project_Status.DRAFT ? "border-black text-black" : "border-white text-white";
 
   const handleNextStatus = () => {
     const nextStatus = getNextStatus(status);
@@ -69,7 +92,7 @@ export function ProjectStatusButton({ initial_status, status, setProjStatus, all
           <button
             className={cn(
               `h-9 px-4 rounded-l-full flex items-center font-medium text-white focus:outline-none transition-all duration-200 ease-in-out ${allowClick ? "hover:bg-opacity-40" : "cursor-default"}`,
-              currentConfig.color,
+              currentConfig.color
             )}
             disabled={!allowClick}
           >
@@ -92,7 +115,7 @@ export function ProjectStatusButton({ initial_status, status, setProjStatus, all
                   "transition-colors duration-100 ease-in-out",
                   "rounded-sm",
                   "pl-2",
-                  isSelectable ? "hover:bg-gray-800" : "opacity-50 cursor-not-allowed",
+                  isSelectable ? "hover:bg-gray-800" : "opacity-50 cursor-not-allowed"
                 )}
               >
                 <div className={cn("w-2 h-2 rounded-full", statusConfig[statusKey].color)} />
@@ -108,7 +131,7 @@ export function ProjectStatusButton({ initial_status, status, setProjStatus, all
         className={cn(
           `h-9 px-2 rounded-r-full border-l flex items-center transition-all duration-200 ease-in-out ${allowClick ? "hover:bg-opacity-40" : "cursor-default"}`,
           currentConfig.color,
-          borderColor,
+          borderColor
         )}
         disabled={!allowClick}
       >

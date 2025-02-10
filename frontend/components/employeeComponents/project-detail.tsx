@@ -210,7 +210,8 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         </div>
         {/* Project edit button */}
         <div className="flex items-center gap-6 justify-center">
-          <Button variant="outline"
+          <Button
+            variant="outline"
             className={`flex flex-row rounded-full w-24 gap-3 font-medium h-9 focus:outline-none 
           hover:bg-opacity-10 hover:bg-white transition-colors duration-100 ease-in-out
           ${isEditing ? "hidden" : ""}`}
@@ -456,7 +457,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
               <div className="flex justify-center items-center space-x-2">
-              <CreatePdf project={originalProjectInfo}/>
+                <CreatePdf project={originalProjectInfo} />
               </div>
               {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
             </div>
@@ -470,12 +471,20 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         <div>
           <h2 className="text-xl font-bold text-white py-2">Applications</h2>
           <div className="space-x-2">
-            <Button asChild variant="outline" className="text-md space-x-1" disabled={!originalProjectInfo.application_link}>
-              <Link href={`/ApplicationForm/${originalProjectInfo.application_link}/`}>
-                {" "}
+            <Button
+              asChild
+              variant="outline"
+              className={`text-md space-x-1 ${originalProjectInfo.application_link === null ? "text-gray-500 border border-gray-400 cursor-not-allowed" : ""}`}
+              disabled={originalProjectInfo.application_link === null}
+            >
+              {originalProjectInfo.application_link ? (
+                <Link href={`/ApplicationForm/${originalProjectInfo.application_link}/`}>
+                  <span>Application Link</span>
+                  <ArrowUpRight />
+                </Link>
+              ) : (
                 <span>Application Link</span>
-                <ArrowUpRight />
-              </Link>
+              )}
             </Button>
             <Button asChild variant="outline" className="text-md space-x-1">
               <Link href={`/Employee/Projects/${project.project_id}/Applicants`}>
@@ -555,7 +564,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
           <Button variant="outline" onClick={handleCancelEdit} className="flex items-center">
             <X className="mr-1 h-4 w-4" /> Cancel
           </Button>
-          <Button onClick={handleSaveProject} variant = "outline" className="flex items-center">
+          <Button onClick={handleSaveProject} variant="outline" className="flex items-center">
             {isSaving ? (
               <>
                 <RoundSpinner size="xs" color="white" />
