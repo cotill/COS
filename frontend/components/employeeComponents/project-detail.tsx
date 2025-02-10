@@ -3,17 +3,16 @@
 import React from "react";
 import { useState, useEffect, Suspense } from "react";
 import { Project, Project_Status, Employee, Universities } from "@/utils/types";
-import { Info, Pencil, X, Check, ArrowUpRight, ChevronRight } from "lucide-react";
+import { Info, Pencil, ArrowUpRight, ChevronRight } from "lucide-react";
 import DatePicker from "react-datepicker"; // npm install react-datepicker documentation: https://reactdatepicker.com/#example-locale-without-global-variables
 import "react-datepicker/dist/react-datepicker.css"; // Import the CSS for the date picker
 import "./customDatePickerWidth.css";
 import ReactMarkdown from "react-markdown";
 import { Button } from "../ui/button";
 import Link from "next/link";
-import { RoundSpinner } from "@/components/ui/spinner";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
-import { getChangedData, onUpdateProject, updateApplicationLink, canUserEditProject } from "@/app/student_applications/project_detail_helper";
+import { getChangedData, onUpdateProject, canUserEditProject } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
 import { createClient } from "@/utils/supabase/client";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
@@ -21,6 +20,7 @@ import { TeamDetailsDialog } from "./team-detail";
 import "./project-details.css";
 import CreatePdf from "@/app/student_applications/createPdf";
 import dynamic from "next/dynamic";
+import SaveCancelButtons from "../save_cancel_btns";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
@@ -80,7 +80,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
     try {
       const updatedData: Partial<Project> = getChangedData(originalProjectInfo, currentProjectInfo, employeeInfo.email, employeeInfo.level);
       if (Object.keys(updatedData).length === 0) {
-        setMessage("No changes detected to update the project.");
+        setMessage("Cannot save without any changes");
         setCurrentProjectInfo(originalProjectInfo);
         return;
       }
@@ -209,7 +209,10 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
           </div>
         </div>
         {/* Project edit button */}
+        {isMessage && <div className="text-red-400 text-center ">{isMessage}</div>}
+
         <div className="flex items-center gap-6 justify-center">
+          {isEditing && <SaveCancelButtons isSaving={isSaving} onCancel={handleCancelEdit} onSave={handleSaveProject} />}
           <Button
             variant="outline"
             className={`flex flex-row rounded-full w-24 gap-3 font-medium h-9 focus:outline-none 
@@ -559,25 +562,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
 
       {/* error message */}
       {isMessage && <div className="text-red-400 text-center">{isMessage}</div>}
-      {isEditing && (
-        <div className="flex justify-end space-x-2 mt-2">
-          <Button variant="outline" onClick={handleCancelEdit} className="flex items-center">
-            <X className="mr-1 h-4 w-4" /> Cancel
-          </Button>
-          <Button onClick={handleSaveProject} variant="outline" className="flex items-center">
-            {isSaving ? (
-              <>
-                <RoundSpinner size="xs" color="white" />
-                <span className="ml-1">Saving...</span>
-              </>
-            ) : (
-              <>
-                <Check className="mr-1 h-4 w-4" /> Save
-              </>
-            )}
-          </Button>
-        </div>
-      )}
+      {isEditing && <SaveCancelButtons isSaving={isSaving} onCancel={handleCancelEdit} onSave={handleSaveProject} />}
     </div>
   );
 }
