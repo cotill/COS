@@ -12,28 +12,20 @@ export const updateSession = async (request: NextRequest) => {
       },
     });
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
-            response = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
-          },
+    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
         },
-      }
-    );
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        },
+      },
+    });
 
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
@@ -48,12 +40,11 @@ export const updateSession = async (request: NextRequest) => {
     if (request.nextUrl.pathname === "/Employee") {
       return NextResponse.redirect(new URL("/Employee/Projects", request.url));
     }
-    if (
-      user.user &&
-      (request.nextUrl.pathname === "/" ||
-        request.nextUrl.pathname.startsWith("/sign-in") ||
-        request.nextUrl.pathname.startsWith("/sign-up"))
-    ) {
+    if (user.user && (request.nextUrl.pathname === "/" || request.nextUrl.pathname.startsWith("/sign-in") || request.nextUrl.pathname.startsWith("/sign-up"))) {
+      const { data: employeeInfo, error: empError } = await supabase.from("Employees").select("*").eq("employee_id", user.user.id).single();
+      if (!employeeInfo || empError) {
+        return NextResponse.redirect(new URL("/Student", request.url));
+      }
       return NextResponse.redirect(new URL("/Employee/Projects", request.url));
     }
     return response;
