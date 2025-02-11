@@ -320,28 +320,15 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
     CANCELLED: 'black',
   };
 
-  const uniShort: { [key: string]: string } = {
-    "University of Calgary": "UofC",
-    "University of British Columbia": "UBC",
-    "University of Toronto": "UofT",
-    "York University": "York",
-    "Ontario Tech University": "ONTech",
-    "University of Alberta": "UofA",
-    "Southern Alberta Institute of Technology": "SAIT",
-    null: "**TBD**"
-  };
-  const getUniShort = (fullName: string) => {
-    return uniShort[fullName] || fullName; // Fallback to full name if not found
-  };
   const uniColors: { [key: string]: string } = {
     // alternate colors include UofC (#ffcd00), SAIT (#6d2077)
-    "University of Calgary": "#d6001c" ,
-    "University of British Columbia": "#002145",
-    "University of Toronto": "#1e3765",
-    "York University": "#e31837",
-    "Ontario Tech University": "#e75d2a",
-    "University of Alberta": "#007c41",
-    "Southern Alberta Institute of Technology": "#da291c",
+    "UofC": "#d6001c" ,
+    "UBC": "#002145",
+    "UofT": "#1e3765",
+    "York": "#e31837",
+    "ONTech": "#e75d2a",
+    "UofA": "#007c41",
+    "SAIT": "#da291c",
     null: "#99a1af"
   };
   
@@ -537,7 +524,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
                           borderRadius: '1.0rem',
                         }}
                       >
-                        {getUniShort(project.university)}
+                        {project.university || "**TBD**"}
                       </div>
                     </TableCell>
                     <TableCell
