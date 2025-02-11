@@ -278,7 +278,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
       if (filter === "ttg") {
         return (
           project.members?.some((member) =>
-            member.ttg.toLowerCase().includes(searchTermLower)
+            member.ttg? member.ttg.toLowerCase().includes(searchTermLower) : false
           ) ?? false
         );
       }

@@ -333,16 +333,25 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             className="p-2 rounded-md bg-white text-black outline-none"
           >
             <option value="" disabled>Select Start Term</option>
-            {years.map((year) =>
+            {years.flatMap((year) =>
               ["01", "05", "09"].map((month) => {
                 const displayMonth = month === "01" ? "Jan" : month === "05" ? "May" : "Sept";
-                const value = `${year}${month}`;
+                const value = `${year}/${month}`;
+
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth() + 1;
+
+                if (parseInt(year) < currentYear || (parseInt(year) == currentYear && parseInt(month) < currentMonth)) {
+                  return null;
+                }
+
                 return (
                   <option key={value} value={value}>
                     {displayMonth} {year}
                   </option>
                 );
-              })
+              }).filter(Boolean)
             )}
           </select>
         </div>

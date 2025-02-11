@@ -143,10 +143,16 @@ export function ProjectsList({
     const matchesSearchTerm =
       filter === "date"
         ? true
-        : project[filter as keyof Project]
+        : searchTerm === "" ? true : 
+          (searchTerm.toLowerCase() === "t" || searchTerm.toLowerCase() === "tb" || searchTerm.toLowerCase() === "tbd") && filter === "term" ? !project[filter as keyof Project] :
+          (project[filter as keyof Project]? 
+          project[filter as keyof Project]
             ?.toString()
             ?.toLowerCase()
-            ?.includes(searchTerm.toLowerCase());
+            ?.includes(searchTerm.toLowerCase()) : 
+          project[filter as keyof Project]
+            ?.toString()
+            ?.includes(searchTerm.toLowerCase()));
 
     const matchesSponsor = sponsorToggle ? project.sponsor === null : true;
 
@@ -396,7 +402,7 @@ export function ProjectsList({
                         padding: "10px",
                       }}
                     >
-                      {"20??/??"}
+                      {project.term? project.term : "TBD"}
                     </TableCell>
                     <TableCell
                       style={{
