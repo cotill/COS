@@ -104,7 +104,11 @@ export const signInAction = async (formData: FormData) => {
   if (error) {
     return encodedRedirect("error", "/sign-in", error.message);
   }
-  revalidatePath("/Employee", "layout"); //purge cache of the Employee folder and its children
+  const { data: employeeInfo, error: empError } = await supabase.from("Employees").select("*").eq("email", email).single();
+  if (!employeeInfo || empError) {
+    return redirect("/Student/Tasks");
+  }
+  // revalidatePath("/Employee", "layout"); //purge cache of the Employee folder and its children
   return redirect("/Employee/Projects");
 };
 

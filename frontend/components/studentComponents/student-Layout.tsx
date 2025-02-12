@@ -1,21 +1,19 @@
 "use client"; //cause Im using useState, i need to import use Client. Making this page React
 import { useState } from "react";
-import Sidebar from "../Sidebar";
+import Sidebar from "../SidebarStudent";
 import Navbar from "../Navbar";
-import { EmployeePages, UserRole } from "@/utils/types";
+import { StudentPages } from "@/utils/types";
 import BackButton from "@/components/backbutton";
 import { usePathname } from "next/navigation";
 
-interface EmpLayoutProps {
+interface StuLayoutProps {
   children: React.ReactNode;
-  userRole: UserRole;
-  employeeLevel?: number;
   firstName: string;
   lastName: string;
   signOutFunc: () => void;
 }
 
-export default function EmpLayout(layoutProps: EmpLayoutProps) {
+export default function StuLayout(layoutProps: StuLayoutProps) {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false); // true represents collapsed sidebar. false represents expanded sidebar
 
 
@@ -27,11 +25,10 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
   
   // Map the current route to EmployeePages
   const pathToPageMap = {
-    "/Employee/Projects": EmployeePages.PROJECTS,
-    "/Employee/Training": EmployeePages.TRAINING,
-    "/Employee/SponsoredProjects": EmployeePages.SPONSORED_PROJECTS,
-    "/Employee/Settings": EmployeePages.SETTINGS,
-    "/Employee/CreateProject": EmployeePages.CREATE_PROJECT,
+    "/Student/Tasks": StudentPages.TASKS,
+    "/Student/Team": StudentPages.TEAM,
+    "/Student/Project": StudentPages.PROJECT,
+    "/Student/Settings": StudentPages.SETTINGS,
   };
 
   const activePage = pathToPageMap[pathname as keyof typeof pathToPageMap];
@@ -49,10 +46,8 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
       />
       <div className="flex flex-1">
         <Sidebar
-          userRole={layoutProps.userRole}
           collapsed={isSidebarCollapsed}
           activePage={activePage}
-          employeeLevel={layoutProps.employeeLevel}
         />
 
         {/**Main Content */}
@@ -60,7 +55,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
           className={`bg-[#413F46] flex-1 p-4 transition-all duration-200 ease-in-out main-content rounded-3xl  ml-4 mr-4 ${isSidebarCollapsed ? "ml-0" : "ml-200px"}`}
         >
       <div className="flex items-center gap-4 m">
-        {pathname !== "/Employee/Projects" && pathname !== "/Employee/Training" && pathname !== "/Employee/SponsoredProjects" && (
+        {pathname !== "/Student/Tasks" && pathname !== "/Student/Team" && pathname !== "/Student/Project" && (
           <BackButton>← Back</BackButton>
         )}
         {/* Subheading */}

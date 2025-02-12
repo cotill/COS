@@ -43,7 +43,7 @@ export const updateSession = async (request: NextRequest) => {
     if (user.user && (request.nextUrl.pathname === "/" || request.nextUrl.pathname.startsWith("/sign-in") || request.nextUrl.pathname.startsWith("/sign-up"))) {
       const { data: employeeInfo, error: empError } = await supabase.from("Employees").select("*").eq("employee_id", user.user.id).single();
       if (!employeeInfo || empError) {
-        return NextResponse.redirect(new URL("/Student", request.url));
+        return NextResponse.redirect(new URL("/Student/Tasks", request.url));
       }
       return NextResponse.redirect(new URL("/Employee/Projects", request.url));
     }
