@@ -26,6 +26,7 @@ interface ApplicationFormProp {
 const minTeamSize = 2;
 const maxTeamSize = 10;
 const ttgWebsite = "https://www.tartigrade.ca/";
+const MAX_CHAR_LIMIT = 250;
 
 function constructFileName(project_id: number, id: number, fullname: string, resumeName: string): string {
   // Construct the filename using the generated applicationId
@@ -44,7 +45,7 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
     },
   ]);
   const [error, setError] = useState<string | null>(null);
-  const [teamDescription, setTeamDescription] = useState("");
+  const [teamDescription, setTeamDescription] = useState({ value: "", charCount: 0 });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0] || null;
@@ -108,6 +109,13 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
     setMembers(newMembers);
   };
 
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    let val = e.target.value;
+    if (val.length > MAX_CHAR_LIMIT) {
+      val = val.substring(0, MAX_CHAR_LIMIT);
+    }
+    setTeamDescription({ value: val, charCount: val.length });
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (members.length < minTeamSize) {
@@ -143,7 +151,7 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
         major: member.major,
         resume: constructFileName(extendedProject.project_id, id, member.full_name, member.resume?.name || ""), // save the file name
       })),
-      about_us: teamDescription,
+      about_us: teamDescription.value,
       course: course,
     };
     await uploadResumes(id);
@@ -277,12 +285,15 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
               <h4 className="text-white">Tell us about your team</h4>
               <Textarea
                 id="teamDescription"
-                value={teamDescription}
-                onChange={(e) => setTeamDescription(e.target.value)}
+                value={teamDescription.value}
+                onChange={handleDescriptionChange}
                 placeholder="We are a group of students..."
                 className="min-h-[7.5rem] border-gray-700 bg-[#1F2937] text-white"
                 required
               />
+              <p className={`text-sm ${teamDescription.charCount === MAX_CHAR_LIMIT ? "text-red-500" : "text-white"}`}>
+                {teamDescription.charCount}/{MAX_CHAR_LIMIT} characters
+              </p>
             </div>
 
             {error && (
