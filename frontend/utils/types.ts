@@ -125,4 +125,5 @@ export interface Application {
   about_us: string | null;
   submission_date: string | null;
   approval_date: string | null; // can be null because not every project will be approved
+  course: string;
 }

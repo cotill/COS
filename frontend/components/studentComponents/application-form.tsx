@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -11,12 +11,11 @@ import { PlusCircle, MinusCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Application, Project } from "@/utils/types";
-import { useRouter } from "next/router";
+import { Application, Member, Project } from "@/utils/types";
+import ReactMarkdown from "react-markdown";
+import { createClient } from "@/utils/supabase/client";
 
-interface TeamMember {
-  name: string;
-  major: string;
+export interface TeamMember extends Omit<Member, "resume"> {
   resume: File | null;
 }
 
@@ -24,13 +23,26 @@ interface ApplicationFormProp {
   extendedProject: Project & { sponsor_name: string | null };
   handleSubmitApplication: (application: Partial<Application>) => Promise<void>;
 }
-const minTeamSize = 3;
+const minTeamSize = 2;
 const maxTeamSize = 10;
 const ttgWebsite = "https://www.tartigrade.ca/";
+
+function constructFileName(project_id: number, id: number, fullname: string, resumeName: string): string {
+  // Construct the filename using the generated applicationId
+  return `${project_id}_${id}_${fullname}_${resumeName}`;
+}
 export default function ApplicationForm({ extendedProject, handleSubmitApplication }: ApplicationFormProp) {
   const [teamName, setTeamName] = useState("");
   const [course, setCourse] = useState("");
-  const [members, setMembers] = useState<TeamMember[]>([{ name: "", major: "", resume: null }]);
+  const [members, setMembers] = useState<TeamMember[]>([
+    {
+      full_name: "",
+      email: "",
+      major: "",
+      resume: null,
+      role: null,
+    },
+  ]);
   const [error, setError] = useState<string | null>(null);
   const [teamDescription, setTeamDescription] = useState("");
 
@@ -53,7 +65,13 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
     if (members.length < minTeamSize) {
       const newMembers = [...members];
       for (let i = members.length; i < minTeamSize; i++) {
-        newMembers.push({ name: "", major: "", resume: null });
+        newMembers.push({
+          full_name: "",
+          email: "",
+          major: "",
+          resume: null,
+          role: null,
+        });
       }
       setMembers(newMembers);
     }
@@ -61,7 +79,16 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
 
   const addMember = () => {
     if (members.length < maxTeamSize) {
-      setMembers([...members, { name: "", major: "", resume: null }]);
+      setMembers([
+        ...members,
+        {
+          full_name: "",
+          email: "",
+          major: "",
+          resume: null,
+          role: null,
+        },
+      ]);
     }
   };
 
@@ -75,13 +102,13 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
     }
   };
 
-  const updateMember = (index: number, field: keyof TeamMember, value: string | File | null) => {
+  const updateMember = async (index: number, field: keyof TeamMember, value: string | File | null) => {
     const newMembers = [...members];
     newMembers[index] = { ...newMembers[index], [field]: value };
     setMembers(newMembers);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (members.length < minTeamSize) {
       setError(`Team must have at least ${minTeamSize} members`);
@@ -96,10 +123,13 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
       return;
     }
     if (typeof extendedProject !== "string") {
-      console.log({ teamName, course, members, projectId: extendedProject.project_id });
+      console.log({ teamName, course, members, projectId: extendedProject.project_id, teamDescription });
     } else {
       console.error("Invalid project data");
     }
+
+    const id = Math.floor(100 + Math.random() * 900); // Generate a number between 100 and 999
+
     const application: Partial<Application> = {
       project_id: extendedProject.project_id,
       team_name: teamName,
@@ -107,18 +137,35 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
       // incomplete
       university: extendedProject.university || "",
       members: members.map((member, index) => ({
-        full_name: member.name,
-        email: "",
+        full_name: member.full_name,
+        email: member.email,
         role: index === 0 ? "Team Manager" : "Team Member",
         major: member.major,
-        resume: member.resume?.name || "",
+        resume: constructFileName(extendedProject.project_id, id, member.full_name, member.resume?.name || ""), // save the file name
       })),
       about_us: teamDescription,
+      course: course,
     };
+    await uploadResumes(id);
+
     handleSubmitApplication(application);
-    // for later: Handle form submission
   };
 
+  const uploadResumes = async (id: number) => {
+    const supabase = createClient();
+
+    const uploadResumePromises = members.map(async (mem) => {
+      if (!mem.resume) return; // if theres no resume, skip
+      const filename = constructFileName(extendedProject.project_id, id, mem.full_name, mem.resume?.name || "");
+      const { data, error } = await supabase.storage.from("applicants_resumes").upload(filename, mem.resume);
+      if (error) {
+        alert(`Error uploading ${mem.full_name} resume. Please contact TTG sponsor`);
+        console.log("resume upload error: ", error.message);
+      }
+    });
+
+    await Promise.all(uploadResumePromises); //upload all in parallel
+  };
   return (
     <>
       <div className="mb-8 text-center text-white">
@@ -130,7 +177,9 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
             <div className="rounded-lg bg-muted mt-4 p-4 bg-[#1F2937]">
               <h2 className="font-bold text-2xl">{extendedProject.title}</h2>
               <h3 className="my-2 font-semibold">Project Details</h3>
-              <p className="text-sm text-gray-300">{extendedProject.description}</p>
+              <div className="max-h-48 overflow-y-auto scrollbar border border-gray-300 p-2 rounded-sm">
+                <ReactMarkdown>{extendedProject.description}</ReactMarkdown>
+              </div>
               <div className="mt-2 grid  sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="font-medium">Website:</span> {ttgWebsite}
@@ -189,10 +238,15 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
                         )}
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-3">
+                      <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor={`name-${index}`}>Full Name</Label>
-                          <Input id={`name-${index}`} value={member.name} onChange={(e) => updateMember(index, "name", e.target.value)} required />
+                          <Input id={`name-${index}`} value={member.full_name} onChange={(e) => updateMember(index, "full_name", e.target.value)} required />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`major-${index}`}>Email</Label>
+                          <Input id={`email-${index}`} value={member.email} onChange={(e) => updateMember(index, "email", e.target.value)} required />
                         </div>
 
                         <div className="space-y-2">
