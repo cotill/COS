@@ -24,7 +24,7 @@ export interface Student {
 export interface Team {
   team_id: string;
   team_name: string;
-  team_lead_id: string;
+  team_lead_email: string;
   nda_file: string;
   completed_onboarding: string;
   project_id: string;
