@@ -19,6 +19,15 @@ export interface Student {
   github?: string;
   team_id: string;
   ttg_email: string;
+  changed_password: boolean;
+}
+export interface Team {
+  team_id: string;
+  team_name: string;
+  team_lead_id: string;
+  nda_file: string;
+  completed_onboarding: string;
+  project_id: string;
 }
 
 export enum EmployeeLevel {
