@@ -1,4 +1,5 @@
 import Headingbar from "@/components/employeeComponents/Headingbar";
+import TeamManagement from "@/components/studentComponents/team-management";
 
 export default function teampage(){
 
@@ -8,7 +9,7 @@ export default function teampage(){
         text='Student Team'
       />
       <div>
-        <span>This is the student team page</span>
+        <TeamManagement />
       </div>
     </>
   );

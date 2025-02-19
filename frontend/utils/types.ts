@@ -18,7 +18,18 @@ export interface Student {
   major: string;
   github?: string;
   team_id: string;
-  ttg_email: string;
+  ttg_email: string | null;
+  changed_password: boolean;
+}
+export interface Team {
+  team_id: string;
+  team_name: string;
+  team_lead_email: string;
+  nda_file: string;
+  completed_onboarding: string;
+  project_id: string;
+  supervisor_name: string;
+  supervisor_email: string;
 }
 
 export enum EmployeeLevel {
@@ -28,6 +39,12 @@ export enum EmployeeLevel {
   LEVEL_3 = 3,
 }
 
+export enum StudentPages {
+  TASKS = "Tasks",
+  TEAM = "Team",
+  PROJECT = "Project",
+  SETTINGS = "Student Settings",
+}
 export interface AuthResult {
   isAuthenticated: boolean;
   userRole: UserRole | null;
@@ -40,13 +57,6 @@ export enum EmployeePages {
   SPONSORED_PROJECTS = "Sponsored Projects",
   SETTINGS = "Employee Settings",
   CREATE_PROJECT = "Create Project",
-}
-
-export enum StudentPages {
-  TASKS = "Tasks",
-  TEAM = "Team",
-  PROJECT = "Project",
-  SETTINGS = "Student Settings",
 }
 
 export enum Department_Types {
@@ -132,4 +142,5 @@ export interface Application {
   about_us: string | null;
   submission_date: string | null;
   approval_date: string | null; // can be null because not every project will be approved
+  course: string;
 }
