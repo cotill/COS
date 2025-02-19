@@ -11,6 +11,7 @@ export interface Employee {
   department: string;
 }
 export interface Student {
+  student_id: string;
   email: string;
   password: string;
   full_name: string;

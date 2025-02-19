@@ -11,7 +11,7 @@ import { PlusCircle, MinusCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Application, Project } from "@/utils/types";
+import { Application, Project, Student } from "@/utils/types";
 import { useRouter } from "next/router";
 
 interface TeamMember {
@@ -25,9 +25,55 @@ const minTeamSize = 3;
 const maxTeamSize = 10;
 const ttgWebsite = "https://www.tartigrade.ca/";
 export default function TeamMembers({}: TeamMembersProp) {
-  const [teamName, setTeamName] = useState("");
-  const [course, setCourse] = useState("");
-  const [members, setMembers] = useState<TeamMember[]>([{ name: "", major: "", resume: null }]);
+  const [members, setMembers] = useState<Student[]>([
+    {
+      email: "john@example.com",
+      password: "password123",
+      full_name: "John Doe",
+      university: "University A",
+      major: "CS",
+      github: "https://github.com/johndoe",
+      team_id: "team1",
+      ttg_email: null,
+      changed_password: false,
+    },
+    {
+      email: "jane@example.com",
+      password: "password123",
+      full_name: "Jane Smith",
+      university: "University B",
+      major: "SE",
+      github: "https://github.com/janesmith",
+      team_id: "team1",
+      ttg_email: null,
+      changed_password: false,
+    },
+    {
+      email: "mike@example.com",
+      password: "password123",
+      full_name: "Mike Ross",
+      university: "University C",
+      major: "IT",
+      github: "https://github.com/mikeross",
+      team_id: "team1",
+      ttg_email: null,
+      changed_password: false,
+    },
+  ]);
+
+  const [supervisor, setSupervisor] = useState("");
+  const [team, setTeam] = useState<Team[]>([
+    {
+      team_id: "21623653532sdhsdh",
+      team_name: "Team Alpha",
+      team_lead_email: "lead@example.com",
+      nda_file: "nda.pdf",
+      completed_onboarding: "2023-01-01",
+      project_id: "project123",
+      supervisor_name: "Dr. Smith",
+      supervisor_email: "dr.smith@example.com",
+    },
+  ]);
   const [error, setError] = useState<string | null>(null);
   const [teamDescription, setTeamDescription] = useState("");
 
