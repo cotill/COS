@@ -40,6 +40,12 @@ export default function TeamSupervisor({}: TeamSupervisorProp) {
     // setStudent(newMembers);
   };
 
+  const [showEditBtn, setShowEditBtn] = useState(true);
+  const handleEditBtn = () => {
+    setShowEditBtn((prev) => !prev);
+  };
+  const handleSaveSupervisor = () => {};
+  const handleCancelSupervisor = () => {};
   return (
     <>
       <Card className="mx-auto max-w-full [_&]: text-white my-4 pt-4">
@@ -48,10 +54,11 @@ export default function TeamSupervisor({}: TeamSupervisorProp) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Team Members</h3>
-                <Button type="button" variant="outline" size="sm" onClick={() => updateSupervisor(0, "name", "")}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Member
-                </Button>
+                {showEditBtn && (
+                  <Button className="w-20" type="button" variant="outline" size="sm" onClick={handleEditBtn}>
+                    Edit
+                  </Button>
+                )}
               </div>
 
               <Card>
@@ -80,7 +87,7 @@ export default function TeamSupervisor({}: TeamSupervisorProp) {
                 <AlertDescription className="text-red-600">{error}</AlertDescription>
               </Alert>
             )}
-            <CancelSaveBtn />
+            {!showEditBtn && <CancelSaveBtn onSave={handleSaveSupervisor} onCancel={handleCancelSupervisor} onToggleBtnDisplay={handleEditBtn} />}
           </form>
         </CardContent>
       </Card>

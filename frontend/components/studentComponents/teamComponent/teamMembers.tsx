@@ -106,6 +106,13 @@ export default function TeamMembers({}: TeamMembersProp) {
     setStudent(newMembers);
   };
 
+  const [showManageTeamBtn, setShowManageTeamBtn] = useState(true);
+
+  const handleTeamBtn = () => {
+    setShowManageTeamBtn((prev) => !prev);
+  };
+  const handleSaveTeam = () => {};
+  const handleCancelTeam = () => {};
   return (
     <>
       <Card className="mx-auto max-w-full [_&]: text-white my-4 pt-4">
@@ -114,10 +121,13 @@ export default function TeamMembers({}: TeamMembersProp) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Team Members</h3>
-                <Button type="button" variant="outline" size="sm" onClick={addMember} disabled={student.length >= maxTeamSize}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Member
-                </Button>
+                {showManageTeamBtn ? (
+                  <Button type="button" variant="outline" size="sm" onClick={handleTeamBtn}>
+                    Manage Team
+                  </Button>
+                ) : (
+                  <CancelSaveBtn onSave={handleSaveTeam} onCancel={handleCancelTeam} onToggleBtnDisplay={handleTeamBtn} />
+                )}
               </div>
 
               {student.map((stu, index) => (
@@ -163,7 +173,7 @@ export default function TeamMembers({}: TeamMembersProp) {
                 <AlertDescription className="text-red-600">{error}</AlertDescription>
               </Alert>
             )}
-            <CancelSaveBtn />
+            {!showManageTeamBtn && <CancelSaveBtn onSave={handleSaveTeam} onCancel={handleCancelTeam} onToggleBtnDisplay={handleTeamBtn} />}
           </form>
         </CardContent>
       </Card>
