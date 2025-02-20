@@ -3,8 +3,13 @@ import { Student, Team } from "@/utils/types";
 import { useState } from "react";
 import TeamSupervisor from "./team-supervisor";
 import TeamMembers from "./teamMembers";
+import Headingbar from "@/components/employeeComponents/Headingbar";
 
-export default function TeamManagement() {
+interface TeamManagementProps {
+  studentInfo: Student;
+  teamInfo: Team;
+}
+export default function TeamManagement({ studentInfo, teamInfo }: TeamManagementProps) {
   const [student, setStudent] = useState<Partial<Student>[]>([
     {
       student_id: "012029",
@@ -54,14 +59,17 @@ export default function TeamManagement() {
     supervisor_name: "Dr. Smith",
     supervisor_email: "dr.smith@example.com",
   });
+  const [localTeamName, setLocalTeamName] = useState(teamInfo.team_name); // used to update the teamName when the user saves
+  const handleTeamName = (new_team_name: string) => {
+    setLocalTeamName(new_team_name);
+  };
   return (
     <>
-      <div className="mt-4">
-        <h2 className="text-xl font-semibold">{team.team_name}</h2>
-        <p className="text-sm text-gray-500">University: {student[0].university}</p>
+      <Headingbar text={localTeamName} />
+      <div>
+        <TeamMembers studentInfo={studentInfo} teamInfo={teamInfo} setTeamNameOnSave={handleTeamName} />
+        <TeamSupervisor />
       </div>
-      <TeamMembers />
-      <TeamSupervisor />
     </>
   );
 }

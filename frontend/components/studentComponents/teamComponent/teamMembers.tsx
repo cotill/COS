@@ -12,17 +12,15 @@ import { AlertCircle } from "lucide-react";
 import { Student, Team } from "@/utils/types";
 import CancelSaveBtn from "./cancel-save-btn";
 
-interface TeamMember {
-  name: string;
-  major: string;
-  resume: File | null;
+interface TeamMembersProp {
+  studentInfo: Student;
+  teamInfo: Team;
+  setTeamNameOnSave: (new_team_name: string) => void; // used to update the teamName when the user saves
 }
-
-interface TeamMembersProp {}
 const minTeamSize = 3;
 const maxTeamSize = 10;
 
-export default function TeamMembers({}: TeamMembersProp) {
+export default function TeamMembers({ studentInfo, teamInfo, setTeamNameOnSave }: TeamMembersProp) {
   const [student, setStudent] = useState<Partial<Student>[]>([
     {
       student_id: "012029",
@@ -100,7 +98,7 @@ export default function TeamMembers({}: TeamMembersProp) {
     }
   };
 
-  const updateMember = (index: number, field: keyof TeamMember, value: string | File | null) => {
+  const updateMember = (index: number, field: keyof Student, value: string | File | null) => {
     const newMembers = [...student];
     newMembers[index] = { ...newMembers[index], [field]: value };
     setStudent(newMembers);
@@ -111,18 +109,30 @@ export default function TeamMembers({}: TeamMembersProp) {
   const handleTeamBtn = () => {
     setShowManageTeamBtn((prev) => !prev);
   };
-  const handleSaveTeam = () => {};
+  const handleSaveTeam = () => {
+    console.log("save function called");
+    setTeamNameOnSave("New Fake Name");
+  };
   const handleCancelTeam = () => {};
+  const saveManageTeamBtn = (): boolean => {
+    // use to check if the manage team and edit should be diable.
+    // the buttons are disabled if the user is not the current team lead.
+    return false;
+  };
   return (
     <>
+      <div className="mt-4">
+        <h2 className="text-xl font-semibold">{team.team_name}</h2>
+        <p className="text-sm text-gray-500">University: {student[0].university}</p>
+      </div>
       <Card className="mx-auto max-w-full [_&]: text-white my-4 pt-4">
         <CardContent>
-          <form className="space-y-6">
+          <div className="space-y-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Team Members</h3>
                 {showManageTeamBtn ? (
-                  <Button type="button" variant="outline" size="sm" onClick={handleTeamBtn}>
+                  <Button type="button" variant="outline" size="sm" onClick={handleTeamBtn} disabled={saveManageTeamBtn()}>
                     Manage Team
                   </Button>
                 ) : (
@@ -148,7 +158,7 @@ export default function TeamMembers({}: TeamMembersProp) {
                       <div className="grid gap-4 md:grid-cols-3">
                         <div className="space-y-2">
                           <Label htmlFor={`name-${index}`}>Email</Label>
-                          <Input id={`name-${index}`} value={stu.email} onChange={(e) => updateMember(index, "name", e.target.value)} required />
+                          <Input id={`name-${index}`} value={stu.email} onChange={(e) => updateMember(index, "full_name", e.target.value)} required />
                         </div>
 
                         <div className="space-y-2">
@@ -157,7 +167,7 @@ export default function TeamMembers({}: TeamMembersProp) {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor={`major-${index}`}>TTG Email</Label>
-                          <Input id={`major-${index}`} value={stu.ttg_email || ""} onChange={(e) => updateMember(index, "major", e.target.value)} required />
+                          <Input id={`major-${index}`} value={stu.ttg_email || ""} onChange={(e) => updateMember(index, "ttg_email", e.target.value)} required />
                         </div>
                       </div>
                     </div>
@@ -174,7 +184,7 @@ export default function TeamMembers({}: TeamMembersProp) {
               </Alert>
             )}
             {!showManageTeamBtn && <CancelSaveBtn onSave={handleSaveTeam} onCancel={handleCancelTeam} onToggleBtnDisplay={handleTeamBtn} />}
-          </form>
+          </div>
         </CardContent>
       </Card>
     </>
