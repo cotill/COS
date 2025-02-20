@@ -29,8 +29,8 @@ export interface Team {
   nda_file: string;
   completed_onboarding: string;
   project_id: string;
-  supervisor_name: string;
-  supervisor_email: string;
+  supervisor_name: string | null;
+  supervisor_email: string | null;
 }
 
 export enum EmployeeLevel {

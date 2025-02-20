@@ -1,13 +1,10 @@
 import Headingbar from "@/components/employeeComponents/Headingbar";
-import TeamManagement from "@/components/studentComponents/team-management";
+import TeamManagement from "@/components/studentComponents/teamComponent/team-management";
 
-export default function teampage(){
-
+export default function teampage() {
   return (
     <>
-      <Headingbar
-        text='Student Team'
-      />
+      <Headingbar text="Student Team" />
       <div>
         <TeamManagement />
       </div>
