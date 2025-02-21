@@ -18,9 +18,11 @@ interface TeamMember {
   resume: File | null;
 }
 
-interface TeamSupervisorProp {}
+interface TeamSupervisorProp {
+  disableButtons: boolean;
+}
 
-export default function TeamSupervisor({}: TeamSupervisorProp) {
+export default function TeamSupervisor({ disableButtons }: TeamSupervisorProp) {
   const [team, setTeam] = useState<Team>({
     team_id: "21623653532sdhsdh",
     team_name: "Team Alpha",
@@ -50,12 +52,12 @@ export default function TeamSupervisor({}: TeamSupervisorProp) {
     <>
       <Card className="mx-auto max-w-full [_&]: text-white my-4 pt-4">
         <CardContent>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Team Members</h3>
                 {showEditBtn && (
-                  <Button className="w-20" type="button" variant="outline" size="sm" onClick={handleEditBtn}>
+                  <Button className="w-20" type="button" variant="outline" size="sm" onClick={handleEditBtn} disabled={disableButtons}>
                     Edit
                   </Button>
                 )}
@@ -67,12 +69,12 @@ export default function TeamSupervisor({}: TeamSupervisorProp) {
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor={`supervisor_name`}>Full Name</Label>
-                        <Input id={`supervisor_name`} value={supervisor.supervisor_name || ""} required />
+                        <Input id={`supervisor_name`} value={supervisor.supervisor_name || ""} required disabled={showEditBtn} />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor={`supervisor_email`}>Email</Label>
-                        <Input id={`supervisor_email`} value={supervisor.supervisor_email || ""} required />
+                        <Input id={`supervisor_email`} value={supervisor.supervisor_email || ""} required disabled={showEditBtn} />
                       </div>
                     </div>
                   </div>
