@@ -61,18 +61,19 @@ export default function TeamManagement({ userInfo, studentsInfo, teamInfo }: Tea
   //   supervisor_name: "Dr. Smith",
   //   supervisor_email: "dr.smith@example.com",
   // });
-  const [localTeamName, setLocalTeamName] = useState(teamInfo.team_name); // used to update the teamName when the user saves
+  const [teamName, setTeamName] = useState(teamInfo.team_name); // used to update the teamName when the user saves
 
   const [currentTeamInfo, setCurrentTeamInfo] = useState<Student>();
   const handleTeamName = (new_team_name: string) => {
-    setLocalTeamName(new_team_name);
+    setTeamName(new_team_name);
+    console.log("teamMgm file, Team name was changed");
   };
   const disableButtons = userInfo.email !== teamInfo.team_lead_email ? true : false;
   return (
     <>
-      <Headingbar text={localTeamName} />
+      <Headingbar text={teamName} />
       <div>
-        <TeamMembers userInfo={userInfo} studentsInfo={studentsInfo} teamInfo={teamInfo} setTeamNameOnSave={handleTeamName} disableButtons={disableButtons} />
+        <TeamMembers userInfo={userInfo} originalStudentsInfo={studentsInfo} originalTeamInfo={teamInfo} teamName={teamName} setTeamNameOnSave={handleTeamName} disableButtons={disableButtons} />
         <TeamSupervisor disableButtons={disableButtons} />
       </div>
     </>
