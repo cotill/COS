@@ -179,6 +179,14 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
     setAwardedTeam(data); // Store the fetched team data
   };
 
+  const formatStartTerm = (term: string) => {
+    if (!term) return "";
+    const year = term.substring(0,4);
+    const month = term.substring(4,6);
+    const displayMonth = month === "01" ? "Jan" : month === "05" ? "May" : "Sept";
+    return `${displayMonth} ${year}`;
+  };  
+
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
@@ -333,6 +341,14 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             className="p-2 rounded-md bg-white text-black outline-none"
           >
             <option value="" disabled>Select Start Term</option>
+
+            {/* Always include the existing start_term if it exists */}
+            {currentProjectInfo.start_term && (
+              <option value={currentProjectInfo.start_term}>
+                {formatStartTerm(currentProjectInfo.start_term)}
+              </option>
+            )}
+
             {years.flatMap((year) =>
               ["01", "05", "09"].map((month) => {
                 const displayMonth = month === "01" ? "Jan" : month === "05" ? "May" : "Sept";
