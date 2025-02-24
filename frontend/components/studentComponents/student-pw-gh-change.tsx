@@ -62,6 +62,7 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
   };
 
   const handlePasswordReset = async (password: string, confirmPassword: string) => {
+    // if changed_password is false, write alert that user needs to change password
     const supabase = await createClient();
 
     if (!password || !confirmPassword) {
@@ -85,6 +86,7 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
         setNewPassword("");
         setConfirmPassword("");
         router.refresh();
+        // update the changed_password field to true
       }
     } catch (err) {
       console.error("Unexpected error:", err);
