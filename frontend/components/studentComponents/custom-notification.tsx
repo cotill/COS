@@ -7,7 +7,9 @@ const CustomNotification: React.FC<NotificationProps> = ({ notification }) => {
   if (!notification) return null;
   return (
     <Alert variant={"default"} className="msb-4">
-      <AlertTitle className="font-bold">{notification.type === "success" ? "Success" : notification.type === "error" ? "Error" : notification.type ? "partial-success" : "Warning"}</AlertTitle>
+      <AlertTitle className={`font-bold ${notification.type === "warning" ? "text-yellow-500" : ""}`}>
+        {notification.type === "success" ? "Success" : notification.type === "error" ? "Error" : notification.type === "partial-success" ? "Partial-success" : "Warning"}
+      </AlertTitle>
       <AlertDescription>
         {notification.type === "success" && Array.isArray(notification.text) ? (
           notification.text.map((msg, i) => (

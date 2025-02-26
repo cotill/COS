@@ -57,7 +57,7 @@ const createTeam = async (team_id: string, project_id: number, team_name: string
  * @param uni The university of the student
  * @returns void but throws an error if account creation fails
  */
-export async function createStudent(member: Member, teamId: string, uni: string) {
+export async function createStudent(member: Member, teamId: string, uni: string, returnResult?: boolean) {
   const payload = {
     email: member.email,
     user_metadata: {
@@ -81,6 +81,9 @@ export async function createStudent(member: Member, teamId: string, uni: string)
     const result = await response.json();
     if (!response.ok) {
       throw new Error(`${result.error}`);
+    }
+    if (returnResult) {
+      return result;
     }
   } catch (err) {
     throw new Error(`Error creating user ${member.email}: ${(err as Error).message}`);

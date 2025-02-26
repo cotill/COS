@@ -12,7 +12,7 @@ import { handleCreateStudentAccounts, validateStudents } from "./teamMemberHelpe
 import dynamic from "next/dynamic";
 import { ConfirmationDialog, ConfirmationDialogProp } from "@/components/confirmationPopup";
 import { AlertDialog } from "@/components/ui/alert-dialog";
-import { createStudent } from "@/app/student_applications/application";
+import { handleDeleteStudentAccounts } from "@/app/Student/Team/teamAction";
 
 interface TeamMembersProp {
   userInfo: Student;
@@ -24,7 +24,7 @@ interface TeamMembersProp {
 }
 const minTeamSize = 3;
 const maxTeamSize = 10;
-const timeLength = 2000;
+const timeLength = 10000;
 
 const CustomNotification = dynamic(() => import("../custom-notification"), { ssr: false });
 export default function TeamMembers({ userInfo, originalStudentsInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons }: TeamMembersProp) {
@@ -38,6 +38,12 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
   const [localTeamName, setLocalTeamName] = useState<string>(teamName);
   const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
   const [alertDialogProps, setAlertDialogProps] = useState<ConfirmationDialogProp | null>(null);
+
+  // Disable delete buttons if new students have been added
+  const deleteButtonDisabled = newStudents.length > 0;
+
+  // Disable add student button if any students have been marked for deletion
+  const addButtonDisabled = deleteStudents.length > 0 || students.length >= maxTeamSize;
 
   const addMember = () => {
     if (students.length < maxTeamSize) {
@@ -68,14 +74,19 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
     // removed student
     const student_to_remove = students[index];
 
-    //Todo: add to removeStudents array
-    setDeleteStudents((prevStuents) => [...prevStuents, student_to_remove]);
+    // Check if student is newly created
+    const isNewStudent: boolean = newStudents.some((stu) => stu.student_id === student_to_remove.student_id);
 
-    // remove from students
-    setStudents((prevStudents) => prevStudents.filter((stu, i) => stu.student_id !== student_to_remove.student_id));
+    // Only add to deleteStudents if it's not a new student
+    if (!isNewStudent) {
+      setDeleteStudents((prev) => [...prev, student_to_remove]);
+    }
 
-    //Todo: if the student was a newly created student, remove from newStudents
+    //if the student was a newly created student, remove from newStudents
     setNewStudents((prevStudent) => prevStudent.filter((stu, i) => student_to_remove.student_id !== stu.student_id));
+
+    // remove from students array
+    setStudents((prevStudents) => prevStudents.filter((stu, i) => stu.student_id !== student_to_remove.student_id));
   };
 
   const updateMember = (index: number, field: keyof Student, value: string | null) => {
@@ -101,6 +112,71 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
   const has_studentDetailsChanges = () => {
     return JSON.stringify(originalStudentsInfo) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0;
   };
+
+  const onConfirmDeleteStudent = async () => {
+    setAlertDialogOpen(false);
+    console.log(`delete Students array length is ${deleteStudents.length}`);
+    const res = await handleDeleteStudentAccounts(deleteStudents);
+    let message: JSX.Element[] = [];
+    let successCount = 0;
+    let errorCount = 0;
+    console.log(`Result from handleDeleteStudentsAccounts was of length ${res.length}`);
+    res.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        message.push(<p key={index}>Student {deleteStudents[index].full_name} deletion successful</p>);
+        successCount++;
+      } else {
+        message.push(
+          <p key={index}>
+            Student {deleteStudents[index].full_name} deletion failed: {(result.reason as Error).message}
+          </p>
+        );
+        errorCount++;
+      }
+    });
+    let notificationType: "success" | "error" | "partial-success";
+
+    if (successCount === res.length) {
+      notificationType = "success";
+      setDeleteStudents([]);
+    } else if (errorCount === res.length) {
+      notificationType = "error";
+      handleCancelTeam();
+    } else {
+      notificationType = "partial-success";
+      // Keep only the students whose deletion failed in the deleteStudents array
+      const failedDeletions = deleteStudents.filter((_, index) => res[index].status !== "fulfilled");
+      setDeleteStudents(failedDeletions);
+      // Add the failed deletions back to the students array
+      setStudents((prevStudents) => [...prevStudents, ...failedDeletions]);
+    }
+
+    // set the notification
+    setNotification({ type: notificationType, text: message });
+    setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
+
+    setIsSaving(false);
+    ToggleManageTeamBtn();
+  };
+  /**
+   * After save is clicked if the user is attempting to delete a student, open confirmations
+   */
+  const handleDeleteStudents = async () => {
+    setAlertDialogProps({
+      title: "Delete Student(s)",
+      description: "Deleting will remove the student(s) from the team and delete their account(s). Do you want to proceed?",
+      confirmationLabel: "Delete",
+      onConfirm: async () => {
+        await onConfirmDeleteStudent();
+      },
+      onCancel: () => {
+        setAlertDialogOpen(false);
+        setIsSaving(false);
+      },
+    });
+    setAlertDialogOpen(true);
+  };
+
   /**
    * After the user confirms they want to create the new accounts
    */
@@ -109,24 +185,39 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
     const res = await handleCreateStudentAccounts(newStudents, originalTeamInfo.team_id, userInfo.university);
     // const res = { type: "error", text: "your mom" };
     if (res.type === "success") {
-      // reset the DeleteStudents and newStudents array
-      setDeleteStudents([]);
+      // reset the  newStudents array
       setNewStudents([]);
+      // update the students array with the new student IDs
+      setStudents((prevStudents) =>
+        prevStudents.map((stu) => {
+          const updatedStudent = res.successStudents.find((s) => s.email === stu.email);
+          return updatedStudent ? { ...stu, student_id: updatedStudent.student_id } : stu;
+        })
+      );
       // set the notification
       setNotification({ type: "success", text: res.text });
-      setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
+      setTimeout(() => setNotification(null), timeLength); // set timeout to 10 seconds
     } else if (res.type === "partial-success") {
       setNotification({ type: "partial-success", text: res.text });
-      setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
-      setDeleteStudents([]); // reset
+      setTimeout(() => setNotification(null), timeLength); // set timeout to 10 seconds
       setNewStudents([]); // reset
-      setStudents((prevStudents) => prevStudents.filter((stu) => !res.failedEmails.some((failed) => failed === stu.email))); // remove the students that were not successful
+      // update the students array with the new student IDs and remove failed students
+      setStudents((prevStudents) =>
+        prevStudents
+          .map((stu) => {
+            const updatedStudent = res.successStudents.find((s) => s.email === stu.email);
+            return updatedStudent ? { ...stu, student_id: updatedStudent.student_id } : stu;
+          })
+          .filter((stu) => !res.failedEmails.includes(stu.email!))
+      );
     } else {
-      // All accounts failed to be createdrevert back to
+      // All accounts failed to be created revert back to
       setNotification({ type: "error", text: res.text });
       handleCancelTeam();
-      setTimeout(() => setNotification(null), 5000);
+      setTimeout(() => setNotification(null), timeLength);
     }
+
+    setIsSaving(false);
     ToggleManageTeamBtn();
   };
 
@@ -164,14 +255,9 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
         setIsSaving(false);
         setNotification(null);
         ToggleManageTeamBtn();
-      }, 1000);
+      }, timeLength);
       return;
     }
-
-    // setTimeout(() => {
-    //   setIsSaving(false);
-    //   handleTeamBtn();
-    // }, timeLength);
 
     // todo: check if the teamName changes, if so we need to update the headingBar on save
 
@@ -184,17 +270,13 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
 
     // handle changes to the students
     if (newStudents.length > 0) {
-      console.log(`New members are: ${JSON.stringify(newStudents)}`);
-
       await handleCreateNewStudents();
     }
     if (deleteStudents.length > 0) {
       // handle delete students
-      console.log(`delete students array is: ${JSON.stringify(deleteStudents)}`);
+      // console.log(`delete students array is: ${JSON.stringify(deleteStudents)}`);
+      await handleDeleteStudents();
     }
-    console.log(`Students are: ${JSON.stringify(students)}`);
-    // setIsSaving(false);
-    // ToggleManageTeamBtn(); // toggle the manage Team button is now display instead of the cancel save buttons displaying
   };
   const handleCancelTeam = () => {
     // reset everything back to original state
@@ -265,8 +347,15 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                           </div>
                         )}
                         {showManageTeamBtn === false && originalTeamInfo.team_lead_email !== stu.email && (
-                          <Button type="button" variant="ghost" size="sm" onClick={() => removeMember(index)}>
-                            <MinusCircle className="h-4 w-4" />
+                          // disable the button is new student is clicked and the student is not a newStudent in the process of being created
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeMember(index)}
+                            disabled={deleteButtonDisabled && !newStudents.some((student) => student.student_id === stu.student_id)}
+                          >
+                            <MinusCircle className={`h-4 w-4 ${deleteButtonDisabled && !newStudents.some((student) => student.student_id === stu.student_id) ? "text-gray-500" : ""}`} />
                           </Button>
                         )}
                       </div>
@@ -314,7 +403,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                   <CancelSaveBtn onCancel={handleCancelTeam} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
                 </div>
                 <div className="flex justify-end w-1/3">
-                  <Button type="button" variant="outline" size="sm" onClick={addMember} disabled={students.length >= maxTeamSize}>
+                  <Button type="button" variant="outline" size="sm" onClick={addMember} disabled={addButtonDisabled}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Student
                   </Button>

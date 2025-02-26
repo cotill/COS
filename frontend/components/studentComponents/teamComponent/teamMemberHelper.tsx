@@ -23,7 +23,13 @@ export const validateStudents = (students: Partial<Student>[]): string | null =>
   return null;
 };
 
-export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[], teamId: string, uni: string): Promise<{ type: string; text: JSX.Element[]; failedEmails: string[] }> => {
+export const handleCreateStudentAccounts = async (
+  newStudents: Partial<Student>[],
+  teamId: string,
+  uni: string
+): Promise<{ type: string; text: JSX.Element[]; failedEmails: string[]; successStudents: Partial<Student>[] }> => {
+  // console.log(`Create student! Passed email: ${newStudents[0].email} student(temp) id: ${newStudents[0].student_id}`);
+
   const newMembers: Member[] = newStudents.map((student) => ({
     full_name: student.full_name!,
     email: student.email!,
@@ -32,23 +38,25 @@ export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[
     resume: null,
   }));
 
-  let successEmails: string[] = [];
+  let successStudents: Partial<Student>[] = [];
   let failedEmails: string[] = [];
   let message: JSX.Element[] = [];
 
-  const results = await Promise.allSettled(newMembers.map((member) => createStudent(member, teamId, uni).then(() => member.email)));
+  const results = await Promise.allSettled(newMembers.map((member) => createStudent(member, teamId, uni, true)));
 
   results.forEach((result, index) => {
     const student = newStudents[index];
     if (result.status === "fulfilled") {
-      successEmails.push(result.value);
+      const createUser = result.value;
+      // update the student Id with the created user id
+      successStudents.push({ ...student, student_id: createUser.data.user.id });
     } else {
       failedEmails.push(student.email!);
       message.push(<p key={index}>{String(result.reason)}</p>);
     }
   });
 
-  if (successEmails.length === newMembers.length) {
+  if (successStudents.length === newMembers.length) {
     message = [<p className="text-green-600  font-bold">All accounts created successfully.</p>];
     newStudents.forEach((student, index) => {
       message.push(
@@ -58,27 +66,24 @@ export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[
         </p>
       );
     });
-    return { type: "success", text: message, failedEmails };
+    return { type: "success", text: message, failedEmails, successStudents };
   } else if (failedEmails.length === newMembers.length) {
     message.unshift(<p className="text-red-600 font-bold">Failed to create student account(s). Please contact the sponsor.</p>);
-    return { type: "error", text: message, failedEmails };
+    return { type: "error", text: message, failedEmails, successStudents };
   } else {
     message.unshift(
       <p className="text-orange-500  font-bold">
         <span className="text-green-600">Some accounts were created successfully</span> but there were errors.
       </p>
     );
-    successEmails.forEach((email, index) => {
-      const student = newStudents.find((s) => s.email === email);
-      if (student) {
-        message.push(
-          <p key={index} className="text-white">
-            For {student.full_name}:<br />
-            Email: <u>{student.email}</u> Password: <u>teamPasswordIsLong</u>
-          </p>
-        );
-      }
+    successStudents.forEach((student, index) => {
+      message.push(
+        <p key={index} className="text-white">
+          For {student.full_name}:<br />
+          Email: <u>{student.email}</u> Password: <u>teamPasswordIsLong</u>
+        </p>
+      );
     });
-    return { type: "partial-success", text: message, failedEmails };
+    return { type: "partial-success", text: message, failedEmails, successStudents };
   }
 };
