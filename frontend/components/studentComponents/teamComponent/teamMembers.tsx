@@ -31,7 +31,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
   const [students, setStudents] = useState<Partial<Student>[]>(originalStudentsInfo);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const [notification, setNotification] = useState<{ type: "error" | "warning" | "success"; text: string | JSX.Element[] } | null>(null);
+  const [notification, setNotification] = useState<{ type: "error" | "warning" | "success" | "partial-success"; text: string | JSX.Element[] } | null>(null);
 
   const [newStudents, setNewStudents] = useState<Partial<Student>[]>([]); // tracks new students
   const [deleteStudents, setDeleteStudents] = useState<Partial<Student>[]>([]); // tracks deleted students
@@ -94,44 +94,66 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
 
   const [showManageTeamBtn, setShowManageTeamBtn] = useState(true);
 
-  const handleTeamBtn = () => {
+  const ToggleManageTeamBtn = () => {
     setShowManageTeamBtn((prev) => !prev);
   };
 
   const has_studentDetailsChanges = () => {
     return JSON.stringify(originalStudentsInfo) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0;
   };
+  /**
+   * After the user confirms they want to create the new accounts
+   */
+  const onConfirmCreateNewStudent = async () => {
+    setAlertDialogOpen(false);
+    const res = await handleCreateStudentAccounts(newStudents, originalTeamInfo.team_id, userInfo.university);
+    // const res = { type: "error", text: "your mom" };
+    if (res.type === "success") {
+      // reset the DeleteStudents and newStudents array
+      setDeleteStudents([]);
+      setNewStudents([]);
+      // set the notification
+      setNotification({ type: "success", text: res.text });
+      setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
+    } else if (res.type === "partial-success") {
+      setNotification({ type: "partial-success", text: res.text });
+      setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
+      setDeleteStudents([]); // reset
+      setNewStudents([]); // reset
+      setStudents((prevStudents) => prevStudents.filter((stu) => !res.failedEmails.some((failed) => failed === stu.email))); // remove the students that were not successful
+    } else {
+      // All accounts failed to be createdrevert back to
+      setNotification({ type: "error", text: res.text });
+      handleCancelTeam();
+      setTimeout(() => setNotification(null), 5000);
+    }
+    ToggleManageTeamBtn();
+  };
 
+  /**
+   * After save is clicked, if the user is attempting to add a new student, open a confirmation popup
+   */
   const handleCreateNewStudents = async () => {
     setAlertDialogProps({
       title: "Create New Student(s)",
       description: "Create new students will create accounts for the new students. Do you want to proceed?",
       confirmationLabel: "Confirm",
       onConfirm: async () => {
-        setAlertDialogOpen(false);
-        const res = await handleCreateStudentAccounts(newStudents, originalTeamInfo.team_id, userInfo.university);
-        // const res = { type: "error", text: "your mom" };
-        if (res.type === "success") {
-          // reset the DeleteStudents and newStudents array
-          setDeleteStudents([]);
-          setNewStudents([]);
-          // set the notification
-          setNotification({ type: "success", text: res.text });
-          setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
-        } else {
-          // else there was a failure, revert back to
-          setNotification({ type: "error", text: "An error occurred while saving changes." });
-          handleCancelTeam();
-          setTimeout(() => setNotification(null), 5000);
-        }
+        await onConfirmCreateNewStudent();
       },
       onCancel: () => {
         setAlertDialogOpen(false);
+        setIsSaving(false);
       },
     });
     setAlertDialogOpen(true);
   };
 
+  /**
+   * Handles when the save button is clicked
+   * @param e
+   * @returns
+   */
   const handleSaveTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -141,7 +163,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       setTimeout(() => {
         setIsSaving(false);
         setNotification(null);
-        handleTeamBtn();
+        ToggleManageTeamBtn();
       }, 1000);
       return;
     }
@@ -171,8 +193,8 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       console.log(`delete students array is: ${JSON.stringify(deleteStudents)}`);
     }
     console.log(`Students are: ${JSON.stringify(students)}`);
-    setIsSaving(false);
-    handleTeamBtn(); // toggle the manage Team button is now display instead of the cancel save buttons displaying
+    // setIsSaving(false);
+    // ToggleManageTeamBtn(); // toggle the manage Team button is now display instead of the cancel save buttons displaying
   };
   const handleCancelTeam = () => {
     // reset everything back to original state
@@ -180,6 +202,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
     setDeleteStudents([]);
     setNewStudents([]);
     setLocalTeamName(teamName); // reset team name
+    setIsSaving(false);
   };
 
   return (
@@ -208,11 +231,11 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Team Members</h3>
                 {showManageTeamBtn ? (
-                  <Button type="button" variant="outline" size="sm" onClick={handleTeamBtn} disabled={disableButtons}>
+                  <Button type="button" variant="outline" size="sm" onClick={ToggleManageTeamBtn} disabled={disableButtons}>
                     Manage Team
                   </Button>
                 ) : (
-                  <CancelSaveBtn onCancel={handleCancelTeam} onToggleBtnDisplay={handleTeamBtn} isSaving={isSaving} />
+                  <CancelSaveBtn onCancel={handleCancelTeam} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
                 )}
               </div>
               {/* <div className="max-h-96 space-y-4 overflow-y-auto pr-4"> */}
@@ -288,7 +311,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                 <div className="w-1/3"></div>
 
                 <div className="w-1/3">
-                  <CancelSaveBtn onCancel={handleCancelTeam} onToggleBtnDisplay={handleTeamBtn} isSaving={isSaving} />
+                  <CancelSaveBtn onCancel={handleCancelTeam} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
                 </div>
                 <div className="flex justify-end w-1/3">
                   <Button type="button" variant="outline" size="sm" onClick={addMember} disabled={students.length >= maxTeamSize}>

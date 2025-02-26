@@ -80,7 +80,7 @@ export async function createStudent(member: Member, teamId: string, uni: string)
 
     const result = await response.json();
     if (!response.ok) {
-      throw new Error(`Error creating user ${member.email}: ${result.error}`);
+      throw new Error(`${result.error}`);
     }
   } catch (err) {
     throw new Error(`Error creating user ${member.email}: ${(err as Error).message}`);

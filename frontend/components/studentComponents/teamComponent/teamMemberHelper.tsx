@@ -1,6 +1,5 @@
 import { createStudent } from "@/app/student_applications/application";
-import { Member, Student, Team, UserRole } from "@/utils/types";
-import { User } from "lucide-react";
+import { Member, Student, UserRole } from "@/utils/types";
 
 export const validateStudents = (students: Partial<Student>[]): string | null => {
   "use client";
@@ -24,8 +23,7 @@ export const validateStudents = (students: Partial<Student>[]): string | null =>
   return null;
 };
 
-export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[], teamId: string, uni: string): Promise<{ type: string; text: string }> => {
-  // map the students to a member because createStudent is the same function that is used for converting an application into a studnet
+export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[], teamId: string, uni: string): Promise<{ type: string; text: JSX.Element[]; failedEmails: string[] }> => {
   const newMembers: Member[] = newStudents.map((student) => ({
     full_name: student.full_name!,
     email: student.email!,
@@ -34,24 +32,53 @@ export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[
     resume: null,
   }));
 
-  try {
-    await Promise.all(newMembers.map((member) => createStudent(member, teamId, uni)));
-    // if successful, update local data with new data
-    let message: JSX.Element[] = [<p className="text-green-600">Changes saved successfully.</p>];
-    if (newStudents.length > 0) {
-      message.push(<p className="mt-2">Account created for new members! Login details are</p>);
-      newStudents.forEach((student, index) => {
+  let successEmails: string[] = [];
+  let failedEmails: string[] = [];
+  let message: JSX.Element[] = [];
+
+  const results = await Promise.allSettled(newMembers.map((member) => createStudent(member, teamId, uni).then(() => member.email)));
+
+  results.forEach((result, index) => {
+    const student = newStudents[index];
+    if (result.status === "fulfilled") {
+      successEmails.push(result.value);
+    } else {
+      failedEmails.push(student.email!);
+      message.push(<p key={index}>{String(result.reason)}</p>);
+    }
+  });
+
+  if (successEmails.length === newMembers.length) {
+    message = [<p className="text-green-600  font-bold">All accounts created successfully.</p>];
+    newStudents.forEach((student, index) => {
+      message.push(
+        <p key={index} className="text-white">
+          For {student.full_name}:<br />
+          Email: <u>{student.email}</u> Password: <u>teamPasswordIsLong</u>
+        </p>
+      );
+    });
+    return { type: "success", text: message, failedEmails };
+  } else if (failedEmails.length === newMembers.length) {
+    message.unshift(<p className="text-red-600 font-bold">Failed to create student account(s). Please contact the sponsor.</p>);
+    return { type: "error", text: message, failedEmails };
+  } else {
+    message.unshift(
+      <p className="text-orange-500  font-bold">
+        <span className="text-green-600">Some accounts were created successfully</span> but there were errors.
+      </p>
+    );
+    successEmails.forEach((email, index) => {
+      const student = newStudents.find((s) => s.email === email);
+      if (student) {
         message.push(
           <p key={index} className="text-white">
-            For ${student.full_name}:<br />
-            Email: <u>${student.email}</u> Password: <u>teamPasswordIsLong</u>
+            For {student.full_name}:<br />
+            Email: <u>{student.email}</u> Password: <u>teamPasswordIsLong</u>
           </p>
         );
-      });
-    }
-    return { type: "success", text: "New student accounts created successfully." };
-  } catch (error) {
-    return { type: "error", text: "An error occurred while creating new student accounts." };
+      }
+    });
+    return { type: "partial-success", text: message, failedEmails };
   }
-  // setTimeout(() => setNotification(null), timeLength);
 };
