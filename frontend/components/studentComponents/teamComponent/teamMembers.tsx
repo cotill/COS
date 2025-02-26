@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, MinusCircle, Crown } from "lucide-react";
 import { Student, Team } from "@/utils/types";
 import CancelSaveBtn from "./cancel-save-btn";
-import { handleCreateStudentAccounts, validateStudents } from "./teamMemberHelper";
+import { handleCreateStudentAccounts } from "./teamMemberHelper";
 import dynamic from "next/dynamic";
 import { ConfirmationDialog, ConfirmationDialogProp } from "@/components/confirmationPopup";
 import { AlertDialog } from "@/components/ui/alert-dialog";
@@ -45,6 +45,9 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
   // Disable add student button if any students have been marked for deletion
   const addButtonDisabled = deleteStudents.length > 0 || students.length >= maxTeamSize;
 
+  const closeNotification = () => {
+    setNotification(null);
+  };
   const addMember = () => {
     if (students.length < maxTeamSize) {
       const newStudent: Partial<Student> = {
@@ -67,9 +70,6 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
     if (students.length - 1 === 1) {
       // they are deleting everyone except the team lead
       setNotification({ type: "warning", text: "You are have deleted everyone on the team except yourself" });
-      setTimeout(() => {
-        setNotification(null);
-      }, timeLength);
     }
     // removed student
     const student_to_remove = students[index];
@@ -153,7 +153,6 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
 
     // set the notification
     setNotification({ type: notificationType, text: message });
-    setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
 
     setIsSaving(false);
     ToggleManageTeamBtn();
@@ -196,10 +195,8 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       );
       // set the notification
       setNotification({ type: "success", text: res.text });
-      setTimeout(() => setNotification(null), timeLength); // set timeout to 10 seconds
     } else if (res.type === "partial-success") {
       setNotification({ type: "partial-success", text: res.text });
-      setTimeout(() => setNotification(null), timeLength); // set timeout to 10 seconds
       setNewStudents([]); // reset
       // update the students array with the new student IDs and remove failed students
       setStudents((prevStudents) =>
@@ -214,7 +211,6 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       // All accounts failed to be created revert back to
       setNotification({ type: "error", text: res.text });
       handleCancelTeam();
-      setTimeout(() => setNotification(null), timeLength);
     }
 
     setIsSaving(false);
@@ -251,11 +247,8 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
 
     if (!has_studentDetailsChanges() && teamName === localTeamName) {
       setNotification({ type: "error", text: "No changes were made." });
-      setTimeout(() => {
-        setIsSaving(false);
-        setNotification(null);
-        ToggleManageTeamBtn();
-      }, timeLength);
+      setIsSaving(false);
+      ToggleManageTeamBtn();
       return;
     }
 
@@ -410,7 +403,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                 </div>
               </div>
             )}
-            {notification && <CustomNotification notification={notification} />}
+            {notification && <CustomNotification notification={notification} close={closeNotification} />}
           </div>
         </CardContent>
       </Card>
