@@ -129,7 +129,7 @@ export interface Member {
   email: string;
   role: string | null;
   major: string;
-  resume: string;
+  resume: string | null;
 }
 
 export interface Application {

@@ -1,12 +1,7 @@
 "use client";
 // Handles api calls related to the project - application
 import { createClient } from "@/utils/supabase/client";
-import {
-  Application,
-  Application_Status,
-  Member,
-  Project_Status,
-} from "@/utils/types";
+import { Application, Application_Status, Member, Project_Status } from "@/utils/types";
 import { v4 as uuidv4 } from "uuid";
 import { UserRole } from "@/utils/types";
 
@@ -17,13 +12,8 @@ const supabase = createClient();
  * @param projectId The project id to fetch applications for
  * @returns An array of applications or null if there are no applications
  */
-export const fetchApplications = async (
-  projectId: number
-): Promise<Application[] | null> => {
-  const { data, error } = await supabase
-    .from("Applications")
-    .select("*")
-    .eq('"project_id"', projectId);
+export const fetchApplications = async (projectId: number): Promise<Application[] | null> => {
+  const { data, error } = await supabase.from("Applications").select("*").eq('"project_id"', projectId);
   if (error) throw new Error(`Error fetching applications: ${error.message}`);
   return data;
 };
@@ -35,44 +25,67 @@ export const fetchApplications = async (
  * @param status The new status of the application
  * @param team_name The name of the team. This is used for error messages
  */
-export const updateApplicationStatus = async (
-  applicationId: number,
-  status: string,
-  team_name: string | undefined
-) => {
+export const updateApplicationStatus = async (applicationId: number, status: string, team_name: string | undefined) => {
   let updateData: { status: string; approval_date?: string } = { status };
 
   if (status === Application_Status.APPROVED) {
     updateData.approval_date = new Date().toISOString(); // set approval_date to current date and time
   }
 
-  const { error } = await supabase
-    .from("Applications")
-    .update(updateData)
-    .eq("application_id", applicationId);
-  if (error)
-    throw new Error(
-      `Error updating ${team_name} application status! Error was: ${error.message}`
-    );
+  const { error } = await supabase.from("Applications").update(updateData).eq("application_id", applicationId);
+  if (error) throw new Error(`Error updating ${team_name} application status! Error was: ${error.message}`);
 };
 
 /**
  * This function is a bulk rejection
  * It will reject all applications for a project except the application id provided.
  */
-export const rejectOtherApplications = async (
-  application_id: number,
-  project_id: number
-) => {
-  const { error } = await supabase
-    .from("Applications")
-    .update({ status: Application_Status.REJECTED })
-    .eq("project_id", project_id)
-    .neq("application_id", application_id);
-  if (error)
-    throw new Error(`Error rejecting other applications: ${error.message}`);
+export const rejectOtherApplications = async (application_id: number, project_id: number) => {
+  const { error } = await supabase.from("Applications").update({ status: Application_Status.REJECTED }).eq("project_id", project_id).neq("application_id", application_id);
+  if (error) throw new Error(`Error rejecting other applications: ${error.message}`);
 };
 
+const createTeam = async (team_id: string, project_id: number, team_name: string, team_lead_email: string) => {
+  const { error } = await supabase.from("Teams").insert({ team_id, project_id, team_name, team_lead_email });
+  if (error) throw new Error(`Error creating team for team_name ${team_name}: ${error.message}`);
+};
+
+/**
+ * Helper function to create a student account
+ * @param member The member object containing student details
+ * @param teamId The team ID to associate the student with
+ * @param uni The university of the student
+ * @returns void but throws an error if account creation fails
+ */
+export async function createStudent(member: Member, teamId: string, uni: string) {
+  const payload = {
+    email: member.email,
+    user_metadata: {
+      team_id: teamId,
+      user_role: UserRole.STUDENT,
+      university: uni,
+      full_name: member.full_name,
+      major: member.major,
+    },
+  };
+
+  try {
+    const response = await fetch("/student_applications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(`Error creating user ${member.email}: ${result.error}`);
+    }
+  } catch (err) {
+    throw new Error(`Error creating user ${member.email}: ${(err as Error).message}`);
+  }
+}
 /**
  *
  * @param teamMembers The members of the team to create accounts for
@@ -80,58 +93,27 @@ export const rejectOtherApplications = async (
  * @param uni The university of the team
  * @returns void but the function will create student accounts for the team members. If there is an error creating an account, the function will throw an error with all the error messages
  */
-export async function createStudentAccounts(
-  teamMembers: Member[],
-  projectId: number,
-  uni: string
-) {
+export async function createStudentAccounts(teamMembers: Member[], projectId: number, uni: string, team_name: string) {
   let errorMessages: string[] = [];
   const teamId = uuidv4();
+  // find team lead
+  const team_lead = teamMembers.find((member) => member.role === "Team Manager") || teamMembers[0];
+  const team_lead_email = team_lead.email;
 
-  // initial payload
-  const basePayload = {
-    user_metadata: {
-      project_id: projectId,
-      team_id: teamId,
-      user_role: UserRole.STUDENT,
-      university: uni,
-    },
-  };
+  // next create the team
+  await createTeam(teamId, projectId, team_name, team_lead_email);
 
-  for (const member of teamMembers) {
-    try {
-      // create custom payload for each member
-      const payLoad = {
-        email: member.email,
-        ...basePayload,
-        user_metadata: {
-          ...basePayload.user_metadata,
-          full_name: member.full_name,
-          major: member.major,
-        },
-      };
-
-      // send the API request
-      const response = await fetch("/student_applications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payLoad),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        errorMessages.push(
-          `Error creating user ${member.email}: ${result.error}`
-        );
+  await Promise.all(
+    teamMembers.map(async (member) => {
+      try {
+        console.log(member);
+        await createStudent(member, teamId, uni);
+      } catch (err: any) {
+        errorMessages.push(err?.message);
       }
-    } catch (err) {
-      errorMessages.push(
-        `Error creating user ${member.email}: ${(err as Error).message}`
-      );
-    }
-  }
+    })
+  );
+
   if (errorMessages.length > 0) {
     throw new Error(errorMessages.join("\n"));
   }
@@ -142,11 +124,7 @@ export async function createStudentAccounts(
  * @param application_id The application id to delete
  */
 export async function deleteApplication(application_id: number) {
-  const { data, error } = await supabase
-    .from("Applications")
-    .delete()
-    .eq("application_id", application_id)
-    .select();
+  const { data, error } = await supabase.from("Applications").delete().eq("application_id", application_id).select();
   if (error) throw new Error(`Error deleting application: ${error?.message}`);
 
   const deletedApplicationData = data[0] as Application;
@@ -159,18 +137,11 @@ export async function deleteApplication(application_id: number) {
  * @param project_id the project_id for the applications to be deleted
  */
 export const deleteAllApps = async (project_id: number) => {
-  const { data: deletedApps, error } = await supabase
-    .from("Applications")
-    .delete()
-    .eq("project_id", project_id)
-    .neq("status", Application_Status.APPROVED)
-    .select();
+  const { data: deletedApps, error } = await supabase.from("Applications").delete().eq("project_id", project_id).neq("status", Application_Status.APPROVED).select();
   if (error) throw new Error(`delete application error: ${error?.message}`);
 
   const appsToDelete = deletedApps as Application[]; // cast to Application[]
-  const deleteResumePromises: Promise<void>[] = appsToDelete.map((app) =>
-    deleteResume(app)
-  ); // map the deleteResume function to each application
+  const deleteResumePromises: Promise<void>[] = appsToDelete.map((app) => deleteResume(app)); // map the deleteResume function to each application
 
   try {
     // promise all performs the operations in parallel -> ALl or Nothing - if 1 fail all fails
@@ -188,19 +159,17 @@ export const deleteAllApps = async (project_id: number) => {
 const deleteResume = async (deletedApplicationData: Application) => {
   let resume_urls: string[] = [];
   deletedApplicationData.members.map((member) => {
-    resume_urls.push(member.resume);
+    if (member.resume) {
+      resume_urls.push(member.resume);
+    }
   });
 
   //check if there were any resumes urls
   if (resume_urls.length === 0) return;
 
   // delete resumes
-  const { data: deleteResume_data, error: deletedResume_error } =
-    await supabase.storage.from("applicants_resumes").remove(resume_urls);
-  if (deleteResume_data === null || deletedResume_error)
-    throw new Error(
-      `Error deleting applicant's resume: ${deletedResume_error.message}`
-    );
+  const { data: deleteResume_data, error: deletedResume_error } = await supabase.storage.from("applicants_resumes").remove(resume_urls);
+  if (deleteResume_data === null || deletedResume_error) throw new Error(`Error deleting applicant's resume: ${deletedResume_error.message}`);
 };
 
 /**
@@ -209,21 +178,14 @@ const deleteResume = async (deletedApplicationData: Application) => {
  * @param requiredLevel The level required to perform the action
  * @returns
  */
-export function confirmEmployeeAuthorization(
-  employeeLevel: number,
-  requiredLevel: number
-): boolean {
+export function confirmEmployeeAuthorization(employeeLevel: number, requiredLevel: number): boolean {
   if (employeeLevel < requiredLevel) {
     return false;
   }
   return true;
 }
 
-export const updateProjectStatus = async (
-  project_id: number,
-  status: string,
-  application_id: number
-) => {
+export const updateProjectStatus = async (project_id: number, status: string, application_id: number) => {
   const supabase = createClient();
   let error;
   if (status === Project_Status.AWARDED) {
@@ -239,15 +201,8 @@ export const updateProjectStatus = async (
       .select();
     error = err;
   } else {
-    const { data, error: err } = await supabase
-      .from("Projects")
-      .update({ status })
-      .eq('"project_id"', project_id)
-      .select();
+    const { data, error: err } = await supabase.from("Projects").update({ status }).eq('"project_id"', project_id).select();
     error = err;
   }
-  if (error)
-    throw new Error(
-      `Error updating project with project id ${project_id} application status! please contact system admin`
-    );
+  if (error) throw new Error(`Error updating project with project id ${project_id} application status! please contact system admin`);
 };

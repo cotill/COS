@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, MinusCircle, Crown } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import { Student, Team } from "@/utils/types";
 import CancelSaveBtn from "./cancel-save-btn";
-import { validateStudents } from "./teamMemberHelper";
-import { FaLeaf } from "react-icons/fa";
+import { handleCreateStudentAccounts, validateStudents } from "./teamMemberHelper";
+import dynamic from "next/dynamic";
+import { ConfirmationDialog, ConfirmationDialogProp } from "@/components/confirmationPopup";
+import { AlertDialog } from "@/components/ui/alert-dialog";
+import { createStudent } from "@/app/student_applications/application";
 
 interface TeamMembersProp {
   userInfo: Student;
@@ -25,6 +25,8 @@ interface TeamMembersProp {
 const minTeamSize = 3;
 const maxTeamSize = 10;
 const timeLength = 2000;
+
+const CustomNotification = dynamic(() => import("../custom-notification"), { ssr: false });
 export default function TeamMembers({ userInfo, originalStudentsInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons }: TeamMembersProp) {
   const [students, setStudents] = useState<Partial<Student>[]>(originalStudentsInfo);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -34,6 +36,8 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
   const [newStudents, setNewStudents] = useState<Partial<Student>[]>([]); // tracks new students
   const [deleteStudents, setDeleteStudents] = useState<Partial<Student>[]>([]); // tracks deleted students
   const [localTeamName, setLocalTeamName] = useState<string>(teamName);
+  const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
+  const [alertDialogProps, setAlertDialogProps] = useState<ConfirmationDialogProp | null>(null);
 
   const addMember = () => {
     if (students.length < maxTeamSize) {
@@ -46,7 +50,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
         university: "",
         github: "",
         changed_password: false,
-        ttg_email: "",
+        ttg_email: null,
       };
       setStudents([...students, newStudent]);
       setNewStudents((prevNewStudents) => [...prevNewStudents, newStudent]);
@@ -98,11 +102,40 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
     return JSON.stringify(originalStudentsInfo) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0;
   };
 
-  const handleSaveTeam = (e: React.FormEvent) => {
+  const handleCreateNewStudents = async () => {
+    setAlertDialogProps({
+      title: "Create New Student(s)",
+      description: "Create new students will create accounts for the new students. Do you want to proceed?",
+      confirmationLabel: "Confirm",
+      onConfirm: async () => {
+        setAlertDialogOpen(false);
+        const res = await handleCreateStudentAccounts(newStudents, originalTeamInfo.team_id, userInfo.university);
+        // const res = { type: "error", text: "your mom" };
+        if (res.type === "success") {
+          // reset the DeleteStudents and newStudents array
+          setDeleteStudents([]);
+          setNewStudents([]);
+          // set the notification
+          setNotification({ type: "success", text: res.text });
+          setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
+        } else {
+          // else there was a failure, revert back to
+          setNotification({ type: "error", text: "An error occurred while saving changes." });
+          handleCancelTeam();
+          setTimeout(() => setNotification(null), 5000);
+        }
+      },
+      onCancel: () => {
+        setAlertDialogOpen(false);
+      },
+    });
+    setAlertDialogOpen(true);
+  };
+
+  const handleSaveTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
 
-    console.log("Inside handleSvaeTeam");
     if (!has_studentDetailsChanges() && teamName === localTeamName) {
       setNotification({ type: "error", text: "No changes were made." });
       setTimeout(() => {
@@ -112,19 +145,12 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       }, 1000);
       return;
     }
-    // // form validation
-    // const validationError = validateStudents(students);
-    // if (validationError) {
-    //   setError(validationError);
-    //   handleCancelTeam();
-    //   setTimeout(() => setError(null), timeLength);
-    //   return;
-    // }
 
-    setTimeout(() => {
-      setIsSaving(false);
-      handleTeamBtn();
-    }, timeLength);
+    // setTimeout(() => {
+    //   setIsSaving(false);
+    //   handleTeamBtn();
+    // }, timeLength);
+
     // todo: check if the teamName changes, if so we need to update the headingBar on save
 
     //else changes were made so save changes and update data.
@@ -133,41 +159,20 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       //Team name changed
       setTeamNameOnSave(localTeamName); // update the heading bar
     }
-    // send data to backend
-    const result = true;
-    if (result) {
-      // if successful, update local data with new data
-      let message: JSX.Element[] = [<p className="text-green-600">Changes saved successfully.</p>];
-      if (newStudents.length > 0) {
-        message.push(<p className="mt-2">Account created for new members! Login details are</p>);
-        newStudents.forEach((student, index) => {
-          message.push(
-            <p key={index} className="text-white">
-              For ${student.full_name}:<br />
-              Email: <u>${student.email}</u> Password: <u>teamPasswordIsLong</u>
-            </p>
-          );
-        });
-      }
 
-      // reset the DeleteStudents and newStudents array
-      setDeleteStudents([]);
-      setNewStudents([]);
+    // handle changes to the students
+    if (newStudents.length > 0) {
+      console.log(`New members are: ${JSON.stringify(newStudents)}`);
 
-      // set the notification
-      setNotification({ type: "success", text: message });
-      setTimeout(() => setNotification(null), 10000); // set timeout to 10 seconds
-    } else {
-      // else there was a failure, revert back to
-      setNotification({ type: "error", text: "An error occurred while saving changes." });
-      handleCancelTeam();
-      setTimeout(() => setNotification(null), timeLength);
+      await handleCreateNewStudents();
     }
-    console.log("save function called");
-    console.log(`New members are: ${JSON.stringify(newStudents)}`);
+    if (deleteStudents.length > 0) {
+      // handle delete students
+      console.log(`delete students array is: ${JSON.stringify(deleteStudents)}`);
+    }
     console.log(`Students are: ${JSON.stringify(students)}`);
-    console.log(`delete students array is: ${JSON.stringify(deleteStudents)}`);
-    // setTeamNameOnSave("New Fake Name");
+    setIsSaving(false);
+    handleTeamBtn(); // toggle the manage Team button is now display instead of the cancel save buttons displaying
   };
   const handleCancelTeam = () => {
     // reset everything back to original state
@@ -194,7 +199,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
             required
           />
         )}
-        <p className="text-gray-300 text-lg">University: {originalStudentsInfo[0].university}</p>
+        <p className="text-gray-300 text-lg">University: {userInfo.university}</p>
       </div>
       <Card className="mx-auto max-w-full [_&]: text-white my-4 pt-4">
         <CardContent>
@@ -231,6 +236,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                               onChange={(e) => updateMember(index, "full_name", e.target.value)}
                               required
                               style={{ width: `${stu.full_name ? stu.full_name.length + 2 : 10}ch` }}
+                              placeholder="Full Name"
                             />
                             {originalTeamInfo.team_lead_email === stu.email && <Crown className="ml-2 text-yellow-500" size={18} />}
                           </div>
@@ -260,7 +266,15 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor={`major-${index}`}>TTG Email</Label>
-                          <Input id={`ttg_email-${index}`} value={stu.ttg_email || ""} onChange={(e) => updateMember(index, "ttg_email", e.target.value)} disabled={showManageTeamBtn} />
+                          <Input
+                            id={`ttg_email-${index}`}
+                            value={stu.ttg_email || ""}
+                            onChange={(e) => updateMember(index, "ttg_email", e.target.value)}
+                            disabled={
+                              showManageTeamBtn ||
+                              (students.some((student) => student.ttg_email === stu.ttg_email && stu.ttg_email !== null) && !newStudents.some((student) => student.student_id === stu.student_id))
+                            } // disable if showManageTeamBtn is true or if the original student data contains a ttg email and if the student is not a new student
+                          />
                         </div>
                       </div>
                     </div>
@@ -279,30 +293,19 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                 <div className="flex justify-end w-1/3">
                   <Button type="button" variant="outline" size="sm" onClick={addMember} disabled={students.length >= maxTeamSize}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Member
+                    Add Student
                   </Button>
                 </div>
               </div>
             )}
-            {notification && (
-              <Alert variant={"default"} className="mb-4">
-                <AlertTitle className="font-bold">{notification.type === "success" ? "Success" : notification.type === "error" ? "Error" : "Warning"}</AlertTitle>
-                <AlertDescription>
-                  {notification.type === "success" && Array.isArray(notification.text) ? (
-                    notification.text.map((msg, i) => (
-                      <p key={i} className="text-white">
-                        {msg}
-                      </p>
-                    ))
-                  ) : (
-                    <p>{notification.text}</p>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
+            {notification && <CustomNotification notification={notification} />}
           </div>
         </CardContent>
       </Card>
+      {/* Alert Dialog will display when the user clicks the save button and will ask them to confirm if they want to confirm their deletion or creation of student accounts */}
+      <AlertDialog open={alertDialogOpen} onOpenChange={() => setAlertDialogOpen(false)}>
+        {alertDialogProps && <ConfirmationDialog {...alertDialogProps} />}
+      </AlertDialog>
     </form>
   );
 }
