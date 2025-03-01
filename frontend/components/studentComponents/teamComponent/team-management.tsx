@@ -4,14 +4,12 @@ import { useState } from "react";
 import TeamSupervisor from "./team-supervisor";
 import TeamMembers from "./teamMembers";
 import Headingbar from "@/components/employeeComponents/Headingbar";
-import { userInfo } from "os";
 
 interface TeamManagementProps {
   userInfo: Student;
-  studentsInfo: Student[];
   teamInfo: Team;
 }
-export default function TeamManagement({ userInfo, studentsInfo, teamInfo }: TeamManagementProps) {
+export default function TeamManagement({ userInfo, teamInfo }: TeamManagementProps) {
   // const [student, setStudent] = useState<Partial<Student>[]>([
   //   {
   //     student_id: "012029",
@@ -73,7 +71,7 @@ export default function TeamManagement({ userInfo, studentsInfo, teamInfo }: Tea
     <>
       <Headingbar text={teamName} />
       <div>
-        <TeamMembers userInfo={userInfo} originalStudentsInfo={studentsInfo} originalTeamInfo={teamInfo} teamName={teamName} setTeamNameOnSave={handleTeamName} disableButtons={disableButtons} />
+        <TeamMembers userInfo={userInfo} originalTeamInfo={teamInfo} teamName={teamName} setTeamNameOnSave={handleTeamName} disableButtons={disableButtons} />
         <TeamSupervisor disableButtons={disableButtons} />
       </div>
     </>

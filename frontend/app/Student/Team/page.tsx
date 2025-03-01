@@ -26,25 +26,26 @@ export default async function Teampage() {
   // const { data: teamData, error: teamError } = await supabase.from("Teams").select("*").eq("team_id", userInfo.team_id).single();
 
   // get all members info
-  const [{ data: studentsData, error: studentsError }, { data: teamData, error: teamError }] = await Promise.all([
-    supabase.from("Students").select("*").eq("team_id", userInfo.team_id),
-    supabase.from("Teams").select("*").eq("team_id", userInfo.team_id).single(),
-  ]);
+  // const [{ data: studentsData, error: studentsError }, { data: teamData, error: teamError }] = await Promise.all([
+  //   supabase.from("Students").select("*").eq("team_id", userInfo.team_id),
+  //   supabase.from("Teams").select("*").eq("team_id", userInfo.team_id).single(),
+  // ]);
+  const { data: teamData, error: teamError } = await supabase.from("Teams").select("*").eq("team_id", userInfo.team_id).single();
 
-  if (!studentsData || studentsError) {
-    console.log(`Error retrieving team members info. Here is more detail: ${studentsError?.message}`);
-  }
+  // if (!studentsData || studentsError) {
+  //   console.log(`Error retrieving team members info. Here is more detail: ${studentsError?.message}`);
+  // }
 
   if (!teamData || teamError) {
     console.log(`Error retrieving team info for student ${user.user_metadata.full_name}. Here is more detail: ${teamError?.message}`);
     return;
   }
   const teamInfo = teamData as Team;
-  const studentsInfo = studentsData as Student[];
+  // const studentsInfo = studentsData as Student[];
 
   return (
     <>
-      <TeamManagement userInfo={userInfo} studentsInfo={studentsInfo} teamInfo={teamInfo} />
+      <TeamManagement userInfo={userInfo} teamInfo={teamInfo} />
     </>
   );
 }

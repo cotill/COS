@@ -1,14 +1,18 @@
 import { Alert, AlertTitle, AlertDescription } from "../ui/alert";
 import { X } from "lucide-react";
 interface NotificationProps {
-  notification: { type: "error" | "warning" | "success" | "partial-success"; text: string | JSX.Element[] } | null;
-  close: () => void;
+  notification: {
+    id: string;
+    type: "error" | "warning" | "success" | "partial-success";
+    text: string | JSX.Element[];
+  };
+  close: (id: string) => void;
 }
 const CustomNotification: React.FC<NotificationProps> = ({ notification, close }) => {
   if (!notification) return null;
   return (
     <Alert variant={"default"} className="msb-4">
-      <button className="absolute top-0 right-0 mt-2 mr-2 text-red-500" onClick={close}>
+      <button className="absolute top-0 right-0 mt-2 mr-2 text-red-500" onClick={() => close(notification.id)}>
         <X />
       </button>
       <AlertTitle className={`font-bold ${notification.type === "warning" ? "text-yellow-500" : ""}`}>

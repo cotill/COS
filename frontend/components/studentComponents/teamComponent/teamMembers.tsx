@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,15 +8,17 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, MinusCircle, Crown } from "lucide-react";
 import { Student, Team } from "@/utils/types";
 import CancelSaveBtn from "./cancel-save-btn";
-import { handleCreateStudentAccounts } from "./teamMemberHelper";
+import { handleCreateStudentAccounts, modifiedStudents, updateStudentInformation, loadTeamData, handleUpdateStudentInformation } from "./teamMemberHelper";
 import dynamic from "next/dynamic";
 import { ConfirmationDialog, ConfirmationDialogProp } from "@/components/confirmationPopup";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { handleDeleteStudentAccounts } from "@/app/Student/Team/teamAction";
+import useNotifcations from "@/hooks/notification/useNotifications"; // import the notification hook
+import { RoundSpinner } from "@/components/ui/spinner";
+const CustomNotification = dynamic(() => import("../custom-notification"), { ssr: false });
 
 interface TeamMembersProp {
   userInfo: Student;
-  originalStudentsInfo: Student[];
   originalTeamInfo: Team;
   setTeamNameOnSave: (new_team_name: string) => void; // used to update the teamName when the user saves
   teamName: string; //pass down the current team name
@@ -26,12 +28,13 @@ const minTeamSize = 3;
 const maxTeamSize = 10;
 const timeLength = 10000;
 
-const CustomNotification = dynamic(() => import("../custom-notification"), { ssr: false });
-export default function TeamMembers({ userInfo, originalStudentsInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons }: TeamMembersProp) {
-  const [students, setStudents] = useState<Partial<Student>[]>(originalStudentsInfo);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons }: TeamMembersProp) {
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
-  const [notification, setNotification] = useState<{ type: "error" | "warning" | "success" | "partial-success"; text: string | JSX.Element[] } | null>(null);
+  const [students, setStudents] = useState<Partial<Student>[]>([]);
+  const [initialStudents, setInitialStudents] = useState<Partial<Student>[]>([]); // Stores the original data
+
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const [newStudents, setNewStudents] = useState<Partial<Student>[]>([]); // tracks new students
   const [deleteStudents, setDeleteStudents] = useState<Partial<Student>[]>([]); // tracks deleted students
@@ -45,8 +48,23 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
   // Disable add student button if any students have been marked for deletion
   const addButtonDisabled = deleteStudents.length > 0 || students.length >= maxTeamSize;
 
-  const closeNotification = () => {
-    setNotification(null);
+  const { notifications, addNotification, removeNotification, clearAllNotifications } = useNotifcations();
+
+  const fetchStudents = async () => {
+    const updatedStudents = await loadTeamData(originalTeamInfo.team_id);
+    setStudents(updatedStudents);
+    setInitialStudents(updatedStudents); //Store a copy of the original data
+  };
+
+  useEffect(() => {
+    setInitialLoading(true);
+
+    fetchStudents();
+    setInitialLoading(false);
+  }, []);
+
+  const closeNotification = (id: string) => {
+    removeNotification(id);
   };
   const addMember = () => {
     if (students.length < maxTeamSize) {
@@ -69,7 +87,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
   const removeMember = (index: number) => {
     if (students.length - 1 === 1) {
       // they are deleting everyone except the team lead
-      setNotification({ type: "warning", text: "You are have deleted everyone on the team except yourself" });
+      addNotification("warning", "You are have deleted everyone on the team except yourself");
     }
     // removed student
     const student_to_remove = students[index];
@@ -110,7 +128,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
   };
 
   const has_studentDetailsChanges = () => {
-    return JSON.stringify(originalStudentsInfo) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0;
+    return JSON.stringify(initialStudents) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0;
   };
 
   const onConfirmDeleteStudent = async () => {
@@ -141,18 +159,19 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       setDeleteStudents([]);
     } else if (errorCount === res.length) {
       notificationType = "error";
-      handleCancelTeam();
+      handleResetTeamDetails();
     } else {
       notificationType = "partial-success";
       // Keep only the students whose deletion failed in the deleteStudents array
       const failedDeletions = deleteStudents.filter((_, index) => res[index].status !== "fulfilled");
       setDeleteStudents(failedDeletions);
       // Add the failed deletions back to the students array
-      setStudents((prevStudents) => [...prevStudents, ...failedDeletions]);
+      // setStudents((prevStudents) => [...prevStudents, ...failedDeletions]);
     }
 
     // set the notification
-    setNotification({ type: notificationType, text: message });
+    addNotification(notificationType, message);
+    await fetchStudents();
 
     setIsSaving(false);
     ToggleManageTeamBtn();
@@ -187,31 +206,32 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       // reset the  newStudents array
       setNewStudents([]);
       // update the students array with the new student IDs
-      setStudents((prevStudents) =>
+      /*setStudents((prevStudents) =>
         prevStudents.map((stu) => {
           const updatedStudent = res.successStudents.find((s) => s.email === stu.email);
           return updatedStudent ? { ...stu, student_id: updatedStudent.student_id } : stu;
         })
-      );
+      );*/
       // set the notification
-      setNotification({ type: "success", text: res.text });
+      addNotification("success", res.text);
     } else if (res.type === "partial-success") {
-      setNotification({ type: "partial-success", text: res.text });
+      addNotification(res.type, res.text);
       setNewStudents([]); // reset
       // update the students array with the new student IDs and remove failed students
-      setStudents((prevStudents) =>
+      /*setStudents((prevStudents) =>
         prevStudents
           .map((stu) => {
             const updatedStudent = res.successStudents.find((s) => s.email === stu.email);
             return updatedStudent ? { ...stu, student_id: updatedStudent.student_id } : stu;
           })
           .filter((stu) => !res.failedEmails.includes(stu.email!))
-      );
+      );*/
     } else {
       // All accounts failed to be created revert back to
-      setNotification({ type: "error", text: res.text });
-      handleCancelTeam();
+      addNotification("error", res.text);
+      handleResetTeamDetails();
     }
+    await fetchStudents();
 
     setIsSaving(false);
     ToggleManageTeamBtn();
@@ -246,7 +266,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
     setIsSaving(true);
 
     if (!has_studentDetailsChanges() && teamName === localTeamName) {
-      setNotification({ type: "error", text: "No changes were made." });
+      addNotification("error", "No changes were made.");
       setIsSaving(false);
       ToggleManageTeamBtn();
       return;
@@ -261,7 +281,37 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       setTeamNameOnSave(localTeamName); // update the heading bar
     }
 
-    // handle changes to the students
+    const allModifiedStudents = modifiedStudents(initialStudents, students, newStudents, deleteStudents);
+    console.log("All modified students is ", allModifiedStudents);
+    // If we have modified students, update them in the database
+    if (allModifiedStudents.length > 0) {
+      try {
+        const updateResults = await handleUpdateStudentInformation(allModifiedStudents);
+
+        // Process results and show notification
+        // const res = updateResults.filter((result) => result.status === "fulfilled").length;
+
+        // if (successCount === allModifiedStudents.length) {
+        //   addNotification("success", "All student information updated successfully.");
+        // } else if (successCount > 0) {
+        //   addNotification("partial-success", `${successCount} of ${allModifiedStudents.length} student updates were successful.`);
+        // } else {
+        //   addNotification("error", "Failed to update student information.");
+        //   handleResetTeamDetails();
+        // }
+        if (updateResults.type === "error") {
+          handleResetTeamDetails();
+        }
+        addNotification(updateResults.type as "error" | "warning" | "success" | "partial-success", updateResults.text);
+      } catch (error) {
+        console.error("Error updating students:", error);
+        addNotification("error", "An error occurred while updating student information.");
+      } finally {
+        setIsSaving(false);
+        ToggleManageTeamBtn();
+      }
+    }
+    // handle new students
     if (newStudents.length > 0) {
       await handleCreateNewStudents();
     }
@@ -271,15 +321,23 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
       await handleDeleteStudents();
     }
   };
-  const handleCancelTeam = () => {
+
+  const handleResetTeamDetails = async () => {
     // reset everything back to original state
-    setStudents([...originalStudentsInfo]);
+    // setStudents([...originalStudentsInfo]);
+    await fetchStudents();
     setDeleteStudents([]);
     setNewStudents([]);
     setLocalTeamName(teamName); // reset team name
     setIsSaving(false);
   };
-
+  if (initialLoading) {
+    return (
+      <div className="w-full justify-items-center my-2">
+        <RoundSpinner size="md" color="white" />
+      </div>
+    );
+  }
   return (
     <form onSubmit={handleSaveTeam}>
       <div className="mt-4">
@@ -310,7 +368,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                     Manage Team
                   </Button>
                 ) : (
-                  <CancelSaveBtn onCancel={handleCancelTeam} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
+                  <CancelSaveBtn onCancel={handleResetTeamDetails} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
                 )}
               </div>
               {/* <div className="max-h-96 space-y-4 overflow-y-auto pr-4"> */}
@@ -393,7 +451,7 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                 <div className="w-1/3"></div>
 
                 <div className="w-1/3">
-                  <CancelSaveBtn onCancel={handleCancelTeam} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
+                  <CancelSaveBtn onCancel={handleResetTeamDetails} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
                 </div>
                 <div className="flex justify-end w-1/3">
                   <Button type="button" variant="outline" size="sm" onClick={addMember} disabled={addButtonDisabled}>
@@ -403,7 +461,13 @@ export default function TeamMembers({ userInfo, originalStudentsInfo, originalTe
                 </div>
               </div>
             )}
-            {notification && <CustomNotification notification={notification} close={closeNotification} />}
+            {notifications.length > 0 && (
+              <>
+                {notifications.map((notification) => (
+                  <CustomNotification key={notification.id} notification={notification} close={closeNotification} />
+                ))}
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
