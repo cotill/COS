@@ -2,12 +2,7 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-  ],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
     container: {
@@ -23,16 +18,16 @@ const config: Config = {
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: {
-          DEFAULT: '#1D1B23',
+          DEFAULT: "#1D1B23",
         },
         jet: {
-          DEFAULT: '#403E45',
+          DEFAULT: "#403E45",
         },
         mantis: {
-          DEFAULT: '#81C26C',
+          DEFAULT: "#81C26C",
         },
         bright_pink: {
-          DEFAULT: '#E75973',
+          DEFAULT: "#E75973",
         },
       },
       borderRadius: {
@@ -55,10 +50,10 @@ const config: Config = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       scale: {
-        '200': '2',
-        '250': '2.5',
-        '275': '2.75',
-        '300': '3',
+        "200": "2",
+        "250": "2.5",
+        "275": "2.75",
+        "300": "3",
       },
     },
   },

@@ -10,7 +10,7 @@ import { UserRole, EmployeeLevel } from "@/utils/types";
 /**
  * Sign up a user as an employee
  * @param formData Data from the sign up form
- * @returns A redirect to the sign up page with an error message if the sign up fails, 
+ * @returns A redirect to the sign up page with an error message if the sign up fails,
  * or a redirect to the sign up page with a success message if the sign up is successful.
  * Afterwards if confirmation is enabled in supabase, the user will receive an email to confirm their email.
  */
@@ -21,31 +21,31 @@ export const signUpAction = async (formData: FormData) => {
   let password = formData.get("password")?.toString();
   let title = formData.get("title")?.toString();
   let department = formData.get("department")?.toString();
-  console.log("user sign up data",{
+  console.log("user sign up data", {
     first_name,
     last_name,
     email,
     password,
     department,
   });
-  const emailRegex = /^[^\s@]+@ttg\.com$/i;
-  
-  if (!first_name || first_name.trim().length ==0) {
+  const emailRegex = /^[^\s@]+@ttgteams\.com$/i;
+
+  if (!first_name || first_name.trim().length == 0) {
     return encodedRedirect("error", "/sign-up", "First name is required");
   }
-  if (!last_name || last_name.trim().length ==0) {
+  if (!last_name || last_name.trim().length == 0) {
     return encodedRedirect("error", "/sign-up", "Last name is required");
   }
-  if (!email || email.trim().length ==0 || !emailRegex.test(email)) {
+  if (!email || email.trim().length == 0 || !emailRegex.test(email)) {
     return encodedRedirect("error", "/sign-up", "Tartigrade Email is required");
   }
   if (!password) {
     return encodedRedirect("error", "/sign-up", "Password is required");
   }
-  if (!title){
+  if (!title) {
     return encodedRedirect("error", "/sign-up", "Title is required");
   }
-  if (!department){
+  if (!department) {
     return encodedRedirect("error", "/sign-up", "Department is required");
   }
 
@@ -53,14 +53,10 @@ export const signUpAction = async (formData: FormData) => {
   last_name = last_name.trim();
   title = title.trim();
   const supabase = await createClient();
-  
-  // check if the ttg email belongs to a student
-  const { data: studentData, error: studentError } = await supabase
-    .from("Students")
-    .select('full_name, email, ttg_email')
-    .or(`email.eq.${email},ttg_email.eq.${email}`);
-    // response is a array of objects studentData: [{name:"",email: "", ttg_email:  ""}, ...]
 
+  // check if the ttg email belongs to a student
+  const { data: studentData, error: studentError } = await supabase.from("Students").select("full_name, email, ttg_email").or(`email.eq.${email},ttg_email.eq.${email}`);
+  // response is a array of objects studentData: [{name:"",email: "", ttg_email:  ""}, ...]
 
   if (studentError) {
     console.error(studentError.message);
@@ -84,18 +80,14 @@ export const signUpAction = async (formData: FormData) => {
         department: department,
         title: title,
         level: EmployeeLevel.LEVEL_0,
-      }
+      },
     },
   });
 
   if (error) {
     return encodedRedirect("error", "/sign-up", error.message);
   } else {
-    return encodedRedirect(
-      "success",
-      "/sign-up",
-      "Thanks for signing up! Please check your email for a verification link.",
-    );
+    return encodedRedirect("success", "/sign-up", "Thanks for signing up! Please check your email for a verification link.");
   }
 };
 
@@ -112,7 +104,11 @@ export const signInAction = async (formData: FormData) => {
   if (error) {
     return encodedRedirect("error", "/sign-in", error.message);
   }
-  revalidatePath('/Employee', 'layout');//purge cache of the Employee folder and its children
+  const { data: employeeInfo, error: empError } = await supabase.from("Employees").select("*").eq("email", email).single();
+  if (!employeeInfo || empError) {
+    return redirect("/Student/Tasks");
+  }
+  // revalidatePath("/Employee", "layout"); //purge cache of the Employee folder and its children
   return redirect("/Employee/Projects");
 };
 
@@ -132,22 +128,14 @@ export const forgotPasswordAction = async (formData: FormData) => {
 
   if (error) {
     console.error(error.message);
-    return encodedRedirect(
-      "error",
-      "/forgot-password",
-      "Could not reset password",
-    );
+    return encodedRedirect("error", "/forgot-password", "Could not reset password");
   }
 
   if (callbackUrl) {
     return redirect(callbackUrl);
   }
 
-  return encodedRedirect(
-    "success",
-    "/forgot-password",
-    "Check your email for a link to reset your password.",
-  );
+  return encodedRedirect("success", "/forgot-password", "Check your email for a link to reset your password.");
 };
 
 export const resetPasswordAction = async (formData: FormData) => {
@@ -157,19 +145,11 @@ export const resetPasswordAction = async (formData: FormData) => {
   const confirmPassword = formData.get("confirmPassword") as string;
 
   if (!password || !confirmPassword) {
-    encodedRedirect(
-      "error",
-      "/reset-password",
-      "Password and confirm password are required",
-    );
+    encodedRedirect("error", "/reset-password", "Password and confirm password are required");
   }
 
   if (password !== confirmPassword) {
-    encodedRedirect(
-      "error",
-      "/reset-password",
-      "Passwords do not match",
-    );
+    encodedRedirect("error", "/reset-password", "Passwords do not match");
   }
 
   const { error } = await supabase.auth.updateUser({
@@ -177,11 +157,7 @@ export const resetPasswordAction = async (formData: FormData) => {
   });
 
   if (error) {
-    encodedRedirect(
-      "error",
-      "/reset-password",
-      "Password update failed",
-    );
+    encodedRedirect("error", "/reset-password", "Password update failed");
   }
 
   encodedRedirect("success", "/reset-password", "Password updated");

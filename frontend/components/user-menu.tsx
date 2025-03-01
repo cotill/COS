@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface UserMenuProps {
   initials: string;
@@ -36,7 +37,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ initials, onClose, signOutButton, n
           </div>
 
           <div className="p-4 space-y-3">
-            <Link href="/Employee/Settings">
+            <Link href={usePathname().includes("/Employee") ? "/Employee/Settings" : "/Student/Settings"}>
               <button
                 className="flex items-center gap-2 w-full text-left text-gray-300 hover:text-white"
                 onClick={onClose}

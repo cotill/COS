@@ -15,6 +15,7 @@ interface ProjectStatusButtonProp {
   status: Project_Status;
   setProjStatus: (new_status: Project_Status) => void;
   allowClick: boolean;
+  onEmployeePage: boolean;
 }
 
 const statusConfig: Record<Project_Status, { color: string }> = {
@@ -101,6 +102,33 @@ export function ProjectStatusButton({
               <span>{status}</span>
             </div>
           </button>
+          {!onEmployeePage ? (
+            <button
+              className={cn(
+                `h-9 px-4 rounded-full flex items-center font-medium text-white focus:outline-none transition-all duration-200 ease-in-out ${allowClick ? "hover:bg-opacity-40" : "cursor-default"}`,
+                currentConfig.color,
+              )}
+              disabled={true}
+            >
+              <div className="flex items-center space-x-2">
+                <div className={cn("w-2 h-2 rounded-full bg-current")} />
+                <span>{status}</span>
+              </div>
+            </button>
+            ) : (
+            <button
+              className={cn(
+                `h-9 px-4 rounded-l-full flex items-center font-medium text-white focus:outline-none transition-all duration-200 ease-in-out ${allowClick ? "hover:bg-opacity-40" : "cursor-default"}`,
+                currentConfig.color,
+              )}
+              disabled={!allowClick}
+            >
+              <div className="flex items-center space-x-2">
+                <div className={cn("w-2 h-2 rounded-full bg-current")} />
+                <span>{status}</span>
+              </div>
+            </button>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-40 max-w-40 bg-[#413F46]/95 border-gray-400">
           {ProjectStatusOrder.map((statusKey) => {
@@ -137,6 +165,19 @@ export function ProjectStatusButton({
       >
         <ChevronRight className={`h-5 w-5 ${borderColor}`} />
       </button>
+      {onEmployeePage && (
+        <button
+          onClick={handleNextStatus}
+          className={cn(
+            `h-9 px-2 rounded-r-full border-l flex items-center transition-all duration-200 ease-in-out ${allowClick ? "hover:bg-opacity-40" : "cursor-default"}`,
+            currentConfig.color,
+            borderColor,
+          )}
+          disabled={!allowClick}
+        >
+          <ChevronRight className={`h-5 w-5 ${borderColor}`} />
+        </button>
+      )}
     </div>
   );
 }
