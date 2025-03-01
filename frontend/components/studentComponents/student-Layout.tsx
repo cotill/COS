@@ -44,7 +44,7 @@ export default function StuLayout(layoutProps: StuLayoutProps) {
         toggleSidebar={toggleSidebar} // Pass the toggleSidebar function
         collapsed={isSidebarCollapsed} // Pass the collapsed state
       />
-      <div className="flex flex-1">
+      <div className="flex flex-1 pb-4">
         <Sidebar
           collapsed={isSidebarCollapsed}
           activePage={activePage}
