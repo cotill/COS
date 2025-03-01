@@ -42,6 +42,13 @@ export enum EmployeePages {
   CREATE_PROJECT = "Create Project",
 }
 
+export enum StudentPages {
+  TASKS = "Tasks",
+  TEAM = "Team",
+  PROJECT = "Project",
+  SETTINGS = "Student Settings",
+}
+
 export enum Department_Types {
   ENGINEERING = "ENGINEERING",
   COMPUTER_SCIENCE = "COMPUTER_SCIENCE",
@@ -84,7 +91,7 @@ export enum Universities {
   York = "York University",
   ONTech = "Ontario Tech University",
   UofA = "University of Alberta",
-  SAIT = "Southern Alberta Institute of Technology"
+  SAIT = "Southern Alberta Institute of Technology",
 }
 
 export enum Project_Status {
@@ -109,7 +116,7 @@ export enum Application_Status {
 export interface Member {
   full_name: string;
   email: string;
-  role: string;
+  role: string | null;
   major: string;
   resume: string;
 }
@@ -119,10 +126,10 @@ export interface Application {
   project_id: number;
   team_name: string;
   university: string;
-  status: Application_Status;
+  status: Application_Status | null;
   members: Member[]; // jsonb
   size: number;
   about_us: string | null;
-  submission_date: string;
+  submission_date: string | null;
   approval_date: string | null; // can be null because not every project will be approved
 }

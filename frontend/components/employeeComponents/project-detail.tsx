@@ -13,7 +13,7 @@ import Link from "next/link";
 import { RoundSpinner } from "@/components/ui/spinner";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
-import { getChangedData, onUpdateProject, updateApplicationLink, canUserEditProject } from "@/app/student_applications/project_detail_helper";
+import { getChangedData, onUpdateProject, canUserEditProject } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
 import { createClient } from "@/utils/supabase/client";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
@@ -218,7 +218,8 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         </div>
         {/* Project edit button */}
         <div className="flex items-center gap-6 justify-center">
-          <Button variant="outline"
+          <Button
+            variant="outline"
             className={`flex flex-row rounded-full w-24 gap-3 font-medium h-9 focus:outline-none 
           hover:bg-opacity-10 hover:bg-white transition-colors duration-100 ease-in-out
           ${isEditing ? "hidden" : ""}`}
@@ -234,6 +235,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             status={currentProjectInfo.status}
             setProjStatus={(status) => onInputChange({ target: { name: "status", value: status } })}
             allowClick={isEditing}
+            onEmployeePage={true}
           />
         </div>
       </div>
@@ -492,7 +494,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             <div className="flex flex-col">
               <label className="text-white">Download for Dispatch</label>
               <div className="flex justify-center items-center space-x-2">
-              <CreatePdf project={originalProjectInfo}/>
+                <CreatePdf project={originalProjectInfo} />
               </div>
               {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
             </div>
@@ -500,13 +502,15 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         </div>
       </div>
 
-      {/* Applications, Team Awarded and Application Status*/}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
+      {/* Applications, Team Awarded and Link Status, Applications Allowed*/}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-2">
         {/* applications */}
         <div>
           <h2 className="text-xl font-bold text-white py-2">Applications</h2>
-          <div className="space-x-2">
-            <Button asChild variant="outline" className="text-md space-x-1" disabled={!originalProjectInfo.application_link}>
+          <div className="">
+            {/*     <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+             */}
+            <Button asChild variant="outline" className="text-md space-x-1 mr-2" disabled={!originalProjectInfo.application_link}>
               <Link href={`/ApplicationForm/${originalProjectInfo.application_link}/`}>
                 {" "}
                 <span>Application Link</span>
@@ -538,50 +542,100 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             </Dialog>
           </div>
         )}
-        {/* Application Status */}
-        <div className="flex gap-2 items-start [&_label]:text-white [&_h2]:text-white">
-          <h2 className="text-xl font-normal">Application Status:</h2>
-          <div className="flex flex-col gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5">
-            <div className="flex items-center space-x-2">
-              <input
-                type="radio"
-                className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                id="project_link_open"
-                name="link_active"
-                checked={currentProjectInfo.link_active === true}
-                onChange={() => {
-                  isEditing &&
-                    onInputChange({
-                      target: {
-                        name: "link_active",
-                        value: true,
-                      },
-                    });
-                }}
-              />
-              <label htmlFor="project_link_open">Open</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="radio"
-                className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                id="project_link_closed"
-                name="link_active"
-                checked={currentProjectInfo.link_active === false}
-                onChange={() => {
-                  isEditing &&
-                    onInputChange({
-                      target: {
-                        name: "link_active",
-                        value: false,
-                      },
-                    });
-                }}
-              />
-              <label htmlFor="project_link_closed">Closed</label>
+        {/* Application Link */}
+        {currentProjectInfo.application_link && (
+          <div className="flex gap-2 items-start py-2 [&_label]:text-white [&_h2]:text-white">
+            <h2 className="text-xl font-normal" hidden={!project.application_link}>
+              Link Status:
+            </h2>
+            <div className="flex flex-col gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5" hidden={!project.application_link}>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
+                  id="project_link_open"
+                  name="link_active"
+                  checked={currentProjectInfo.link_active === true}
+                  onChange={() => {
+                    isEditing &&
+                      onInputChange({
+                        target: {
+                          name: "link_active",
+                          value: true,
+                        },
+                      });
+                  }}
+                />
+                <label htmlFor="project_link_open">Open</label>
+              </div>
+              <div className="flex items-center space-x-2 py-2">
+                <input
+                  type="radio"
+                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
+                  id="project_link_closed"
+                  name="link_active"
+                  checked={currentProjectInfo.link_active === false}
+                  onChange={() => {
+                    isEditing &&
+                      onInputChange({
+                        target: {
+                          name: "link_active",
+                          value: false,
+                        },
+                      });
+                  }}
+                />
+                <label htmlFor="project_link_closed">Closed</label>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+        {/* Applications Allowed */}
+        {currentProjectInfo.applications_allowed !== null && (
+          <div className="flex gap-2 items-start [&_label]:text-white [&_h2]:text-white">
+            <h2 className="text-xl font-normal">Applications Allowed:</h2>
+            <div className="flex flex-col gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5" hidden={!project.application_link}>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
+                  id="project_link_true"
+                  name="applications_allowed"
+                  checked={currentProjectInfo.applications_allowed === true}
+                  onChange={() => {
+                    isEditing &&
+                      onInputChange({
+                        target: {
+                          name: "applications_allowed",
+                          value: true,
+                        },
+                      });
+                  }}
+                />
+                <label htmlFor="project_link_open">True</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
+                  id="project_link_false"
+                  name="applications_allowed"
+                  checked={currentProjectInfo.applications_allowed === false}
+                  onChange={() => {
+                    isEditing &&
+                      onInputChange({
+                        target: {
+                          name: "applications_allowed",
+                          value: false,
+                        },
+                      });
+                  }}
+                />
+                <label htmlFor="project_link_closed">False</label>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* error message */}
@@ -591,7 +645,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
           <Button variant="outline" onClick={handleCancelEdit} className="flex items-center">
             <X className="mr-1 h-4 w-4" /> Cancel
           </Button>
-          <Button onClick={handleSaveProject} variant = "outline" className="flex items-center">
+          <Button onClick={handleSaveProject} variant="outline" className="flex items-center">
             {isSaving ? (
               <>
                 <RoundSpinner size="xs" color="white" />
