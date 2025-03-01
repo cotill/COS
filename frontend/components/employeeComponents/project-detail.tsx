@@ -227,6 +227,7 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
             status={currentProjectInfo.status}
             setProjStatus={(status) => onInputChange({ target: { name: "status", value: status } })}
             allowClick={isEditing}
+            onEmployeePage={true}
           />
         </div>
       </div>
