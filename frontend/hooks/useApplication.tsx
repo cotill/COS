@@ -69,7 +69,7 @@ export const useApplications = ({ project_id, employeeInfo }: UseApplicationProp
 
     try {
       const teamMembers = selectedTeam?.members as Member[];
-      await applicationService.createStudentAccounts(teamMembers, project_id, university, team_name);
+      await applicationService.createStudentAccounts(teamMembers, project_id, university, team_name, application_id);
     } catch (error) {
       console.error(`Error creating student accounts:\n${error}`);
       alert(`Error creating student accounts please contact system admin`);

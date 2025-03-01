@@ -45,8 +45,8 @@ export const rejectOtherApplications = async (application_id: number, project_id
   if (error) throw new Error(`Error rejecting other applications: ${error.message}`);
 };
 
-const createTeam = async (team_id: string, project_id: number, team_name: string, team_lead_email: string) => {
-  const { error } = await supabase.from("Teams").insert({ team_id, project_id, team_name, team_lead_email });
+const createTeam = async (team_id: string, project_id: number, team_name: string, team_lead_email: string, application_id: number) => {
+  const { error } = await supabase.from("Teams").insert({ team_id, project_id, team_name, team_lead_email, application_id });
   if (error) throw new Error(`Error creating team for team_name ${team_name}: ${error.message}`);
 };
 
@@ -96,15 +96,17 @@ export async function createStudent(member: Member, teamId: string, uni: string,
  * @param uni The university of the team
  * @returns void but the function will create student accounts for the team members. If there is an error creating an account, the function will throw an error with all the error messages
  */
-export async function createStudentAccounts(teamMembers: Member[], projectId: number, uni: string, team_name: string) {
+export async function createStudentAccounts(teamMembers: Member[], projectId: number, uni: string, team_name: string, application_id: number) {
   let errorMessages: string[] = [];
   const teamId = uuidv4();
   // find team lead
   const team_lead = teamMembers.find((member) => member.role === "Team Manager") || teamMembers[0];
   const team_lead_email = team_lead.email;
 
+  console.log("check name: ", team_name)
+
   // next create the team
-  await createTeam(teamId, projectId, team_name, team_lead_email);
+  await createTeam(teamId, projectId, team_name, team_lead_email, application_id);
 
   await Promise.all(
     teamMembers.map(async (member) => {
