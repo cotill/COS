@@ -11,8 +11,6 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-
-import { getChangedData, onUpdateProject, canUserEditProject } from "@/app/student_applications/project_detail_helper";
 import { getChangedData, onUpdateProject, canUserEditProject } from "@/app/student_applications/project_detail_helper";
 import { ProjectStatusButton } from "../project-status-button";
 import { createClient } from "@/utils/supabase/client";

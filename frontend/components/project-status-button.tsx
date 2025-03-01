@@ -68,6 +68,7 @@ export function ProjectStatusButton({
   status,
   setProjStatus,
   allowClick,
+  onEmployeePage
 }: ProjectStatusButtonProp) {
   const currentConfig = statusConfig[status];
   function handleStatusChange(target_status: Project_Status) {
