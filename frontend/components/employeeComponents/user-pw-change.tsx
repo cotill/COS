@@ -112,7 +112,7 @@ const ChangePassword = () => {
         <button
           className="bg-[#E75973] text-white px-8 py-2 mb-6 rounded hover:bg-red-600"
           type="button"
-          onClick={() => handleCancel}
+          onClick={() => handleCancel()}
         >
           Cancel
         </button>
