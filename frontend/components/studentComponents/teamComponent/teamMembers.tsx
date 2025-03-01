@@ -423,16 +423,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor={`major-${index}`}>TTG Email</Label>
-                          <Input
-                            id={`ttg_email-${index}`}
-                            value={stu.ttg_email || ""}
-                            onChange={(e) => updateMember(index, "ttg_email", e.target.value)}
-                            disabled={
-                              !isEditing ||
-                              (initialStudents.some((student) => student.ttg_email === stu.ttg_email && stu.ttg_email !== null) &&
-                                !newStudents.some((student) => student.student_id === stu.student_id))
-                            } // disable if isEditing is false or if the original(initial) student data contains a ttg email and if the student is not a new student
-                          />
+                          <Input id={`ttg_email-${index}`} value={stu.ttg_email || ""} onChange={(e) => updateMember(index, "ttg_email", e.target.value)} disabled={true} />
                         </div>
                       </div>
                     </div>
