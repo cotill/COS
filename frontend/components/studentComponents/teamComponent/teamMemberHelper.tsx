@@ -148,23 +148,19 @@ export const updateStudentInformation = async (students: Partial<Student>[]) => 
   return results;
 };
 export const handleUpdateStudentInformation = async (students: Partial<Student>[]): Promise<{ type: string; text: JSX.Element[] }> => {
-  let successUpdates: Partial<Student>[] = [];
+  let success_count = 0;
   let failedUpdates: string[] = [];
   let message: JSX.Element[] = [];
 
   const results = await updateStudentInformation(students);
 
-  results.forEach((result, index) => {
-    const student = students[index];
+  results.forEach((result) => {
     if (result.status === "fulfilled") {
-      successUpdates.push(student);
-    } else {
-      failedUpdates.push(student.email!);
-      message.push(<p key={index}>{String(result.reason)}</p>);
+      success_count++;
     }
   });
 
-  if (successUpdates.length === students.length) {
+  if (success_count === students.length) {
     message = [<p className="text-green-600 font-bold">All student information updated successfully.</p>];
     // successUpdates.forEach((student, index) => {
     //   message.push(
@@ -175,7 +171,7 @@ export const handleUpdateStudentInformation = async (students: Partial<Student>[
     //   );
     // });
     return { type: "success", text: message };
-  } else if (failedUpdates.length === students.length) {
+  } else if (success_count === 0) {
     message.unshift(<p className="text-red-600 font-bold">Failed to update student information. Please contact the sponsor.</p>);
     return { type: "error", text: message };
   } else {

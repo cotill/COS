@@ -11,7 +11,7 @@ interface NotificationProps {
 const CustomNotification: React.FC<NotificationProps> = ({ notification, close }) => {
   if (!notification) return null;
   return (
-    <Alert variant={"default"} className="msb-4">
+    <Alert variant={"default"} className="mb-4">
       <button className="absolute top-0 right-0 mt-2 mr-2 text-red-500" onClick={() => close(notification.id)}>
         <X />
       </button>
@@ -19,14 +19,16 @@ const CustomNotification: React.FC<NotificationProps> = ({ notification, close }
         {notification.type === "success" ? "Success" : notification.type === "error" ? "Error" : notification.type === "partial-success" ? "Partial-success" : "Warning"}
       </AlertTitle>
       <AlertDescription>
-        {notification.type === "success" && Array.isArray(notification.text) ? (
-          notification.text.map((msg, i) => (
-            <div key={i} className="text-white">
-              {msg}
-            </div>
-          ))
+        {Array.isArray(notification.text) ? (
+          <div className="space-y-1">
+            {notification.text.map((msg, i) => (
+              <div key={i} className={notification.type === "success" ? "text-green-600" : "text-white"}>
+                {msg}
+              </div>
+            ))}
+          </div>
         ) : (
-          <p>{notification.text}</p>
+          notification.text
         )}
       </AlertDescription>
     </Alert>

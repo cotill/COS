@@ -19,8 +19,8 @@ const CustomNotification = dynamic(() => import("../custom-notification"), { ssr
 
 interface TeamMembersProp {
   userInfo: Student;
-  originalTeamInfo: Team;
-  setTeamNameOnSave: (new_team_name: string) => void; // used to update the teamName when the user saves
+  originalTeamInfo: Partial<Team>;
+  setTeamNameOnSave: (new_team_name: string) => Promise<{ type: "success" | "error"; text: JSX.Element[] }>; // used to update the teamName when the user saves
   teamName: string; //pass down the current team name
   disableButtons: boolean;
 }
@@ -51,7 +51,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
   const { notifications, addNotification, removeNotification, clearAllNotifications } = useNotifcations();
 
   const fetchStudents = async () => {
-    const updatedStudents = await loadTeamData(originalTeamInfo.team_id);
+    const updatedStudents = await loadTeamData(originalTeamInfo.team_id!);
     setStudents(updatedStudents);
     setInitialStudents(updatedStudents); //Store a copy of the original data
   };
@@ -123,7 +123,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
 
   const [showManageTeamBtn, setShowManageTeamBtn] = useState(true);
 
-  const ToggleManageTeamBtn = () => {
+  const toggleManageTeamBtn = () => {
     setShowManageTeamBtn((prev) => !prev);
   };
 
@@ -174,7 +174,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     await fetchStudents();
 
     setIsSaving(false);
-    ToggleManageTeamBtn();
+    toggleManageTeamBtn();
   };
   /**
    * After save is clicked if the user is attempting to delete a student, open confirmations
@@ -200,7 +200,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
    */
   const onConfirmCreateNewStudent = async () => {
     setAlertDialogOpen(false);
-    const res = await handleCreateStudentAccounts(newStudents, originalTeamInfo.team_id, userInfo.university);
+    const res = await handleCreateStudentAccounts(newStudents, originalTeamInfo.team_id!, userInfo.university);
     // const res = { type: "error", text: "your mom" };
     if (res.type === "success") {
       // reset the  newStudents array
@@ -234,7 +234,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     await fetchStudents();
 
     setIsSaving(false);
-    ToggleManageTeamBtn();
+    toggleManageTeamBtn();
   };
 
   /**
@@ -268,7 +268,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     if (!has_studentDetailsChanges() && teamName === localTeamName) {
       addNotification("error", "No changes were made.");
       setIsSaving(false);
-      ToggleManageTeamBtn();
+      toggleManageTeamBtn();
       return;
     }
 
@@ -278,7 +278,8 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
 
     if (teamName !== localTeamName) {
       //Team name changed
-      setTeamNameOnSave(localTeamName); // update the heading bar
+      const result = await setTeamNameOnSave(localTeamName); // update the heading bar
+      addNotification(result.type, result.text);
     }
 
     const allModifiedStudents = modifiedStudents(initialStudents, students, newStudents, deleteStudents);
@@ -308,7 +309,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
         addNotification("error", "An error occurred while updating student information.");
       } finally {
         setIsSaving(false);
-        ToggleManageTeamBtn();
+        toggleManageTeamBtn();
       }
     }
     // handle new students
@@ -364,11 +365,11 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Team Members</h3>
                 {showManageTeamBtn ? (
-                  <Button type="button" variant="outline" size="sm" onClick={ToggleManageTeamBtn} disabled={disableButtons}>
+                  <Button type="button" variant="outline" size="sm" onClick={toggleManageTeamBtn} disabled={disableButtons}>
                     Manage Team
                   </Button>
                 ) : (
-                  <CancelSaveBtn onCancel={handleResetTeamDetails} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
+                  <CancelSaveBtn onCancel={handleResetTeamDetails} onToggleBtnDisplay={toggleManageTeamBtn} isSaving={isSaving} />
                 )}
               </div>
               {/* <div className="max-h-96 space-y-4 overflow-y-auto pr-4"> */}
@@ -451,7 +452,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
                 <div className="w-1/3"></div>
 
                 <div className="w-1/3">
-                  <CancelSaveBtn onCancel={handleResetTeamDetails} onToggleBtnDisplay={ToggleManageTeamBtn} isSaving={isSaving} />
+                  <CancelSaveBtn onCancel={handleResetTeamDetails} onToggleBtnDisplay={toggleManageTeamBtn} isSaving={isSaving} />
                 </div>
                 <div className="flex justify-end w-1/3">
                   <Button type="button" variant="outline" size="sm" onClick={addMember} disabled={addButtonDisabled}>
@@ -464,7 +465,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
             {notifications.length > 0 && (
               <>
                 {notifications.map((notification) => (
-                  <CustomNotification key={notification.id} notification={notification} close={closeNotification} />
+                  <CustomNotification key={notification.id} notification={notification} close={() => removeNotification(notification.id)} />
                 ))}
               </>
             )}
