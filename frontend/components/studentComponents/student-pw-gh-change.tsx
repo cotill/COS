@@ -1,6 +1,6 @@
 "use client"
 
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CircleAlert, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client"
@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { userInfo } from "os";
+import ChangePassword from "../employeeComponents/user-pw-change";
 
 interface StudentChangesProps {
   userId: string
@@ -28,7 +29,10 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [githubUser, setGithubUser] = useState("");
+  const [OGgithubUser, setOGgithubUser] = useState("");
+  const [changedPassword, setChangedPassword] = useState<boolean | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+
   
   const toggleVisibility = () => setIsVisible(prevState => !prevState);
   const router = useRouter();
@@ -41,24 +45,50 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
     const fetchUserData = async () => {
         const { data: userInfo, error: userError } = await supabase
             .from("Students")
-            .select("github")
+            .select("github, changed_password")
             .eq("student_id", userId)  // match userid with the employee id
             .single(); // only 1 record returned
 
         if (userError) {
             console.error("error getting user data:", userError);
         } else {
-            setGithubUser(userInfo.github);
+            setGithubUser(userInfo.github || "");
+            setOGgithubUser(userInfo.github || "");
+            setChangedPassword(userInfo.changed_password ?? false)
         }
     };
 
     fetchUserData(); 
   }, [userId]);
+  //   setGithubUser(OGgithubUser);
+  //   console.log("textboxes cleaned");
+  // };
+
+  const handleGHSave = async () => {
+    if (!userId) {
+      console.error("User ID not found.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("Students")
+      .update({ github: githubUser }) 
+      .eq("student_id", userId);
+
+    if (error) {
+      console.error("Error updating GitHub username:", error);
+      alert("Failed to update GitHub username.");
+    } else {
+      alert("GitHub username updated successfully!");
+      setOGgithubUser(githubUser);
+    }
+  };
 
   const handleCancel = () => {
     setNewPassword("");
     setConfirmPassword("");
-    console.log("textboxes cleaned")
+    setGithubUser(OGgithubUser);
+    console.log("textboxes cleaned");
   };
 
   const handlePasswordReset = async (password: string, confirmPassword: string) => {
@@ -78,6 +108,14 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
     try {
       const { error } = await supabase.auth.updateUser({ password: password });
 
+      const { error: updateError } = await supabase
+        .from('Students')
+        .update({ changed_password: true })
+        .eq("student_id", userId)
+
+      if (updateError) {
+        console.error("Error updating changed_password:", updateError);
+      }
       if (error) { 
         alert("Password update failed");
         console.error("Error updating password:", error);
@@ -85,8 +123,8 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
         alert("Password updated successfully");
         setNewPassword("");
         setConfirmPassword("");
+        setChangedPassword(true);
         router.refresh();
-        // update the changed_password field to true
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -107,6 +145,12 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
               <CardTitle>Password</CardTitle>
               <CardDescription>
                 Change your password here. 
+                {changedPassword === false && (
+                  <div className="flex items-center gap-2 bg-red-100 text-red-700 p-3 rounded-md">
+                    <AlertCircle className="w-5 h-5 text-red-700" />
+                    <p className="text-sm font-semibold">You must change your password.</p>
+                  </div>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -153,8 +197,8 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
             </CardContent>
             <CardFooter>
               <div className="flex justify-end gap-4">
-                <Button className="bg-[#81C26C] text-white px-8 py-2 mb-6 rounded hover:bg-green-600" onClick={() => handlePasswordReset}>Save</Button>
-                <Button className="bg-[#E75973] text-white px-8 py-2 mb-6 rounded hover:bg-red-600" onClick={() => handleCancel}>Cancel</Button>
+                <Button className="bg-[#E75973] text-white px-8 py-2 mb-6 rounded hover:bg-red-600" onClick={() => handleCancel()}>Cancel</Button>
+                <Button className="bg-[#81C26C] text-white px-8 py-2 mb-6 rounded hover:bg-green-600" onClick={() => handlePasswordReset(newPassword, confirmPassword)}>Save</Button>
               </div>
             </CardFooter>
           </Card>
@@ -170,12 +214,18 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
             <CardContent className="space-y-2">
               <div className="space-y-1">
                 <Label htmlFor="username">GitHub Username</Label>
-                <Input id="username" defaultValue={githubUser} />
-              </div>
+                <Input
+                  id="username"
+                  value={githubUser}
+                  onChange={(e) => setGithubUser(e.target.value)}
+                />
+              </div> 
             </CardContent>
             <CardFooter>
-              <Button className="bg-[#E75973] text-white px-8 py-2 mb-6 rounded hover:bg-red-600">Save</Button>
-              <Button className="bg-[#81C26C] text-white px-8 py-2 mb-6 rounded hover:bg-green-600">Cancel</Button>
+            <div className="flex justify-end gap-4">
+              <Button className="bg-[#E75973] text-white px-8 py-2 mb-6 rounded hover:bg-red-600" onClick={() => handleCancel()}>Cancel</Button>
+              <Button className="bg-[#81C26C] text-white px-8 py-2 mb-6 rounded hover:bg-green-600" onClick={() =>handleGHSave()}>Save</Button>
+            </div>
             </CardFooter>
           </Card>
         </TabsContent>
