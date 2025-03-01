@@ -5,7 +5,7 @@ interface notification {
   text: string | JSX.Element[];
 }
 
-const useNotifcations = () => {
+const useNotifications = () => {
   const [notifications, setNotifications] = useState<Array<notification>>([]);
   // Add a new notification
   const addNotification = (type: "error" | "warning" | "success" | "partial-success", text: string | JSX.Element[]) => {
@@ -31,4 +31,4 @@ const useNotifcations = () => {
   return { notifications, addNotification, removeNotification, clearAllNotifications };
 };
 
-export default useNotifcations;
+export default useNotifications;

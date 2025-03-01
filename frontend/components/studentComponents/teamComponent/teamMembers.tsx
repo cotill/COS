@@ -7,15 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle, MinusCircle, Crown } from "lucide-react";
 import { Student, Team } from "@/utils/types";
-import CancelSaveBtn from "./cancel-save-btn";
-import { handleCreateStudentAccounts, modifiedStudents, updateStudentInformation, loadTeamData, handleUpdateStudentInformation } from "./teamMemberHelper";
+import { handleCreateStudentAccounts, modifiedStudents, loadTeamData, handleUpdateStudentInformation } from "./teamMemberHelper";
 import dynamic from "next/dynamic";
 import { ConfirmationDialog, ConfirmationDialogProp } from "@/components/confirmationPopup";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { handleDeleteStudentAccounts } from "@/app/Student/Team/teamAction";
-import useNotifcations from "@/hooks/notification/useNotifications"; // import the notification hook
+import useNotifications from "@/hooks/notification/useNotifications"; // import the notification hook
 import { RoundSpinner } from "@/components/ui/spinner";
-const CustomNotification = dynamic(() => import("../custom-notification"), { ssr: false });
+
+const CustomNotification = dynamic(() => import("../../../hooks/notification/custom-notification"), { ssr: false });
+const CancelSaveBtn = dynamic(() => import("./cancel-save-btn"), { ssr: false });
 
 interface TeamMembersProp {
   userInfo: Student;
@@ -26,46 +27,73 @@ interface TeamMembersProp {
 }
 const minTeamSize = 3;
 const maxTeamSize = 10;
-const timeLength = 10000;
 
 export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons }: TeamMembersProp) {
+  //loading state
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
+  //Data states
   const [students, setStudents] = useState<Partial<Student>[]>([]);
   const [initialStudents, setInitialStudents] = useState<Partial<Student>[]>([]); // Stores the original data
-
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-
   const [newStudents, setNewStudents] = useState<Partial<Student>[]>([]); // tracks new students
   const [deleteStudents, setDeleteStudents] = useState<Partial<Student>[]>([]); // tracks deleted students
   const [localTeamName, setLocalTeamName] = useState<string>(teamName);
+
+  // UI states
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [currentOperation, setCurrentOperation] = useState<"none" | "save" | "delete" | "create">("none"); //state to track which operation is in progress (save, delete, create)
+
+  //Dialog states
   const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
   const [alertDialogProps, setAlertDialogProps] = useState<ConfirmationDialogProp | null>(null);
 
+  /* Computed properties */
   // Disable delete buttons if new students have been added
   const deleteButtonDisabled = newStudents.length > 0;
-
   // Disable add student button if any students have been marked for deletion
   const addButtonDisabled = deleteStudents.length > 0 || students.length >= maxTeamSize;
 
-  const { notifications, addNotification, removeNotification, clearAllNotifications } = useNotifcations();
+  // notification hook
+  const { notifications, addNotification, removeNotification, clearAllNotifications } = useNotifications();
 
+  // Initial data loading
   const fetchStudents = async () => {
-    const updatedStudents = await loadTeamData(originalTeamInfo.team_id!);
-    setStudents(updatedStudents);
-    setInitialStudents(updatedStudents); //Store a copy of the original data
+    try {
+      const updatedStudents = await loadTeamData(originalTeamInfo.team_id!);
+      setStudents(updatedStudents);
+      setInitialStudents(updatedStudents); //Store a copy of the original data
+    } catch (error) {
+      console.error("Error fetching team data:", error);
+      addNotification("error", "Failed to load team data");
+    }
   };
 
   useEffect(() => {
-    setInitialLoading(true);
+    const loadInitialData = async () => {
+      setInitialLoading(true);
+      await fetchStudents();
+      setInitialLoading(false);
+    };
 
-    fetchStudents();
-    setInitialLoading(false);
+    loadInitialData();
   }, []);
 
-  const closeNotification = (id: string) => {
-    removeNotification(id);
+  const hasChanges = () => {
+    return JSON.stringify(initialStudents) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0 || teamName !== localTeamName;
   };
+
+  // State reset functions
+  const resetAllStates = async () => {
+    await fetchStudents();
+    setDeleteStudents([]);
+    setNewStudents([]);
+    setLocalTeamName(teamName);
+    setIsEditing(false);
+    setIsSaving(false);
+    setCurrentOperation("none");
+  };
+
   const addMember = () => {
     if (students.length < maxTeamSize) {
       const newStudent: Partial<Student> = {
@@ -87,24 +115,24 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
   const removeMember = (index: number) => {
     if (students.length - 1 === 1) {
       // they are deleting everyone except the team lead
-      addNotification("warning", "You are have deleted everyone on the team except yourself");
+      addNotification("warning", "You will have deleted everyone on the team except yourself");
     }
     // removed student
-    const student_to_remove = students[index];
+    const studentToRemove = students[index];
 
     // Check if student is newly created
-    const isNewStudent: boolean = newStudents.some((stu) => stu.student_id === student_to_remove.student_id);
+    const isNewStudent: boolean = newStudents.some((stu) => stu.student_id === studentToRemove.student_id);
 
     // Only add to deleteStudents if it's not a new student
     if (!isNewStudent) {
-      setDeleteStudents((prev) => [...prev, student_to_remove]);
+      setDeleteStudents((prev) => [...prev, studentToRemove]);
     }
 
     //if the student was a newly created student, remove from newStudents
-    setNewStudents((prevStudent) => prevStudent.filter((stu, i) => student_to_remove.student_id !== stu.student_id));
+    setNewStudents((prevStudent) => prevStudent.filter((stu, i) => studentToRemove.student_id !== stu.student_id));
 
     // remove from students array
-    setStudents((prevStudents) => prevStudents.filter((stu, i) => stu.student_id !== student_to_remove.student_id));
+    setStudents((prevStudents) => prevStudents.filter((stu, i) => stu.student_id !== studentToRemove.student_id));
   };
 
   const updateMember = (index: number, field: keyof Student, value: string | null) => {
@@ -121,33 +149,150 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     }
   };
 
-  const [showManageTeamBtn, setShowManageTeamBtn] = useState(true);
+  /**
+   * Handles when the save button is clicked
+   * @param e
+   * @returns
+   */
+  const startSaveProcess = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const toggleManageTeamBtn = () => {
-    setShowManageTeamBtn((prev) => !prev);
+    if (!hasChanges() && teamName === localTeamName) {
+      addNotification("error", "No changes were made.");
+      return;
+    }
+    setIsSaving(true);
+    setCurrentOperation("save");
+
+    // process operations in sequence
+    await processTeamNameChange();
+    await processStudentUpdates();
+
+    // Handle new and deleted students last as they require confirmations
+    if (newStudents.length > 0) {
+      openCreateStudentsDialog();
+    } else if (deleteStudents.length > 0) {
+      openDeleteStudentsDialog();
+    } else {
+      // If no confirmations needed, complete the save process
+      completeSaveProcess();
+    }
   };
 
-  const has_studentDetailsChanges = () => {
-    return JSON.stringify(initialStudents) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0;
+  const processTeamNameChange = async () => {
+    if (teamName === localTeamName) return;
+    //Team name changed
+    const result = await setTeamNameOnSave(localTeamName); // update the heading bar
+    addNotification(result.type, result.text);
   };
 
-  const onConfirmDeleteStudent = async () => {
+  const processStudentUpdates = async () => {
+    const allModifiedStudents = modifiedStudents(initialStudents, students, newStudents, deleteStudents);
+    // console.log("All modified students is ", allModifiedStudents);
+
+    if (allModifiedStudents.length === 0) return;
+
+    // If we have modified students, update them in the database
+    try {
+      const updateResults = await handleUpdateStudentInformation(allModifiedStudents);
+
+      if (updateResults.type === "error") {
+        await resetAllStates();
+      }
+      addNotification(updateResults.type as "error" | "warning" | "success" | "partial-success", updateResults.text);
+    } catch (error) {
+      console.error("Error updating students:", error);
+      addNotification("error", "An error occurred while updating student information.");
+      await resetAllStates();
+    }
+  };
+
+  /**
+   * After save is clicked, if the user is attempting to add a new student, open a confirmation popup
+   */
+  const openCreateStudentsDialog = () => {
+    setCurrentOperation("create");
+    setAlertDialogProps({
+      title: "Create New Student(s)",
+      description: "Create new students will create accounts for the new students. Do you want to proceed?",
+      confirmationLabel: "Confirm",
+      onConfirm: processCreateStudents,
+      onCancel: () => {
+        setAlertDialogOpen(false);
+        completeSaveProcess();
+      },
+    });
+    setAlertDialogOpen(true);
+  };
+
+  /**
+   * After save is clicked if the user is attempting to delete a student, open confirmations
+   */
+  const openDeleteStudentsDialog = () => {
+    setCurrentOperation("delete");
+    setAlertDialogProps({
+      title: "Delete Student(s)",
+      description: "Deleting will remove the student(s) from the team and delete their account(s). Do you want to proceed?",
+      confirmationLabel: "Delete",
+      onConfirm: processDeleteStudents,
+      onCancel: () => {
+        setAlertDialogOpen(false);
+        completeSaveProcess();
+      },
+    });
+    setAlertDialogOpen(true);
+  };
+  /**
+   * After the user confirms they want to create the new accounts
+   */
+  const processCreateStudents = async () => {
     setAlertDialogOpen(false);
-    console.log(`delete Students array length is ${deleteStudents.length}`);
+    const res = await handleCreateStudentAccounts(newStudents, originalTeamInfo.team_id!, userInfo.university);
+    // const res = { type: "error", text: "your mom" };
+    if (res.type === "success") {
+      // reset the  newStudents array
+      setNewStudents([]);
+
+      // set the notification
+      addNotification("success", res.text);
+    } else if (res.type === "partial-success") {
+      addNotification(res.type, res.text);
+      setNewStudents([]); // reset
+    } else {
+      // All accounts failed to be created revert back to
+      addNotification("error", res.text);
+      await resetAllStates();
+    }
+    await fetchStudents();
+
+    //if there is delete operations pending, show the dialog next
+    if (deleteStudents.length > 0) {
+      openDeleteStudentsDialog();
+    } else {
+      completeSaveProcess();
+    }
+  };
+
+  /**
+   * After the user confirms they want to delete accounts
+   */
+  const processDeleteStudents = async () => {
+    setAlertDialogOpen(false);
+    // console.log(`delete Students array length is ${deleteStudents.length}`);
     const res = await handleDeleteStudentAccounts(deleteStudents);
     let message: JSX.Element[] = [];
     let successCount = 0;
     let errorCount = 0;
-    console.log(`Result from handleDeleteStudentsAccounts was of length ${res.length}`);
+    // console.log(`Result from handleDeleteStudentsAccounts was of length ${res.length}`);
     res.forEach((result, index) => {
       if (result.status === "fulfilled") {
-        message.push(<p key={index}>Student {deleteStudents[index].full_name} deletion successful</p>);
+        message.push(<div key={index}>Student {deleteStudents[index].full_name} deletion successful</div>);
         successCount++;
       } else {
         message.push(
-          <p key={index}>
+          <div key={index}>
             Student {deleteStudents[index].full_name} deletion failed: {(result.reason as Error).message}
-          </p>
+          </div>
         );
         errorCount++;
       }
@@ -159,179 +304,27 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
       setDeleteStudents([]);
     } else if (errorCount === res.length) {
       notificationType = "error";
-      handleResetTeamDetails();
+      await resetAllStates();
     } else {
       notificationType = "partial-success";
       // Keep only the students whose deletion failed in the deleteStudents array
       const failedDeletions = deleteStudents.filter((_, index) => res[index].status !== "fulfilled");
-      setDeleteStudents(failedDeletions);
-      // Add the failed deletions back to the students array
-      // setStudents((prevStudents) => [...prevStudents, ...failedDeletions]);
+
+      setDeleteStudents(failedDeletions); // Add the failed deletions back to the students array
     }
 
     // set the notification
     addNotification(notificationType, message);
     await fetchStudents();
 
+    completeSaveProcess();
+  };
+  const completeSaveProcess = () => {
+    setCurrentOperation("none");
     setIsSaving(false);
-    toggleManageTeamBtn();
-  };
-  /**
-   * After save is clicked if the user is attempting to delete a student, open confirmations
-   */
-  const handleDeleteStudents = async () => {
-    setAlertDialogProps({
-      title: "Delete Student(s)",
-      description: "Deleting will remove the student(s) from the team and delete their account(s). Do you want to proceed?",
-      confirmationLabel: "Delete",
-      onConfirm: async () => {
-        await onConfirmDeleteStudent();
-      },
-      onCancel: () => {
-        setAlertDialogOpen(false);
-        setIsSaving(false);
-      },
-    });
-    setAlertDialogOpen(true);
+    setIsEditing(false);
   };
 
-  /**
-   * After the user confirms they want to create the new accounts
-   */
-  const onConfirmCreateNewStudent = async () => {
-    setAlertDialogOpen(false);
-    const res = await handleCreateStudentAccounts(newStudents, originalTeamInfo.team_id!, userInfo.university);
-    // const res = { type: "error", text: "your mom" };
-    if (res.type === "success") {
-      // reset the  newStudents array
-      setNewStudents([]);
-      // update the students array with the new student IDs
-      /*setStudents((prevStudents) =>
-        prevStudents.map((stu) => {
-          const updatedStudent = res.successStudents.find((s) => s.email === stu.email);
-          return updatedStudent ? { ...stu, student_id: updatedStudent.student_id } : stu;
-        })
-      );*/
-      // set the notification
-      addNotification("success", res.text);
-    } else if (res.type === "partial-success") {
-      addNotification(res.type, res.text);
-      setNewStudents([]); // reset
-      // update the students array with the new student IDs and remove failed students
-      /*setStudents((prevStudents) =>
-        prevStudents
-          .map((stu) => {
-            const updatedStudent = res.successStudents.find((s) => s.email === stu.email);
-            return updatedStudent ? { ...stu, student_id: updatedStudent.student_id } : stu;
-          })
-          .filter((stu) => !res.failedEmails.includes(stu.email!))
-      );*/
-    } else {
-      // All accounts failed to be created revert back to
-      addNotification("error", res.text);
-      handleResetTeamDetails();
-    }
-    await fetchStudents();
-
-    setIsSaving(false);
-    toggleManageTeamBtn();
-  };
-
-  /**
-   * After save is clicked, if the user is attempting to add a new student, open a confirmation popup
-   */
-  const handleCreateNewStudents = async () => {
-    setAlertDialogProps({
-      title: "Create New Student(s)",
-      description: "Create new students will create accounts for the new students. Do you want to proceed?",
-      confirmationLabel: "Confirm",
-      onConfirm: async () => {
-        await onConfirmCreateNewStudent();
-      },
-      onCancel: () => {
-        setAlertDialogOpen(false);
-        setIsSaving(false);
-      },
-    });
-    setAlertDialogOpen(true);
-  };
-
-  /**
-   * Handles when the save button is clicked
-   * @param e
-   * @returns
-   */
-  const handleSaveTeam = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-
-    if (!has_studentDetailsChanges() && teamName === localTeamName) {
-      addNotification("error", "No changes were made.");
-      setIsSaving(false);
-      toggleManageTeamBtn();
-      return;
-    }
-
-    // todo: check if the teamName changes, if so we need to update the headingBar on save
-
-    //else changes were made so save changes and update data.
-
-    if (teamName !== localTeamName) {
-      //Team name changed
-      const result = await setTeamNameOnSave(localTeamName); // update the heading bar
-      addNotification(result.type, result.text);
-    }
-
-    const allModifiedStudents = modifiedStudents(initialStudents, students, newStudents, deleteStudents);
-    console.log("All modified students is ", allModifiedStudents);
-    // If we have modified students, update them in the database
-    if (allModifiedStudents.length > 0) {
-      try {
-        const updateResults = await handleUpdateStudentInformation(allModifiedStudents);
-
-        // Process results and show notification
-        // const res = updateResults.filter((result) => result.status === "fulfilled").length;
-
-        // if (successCount === allModifiedStudents.length) {
-        //   addNotification("success", "All student information updated successfully.");
-        // } else if (successCount > 0) {
-        //   addNotification("partial-success", `${successCount} of ${allModifiedStudents.length} student updates were successful.`);
-        // } else {
-        //   addNotification("error", "Failed to update student information.");
-        //   handleResetTeamDetails();
-        // }
-        if (updateResults.type === "error") {
-          handleResetTeamDetails();
-        }
-        addNotification(updateResults.type as "error" | "warning" | "success" | "partial-success", updateResults.text);
-      } catch (error) {
-        console.error("Error updating students:", error);
-        addNotification("error", "An error occurred while updating student information.");
-      } finally {
-        setIsSaving(false);
-        toggleManageTeamBtn();
-      }
-    }
-    // handle new students
-    if (newStudents.length > 0) {
-      await handleCreateNewStudents();
-    }
-    if (deleteStudents.length > 0) {
-      // handle delete students
-      // console.log(`delete students array is: ${JSON.stringify(deleteStudents)}`);
-      await handleDeleteStudents();
-    }
-  };
-
-  const handleResetTeamDetails = async () => {
-    // reset everything back to original state
-    // setStudents([...originalStudentsInfo]);
-    await fetchStudents();
-    setDeleteStudents([]);
-    setNewStudents([]);
-    setLocalTeamName(teamName); // reset team name
-    setIsSaving(false);
-  };
   if (initialLoading) {
     return (
       <div className="w-full justify-items-center my-2">
@@ -340,9 +333,9 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     );
   }
   return (
-    <form onSubmit={handleSaveTeam}>
+    <form onSubmit={startSaveProcess}>
       <div className="mt-4">
-        {showManageTeamBtn ? (
+        {!isEditing ? (
           <h2 className="text-xl font-semibold">{localTeamName}</h2>
         ) : (
           <Input
@@ -364,12 +357,12 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Team Members</h3>
-                {showManageTeamBtn ? (
-                  <Button type="button" variant="outline" size="sm" onClick={toggleManageTeamBtn} disabled={disableButtons}>
+                {!isEditing ? (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsEditing(true)} disabled={disableButtons}>
                     Manage Team
                   </Button>
                 ) : (
-                  <CancelSaveBtn onCancel={handleResetTeamDetails} onToggleBtnDisplay={toggleManageTeamBtn} isSaving={isSaving} />
+                  <CancelSaveBtn onCancel={resetAllStates} onToggleBtnDisplay={() => setIsEditing(false)} isSaving={isSaving} />
                 )}
               </div>
               {/* <div className="max-h-96 space-y-4 overflow-y-auto pr-4"> */}
@@ -379,7 +372,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
                   <CardContent className="pt-6">
                     <div className="grid gap-2">
                       <div className="flex items-center justify-between">
-                        {showManageTeamBtn ? (
+                        {!isEditing ? (
                           <h4 className="font-medium flex flex-1 items-center">
                             {stu.full_name}
                             {originalTeamInfo.team_lead_email === stu.email && <Crown className="ml-2 text-yellow-500" size={18} />}
@@ -398,7 +391,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
                             {originalTeamInfo.team_lead_email === stu.email && <Crown className="ml-2 text-yellow-500" size={18} />}
                           </div>
                         )}
-                        {showManageTeamBtn === false && originalTeamInfo.team_lead_email !== stu.email && (
+                        {isEditing && originalTeamInfo.team_lead_email !== stu.email && (
                           // disable the button is new student is clicked and the student is not a newStudent in the process of being created
                           <Button
                             type="button"
@@ -426,7 +419,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
 
                         <div className="space-y-2">
                           <Label htmlFor={`major-${index}`}>Major</Label>
-                          <Input id={`major-${index}`} value={stu.major} onChange={(e) => updateMember(index, "major", e.target.value)} required disabled={showManageTeamBtn} />
+                          <Input id={`major-${index}`} value={stu.major} onChange={(e) => updateMember(index, "major", e.target.value)} required disabled={!isEditing} />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor={`major-${index}`}>TTG Email</Label>
@@ -435,9 +428,10 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
                             value={stu.ttg_email || ""}
                             onChange={(e) => updateMember(index, "ttg_email", e.target.value)}
                             disabled={
-                              showManageTeamBtn ||
-                              (students.some((student) => student.ttg_email === stu.ttg_email && stu.ttg_email !== null) && !newStudents.some((student) => student.student_id === stu.student_id))
-                            } // disable if showManageTeamBtn is true or if the original student data contains a ttg email and if the student is not a new student
+                              !isEditing ||
+                              (initialStudents.some((student) => student.ttg_email === stu.ttg_email && stu.ttg_email !== null) &&
+                                !newStudents.some((student) => student.student_id === stu.student_id))
+                            } // disable if isEditing is false or if the original(initial) student data contains a ttg email and if the student is not a new student
                           />
                         </div>
                       </div>
@@ -447,12 +441,12 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
               ))}
             </div>
 
-            {!showManageTeamBtn && (
+            {isEditing && (
               <div className="flex items-center justify-between w-full">
                 <div className="w-1/3"></div>
 
                 <div className="w-1/3">
-                  <CancelSaveBtn onCancel={handleResetTeamDetails} onToggleBtnDisplay={toggleManageTeamBtn} isSaving={isSaving} />
+                  <CancelSaveBtn onCancel={resetAllStates} onToggleBtnDisplay={() => setIsEditing(false)} isSaving={isSaving} />
                 </div>
                 <div className="flex justify-end w-1/3">
                   <Button type="button" variant="outline" size="sm" onClick={addMember} disabled={addButtonDisabled}>

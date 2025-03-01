@@ -15,7 +15,7 @@ import { createClient } from "@/utils/supabase/client";
 import useNotifcations from "@/hooks/notification/useNotifications";
 import dynamic from "next/dynamic";
 
-const CustomNotification = dynamic(() => import("../custom-notification"), { ssr: false });
+const CustomNotification = dynamic(() => import("../../../hooks/notification/custom-notification"), { ssr: false });
 
 interface TeamSupervisorProp {
   disableButtons: boolean;
