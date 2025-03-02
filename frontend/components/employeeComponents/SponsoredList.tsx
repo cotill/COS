@@ -56,8 +56,9 @@ type Members = {
 type Team = {
   team_name: string;
   university: string;
-  bio: string;
   members: Members[];
+  supervisor_name: string;
+  supervisor_email: string;
 }
 
 export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filter: string;}) {
@@ -186,8 +187,8 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
           .select(`
             team_name,
             university,
-            about_us,
-            members
+            members,
+            Teams(supervisor_name, supervisor_email)
           `)
           .eq('project_id', projectId)
           .eq('status', 'APPROVED')
@@ -202,6 +203,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
           setTeams(null);
           return;
         } else if (teamsData) {
+          console.log("Teams data: ", teamsData)
           const members = teamsData.members || [];
           const memberDetails = members.map((member: any) => ({
             full_name: member.full_name,
@@ -212,8 +214,9 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
           setTeams({
             team_name: teamsData.team_name,
             university: teamsData.university,
-            bio: teamsData.about_us,
             members: memberDetails,
+            supervisor_name: teamsData?.Teams?.[0]?.supervisor_name ?? "N/A",
+            supervisor_email: teamsData?.Teams?.[0]?.supervisor_email ?? "N/A",
           });
         }
     } catch (err) {
@@ -278,7 +281,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
       if (filter === "ttg") {
         return (
           project.members?.some((member) =>
-            member.ttg.toLowerCase().includes(searchTermLower)
+            member.ttg? member.ttg.toLowerCase().includes(searchTermLower) : false
           ) ?? false
         );
       }
@@ -320,19 +323,6 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
     CANCELLED: 'black',
   };
 
-  const uniShort: { [key: string]: string } = {
-    "University of Calgary": "UofC",
-    "University of British Columbia": "UBC",
-    "University of Toronto": "UofT",
-    "York University": "York",
-    "Ontario Tech University": "ONTech",
-    "University of Alberta": "UofA",
-    "Southern Alberta Institute of Technology": "SAIT",
-    null: "**TBD**"
-  };
-  const getUniShort = (fullName: string) => {
-    return uniShort[fullName] || fullName; // Fallback to full name if not found
-  };
   const uniColors: { [key: string]: string } = {
     // alternate colors include UofC (#ffcd00), SAIT (#6d2077)
     "University of Calgary": "#d6001c" ,
@@ -343,6 +333,16 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
     "University of Alberta": "#007c41",
     "Southern Alberta Institute of Technology": "#da291c",
     null: "#99a1af"
+  };
+
+  const uniShort: { [key: string]: string } = {
+    "University of Calgary": "UofC" ,
+    "University of British Columbia": "UBC",
+    "University of Toronto": "UofT",
+    "York University": "York",
+    "Ontario Tech University": "ON Tech",
+    "University of Alberta": "UofA",
+    "Southern Alberta Institute of Technology": "SAIT",
   };
   
   const handleTeamDetails = async (projectId: string) => {
@@ -537,7 +537,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
                           borderRadius: '1.0rem',
                         }}
                       >
-                        {getUniShort(project.university)}
+                        {uniShort[project.university] || "**TBD**"}
                       </div>
                     </TableCell>
                     <TableCell

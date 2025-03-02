@@ -179,6 +179,14 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
     setAwardedTeam(data); // Store the fetched team data
   };
 
+  const formatStartTerm = (term: string) => {
+    if (!term) return "";
+    const year = term.substring(0,4);
+    const month = term.substring(4,6);
+    const displayMonth = month === "01" ? "Jan" : month === "05" ? "May" : "Sept";
+    return `${displayMonth} ${year}`;
+  };  
+
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
@@ -318,24 +326,52 @@ export default function ProjectDetail({ employeeInfo, project, initialSponsorInf
         </div>
 
         {/* Start Term */}
-        <div className=" relative flex flex-col">
-          <label className="text-base capitalize">start team</label>
-          <div className="flex items-center space-x-2">
-            <select className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? "cursor-default" : ""}`} disabled={!isEditing}>
-              {["Jan", "May", "Sept"].map((choice) => (
-                <option key={choice} value={choice}>
-                  {choice}
-                </option>
-              ))}
-            </select>
-            <select className={`text-black focus:outline-none rounded-md h-6 ${!isEditing ? "cursor-default" : ""}`} disabled={!isEditing}>
-              {years.map((choice) => (
-                <option key={choice} value={choice}>
-                  {choice}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className=" relative flex flex-col space-y-2 w-[50%]">
+          <label className="text-base capitalize">Start Term</label>
+          <select
+            value={currentProjectInfo.start_term ?? ""}
+            onChange={(e) => {
+              const newStartTerm = e.target.value;
+              onInputChange({
+                target: {
+                  name: "start_term",
+                  value: newStartTerm ? newStartTerm.toString() : "",
+                },
+              });
+            }}
+            disabled={!isEditing}
+            className="p-2 rounded-md bg-white text-black outline-none"
+          >
+            <option value="" disabled>Select Start Term</option>
+
+            {/* Always include the existing start_term if it exists */}
+            {currentProjectInfo.start_term && (
+              <option value={currentProjectInfo.start_term}>
+                {formatStartTerm(currentProjectInfo.start_term)}
+              </option>
+            )}
+
+            {years.flatMap((year) =>
+              ["01", "05", "09"].map((month) => {
+                const displayMonth = month === "01" ? "Jan" : month === "05" ? "May" : "Sept";
+                const value = `${year}/${month}`;
+
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth() + 1;
+
+                if (parseInt(year) < currentYear || (parseInt(year) == currentYear && parseInt(month) < currentMonth)) {
+                  return null;
+                }
+
+                return (
+                  <option key={value} value={value}>
+                    {displayMonth} {year}
+                  </option>
+                );
+              }).filter(Boolean)
+            )}
+          </select>
         </div>
       </div>
 
