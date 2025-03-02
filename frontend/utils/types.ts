@@ -18,7 +18,16 @@ export interface Student {
   major: string;
   github?: string;
   team_id: string;
-  ttg_email: string;
+  ttg_email: string | null;
+  changed_password: boolean;
+}
+export interface Team {
+  team_id: string;
+  team_name: string;
+  team_lead_email: string;
+  nda_file: string;
+  completed_onboarding: string;
+  project_id: string;
 }
 
 export enum EmployeeLevel {
@@ -40,6 +49,13 @@ export enum EmployeePages {
   SPONSORED_PROJECTS = "Sponsored Projects",
   SETTINGS = "Employee Settings",
   CREATE_PROJECT = "Create Project",
+}
+
+export enum StudentPages {
+  TASKS = "Tasks",
+  TEAM = "Team",
+  PROJECT = "Project",
+  SETTINGS = "Student Settings",
 }
 
 export enum Department_Types {
@@ -84,7 +100,7 @@ export enum Universities {
   York = "York University",
   ONTech = "Ontario Tech University",
   UofA = "University of Alberta",
-  SAIT = "Southern Alberta Institute of Technology"
+  SAIT = "Southern Alberta Institute of Technology",
 }
 
 export enum Project_Status {
@@ -109,7 +125,7 @@ export enum Application_Status {
 export interface Member {
   full_name: string;
   email: string;
-  role: string;
+  role: string | null;
   major: string;
   resume: string;
 }
@@ -119,10 +135,11 @@ export interface Application {
   project_id: number;
   team_name: string;
   university: string;
-  status: Application_Status;
+  status: Application_Status | null;
   members: Member[]; // jsonb
   size: number;
   about_us: string | null;
-  submission_date: string;
+  submission_date: string | null;
   approval_date: string | null; // can be null because not every project will be approved
+  course: string;
 }

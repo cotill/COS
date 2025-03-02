@@ -20,8 +20,9 @@ type Members = {
 type Team = {
   team_name: string;
   university: string;
-  bio: string;
   members: Members[];
+  supervisor_name: string;
+  supervisor_email: string;
 };
 
 interface TeamMenuProps {
@@ -63,8 +64,21 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
                 <span>{teamsData.university}</span>
               </div>
               <div className='flex flex-col'>
-                <span className="text-gray-400">Team detail: </span>
-                <span className="max-h-32 overflow-y-auto scrollbar bg-gray-800 rounded-md p-2">{teamsData.bio}</span>
+                <span className="text-gray-400">Supervisor: </span>
+                  <div
+                    className="flex flex-col bg-gray-800 p-2 rounded-md"
+                  >
+                    <div className='flex items-center justify-between'>
+                    <div className='flex'>
+                      <p>Name:&nbsp;</p>
+                      <p>{teamsData.supervisor_name}</p>
+                    </div>
+                    </div>
+                    <div className='flex'>
+                      <p className='text-sm text-gray-400'>Email:&nbsp;</p>
+                      <p className='text-sm'> {teamsData.supervisor_email}</p>
+                    </div>
+                  </div>
               </div>
               <div>
                 <div>
@@ -79,15 +93,15 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
                       <div className='flex items-center justify-between'>
                       <div>
                         <p>{member.full_name}</p>
-                        <p className="text-sm text-gray-400">{member.role}</p>
+                        {/* <p className="text-sm text-gray-400">{member.role}</p> */}
                       </div>
-                      <Button
+                      {/* <Button
                         variant="outline"
                         size="sm"
                         onClick={() => openResume(member.resume)}
                       >
                         View Resume
-                      </Button>
+                      </Button> */}
                       </div>
                       <div className='flex'>
                         <p className='text-sm text-gray-400'>Email:&nbsp;</p>
