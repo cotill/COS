@@ -1,4 +1,3 @@
-"use client";
 import { Message } from "@/components/form-message";
 
 export default async function ApplicationSuccess(props: { searchParams: Promise<Message> }) {
