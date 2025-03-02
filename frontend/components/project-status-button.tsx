@@ -19,7 +19,7 @@ interface ProjectStatusButtonProp {
 }
 
 const statusConfig: Record<Project_Status, { color: string }> = {
-  NEW: { color: "bg-white" },
+  NEW: { color: "bg-[#788292]" },
   DRAFT: { color: "bg-white text-black" },
   REVIEW: { color: "bg-[#D7B634]" },
   REJECTED: { color: "bg-[#E75973]" },

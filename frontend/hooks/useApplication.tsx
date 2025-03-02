@@ -15,12 +15,10 @@ import { ConfirmationDialogProp } from "../components/confirmationPopup";
 interface UseApplicationProps {
   project_id: number;
   employeeInfo: Employee;
-  applicationPerPage: number;
 }
 export const useApplications = ({
   project_id,
   employeeInfo,
-  applicationPerPage,
 }: UseApplicationProps) => {
   const [isLoading, setIsLoading] = useState(true); // shows the loading icon for the entire page
   const [isRefreshingTable, setRefreshingTable] = useState(false); // controls the loading icon for the table
@@ -29,11 +27,6 @@ export const useApplications = ({
     null
   );
   const [selectedTeam, setSelectedTeam] = useState<Application | null>(null);
-
-  // const totalPages = applications ? Math.ceil(applications.length / applicationPerPage) : 0
-  // const currentApplications = applications ? applications.slice((currentPage-1) * applicationPerPage, currentPage * applicationPerPage) : [];
-
-  // const isAnyApplicationApproved = applications?.some((application) => application.status === Application_Status.APPROVED);
 
   /*states that controls the alert dialog*/
   const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
@@ -71,7 +64,8 @@ export const useApplications = ({
   const handleApprove = async (
     application_id: number,
     project_id: number,
-    university: string
+    university: string,
+    team_name: string
   ) => {
     if (
       !applicationService.confirmEmployeeAuthorization(
@@ -109,7 +103,9 @@ export const useApplications = ({
       await applicationService.createStudentAccounts(
         teamMembers,
         project_id,
-        university
+        university,
+        team_name,
+        application_id
       );
     } catch (error) {
       console.error(`Error creating student accounts:\n${error}`);
@@ -263,13 +259,8 @@ export const useApplications = ({
     isLoading,
     isRefreshingTable,
     all_applications,
-    // currentPage,
-    // setCurrentPage,
-    // totalPages,
-    // currentApplications,
     selectedTeam,
     setSelectedTeam,
-    // isAnyApplicationApproved,
     handleApprove,
     handleReject,
     handlePending,

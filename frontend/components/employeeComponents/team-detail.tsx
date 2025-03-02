@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
@@ -8,7 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { Application, Application_Status } from "@/utils/types";
 import { createClient } from "@/utils/supabase/client";
-import { ConfirmationDialog, ConfirmationDialogProp } from "../confirmationPopup";
+import {
+  ConfirmationDialog,
+  ConfirmationDialogProp,
+} from "../confirmationPopup";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -20,12 +23,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 interface TeamDetailsDialogProps {
   team: Application | null;
   onClose: () => void;
-  onApprove?: ( application_id: number, projectId: number, university: string) => void;
+  onApprove?: (
+    application_id: number,
+    projectId: number,
+    university: string,
+    team_name: string
+  ) => void;
   onReject?: (application_id: number) => void;
   onPending?: (application_id: number) => void;
 }
@@ -46,11 +54,21 @@ async function openResume(resume_filepath: string) {
   }
 }
 
-export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: TeamDetailsDialogProps) {
-  if (!team ) return null;
-  const displayRejectBtn = team.status === Application_Status.PENDING || team.status === Application_Status.APPROVED; // if the btn current status is pending or pending, then display rejected button
+export function TeamDetailsDialog({
+  team,
+  onClose,
+  onApprove,
+  onReject,
+  onPending,
+}: TeamDetailsDialogProps) {
+  if (!team) return null;
+  const displayRejectBtn =
+    team.status === Application_Status.PENDING ||
+    team.status === Application_Status.APPROVED; // if the btn current status is pending or pending, then display rejected button
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogProps, setDialogProps] = useState<ConfirmationDialogProp | null>(null);
+  const [dialogProps, setDialogProps] = useState<ConfirmationDialogProp | null>(
+    null
+  );
 
   /**
    * Will activate the confirmation popup
@@ -58,31 +76,41 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
    * @param project_id the project that the application is for
    * @param university the university the application is for
    */
-  const handleApproveClick = (application_id: number, project_id: number, university: string) => {
+  const handleApproveClick = (
+    application_id: number,
+    project_id: number,
+    university: string
+  ) => {
     setDialogProps({
       title: "Confirm Approval",
       description: (
         <>
           Are you sure you want to approve{" "}
-          <span className="font-bold">{team.team_name}</span> application?
-          This action cannot be undone
+          <span className="font-bold">{team.team_name}</span> application? This
+          action cannot be undone
         </>
       ),
       confirmationLabel: "Approve",
       onConfirm: () => {
         handleConfirmApprove(application_id, project_id, university);
       },
-      onCancel: () => {handleCancelConfirm()},
+      onCancel: () => {
+        handleCancelConfirm();
+      },
     });
     setDialogOpen(true);
   };
-  const handleConfirmApprove = (application_id: number, project_id: number, university: string) => {
-    onApprove?.(application_id, project_id, university);
-    setDialogOpen(false)
-    onClose();// close the view team detail popup
-  }
-  function handleCancelConfirm () {
-    setDialogOpen(false); 
+  const handleConfirmApprove = (
+    application_id: number,
+    project_id: number,
+    university: string
+  ) => {
+    onApprove?.(application_id, project_id, university, team.team_name);
+    setDialogOpen(false);
+    onClose(); // close the view team detail popup
+  };
+  function handleCancelConfirm() {
+    setDialogOpen(false);
     onClose();
   }
   return (
@@ -100,7 +128,9 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
           </div>
           <div>
             <p className="text-gray-400 mb-2">Team members:</p>
-            <div className={`space-y-2 ${team.members.length > 3 ? "max-h-60 overflow-y-scroll scrollbar" : ""}`}>
+            <div
+              className={`space-y-2 ${team.members.length > 3 ? "max-h-60 overflow-y-scroll scrollbar" : ""}`}
+            >
               {team.members.map((member, index) => (
                 <div
                   key={index}
@@ -113,7 +143,7 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => openResume(member.resume)}
+                    onClick={() => openResume(member.resume!)}
                   >
                     View Resume
                   </Button>
@@ -161,7 +191,10 @@ export function TeamDetailsDialog({team,onClose,onApprove,onReject, onPending}: 
           </div>
         </div>
         {/* Alert Dialog will display when the user clicks the approve button */}
-        <AlertDialog open={dialogOpen} onOpenChange={() => setDialogOpen(false)}>
+        <AlertDialog
+          open={dialogOpen}
+          onOpenChange={() => setDialogOpen(false)}
+        >
           {dialogProps && <ConfirmationDialog {...dialogProps} />}
         </AlertDialog>
       </DialogContent>

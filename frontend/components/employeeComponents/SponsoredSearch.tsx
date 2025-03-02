@@ -26,7 +26,7 @@ export const SponsoredSearch: React.FC<SponsoredSearchProps> = ({
         <option value="team">Team Name</option>
         <option value="member">Team Member</option>
         <option value="email">Personal Email</option>
-        <option value="ttg" disabled>TTG Email</option>
+        <option value="ttg">TTG Email</option>
       </select>
       <input
         type="text"

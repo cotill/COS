@@ -73,6 +73,73 @@ export const rejectOtherApplications = async (
     throw new Error(`Error rejecting other applications: ${error.message}`);
 };
 
+const createTeam = async (
+  team_id: string,
+  project_id: number,
+  team_name: string,
+  team_lead_email: string,
+  application_id: number
+) => {
+  const { error } = await supabase.from("Teams").insert({
+    team_id,
+    project_id,
+    team_name,
+    team_lead_email,
+    application_id,
+  });
+  if (error)
+    throw new Error(
+      `Error creating team for team_name ${team_name}: ${error.message}`
+    );
+};
+
+/**
+ * Helper function to create a student account
+ * @param member The member object containing student details
+ * @param teamId The team ID to associate the student with
+ * @param uni The university of the student
+ * @returns void but throws an error if account creation fails
+ */
+export async function createStudent(
+  member: Member,
+  teamId: string,
+  uni: string,
+  returnResult?: boolean
+) {
+  const payload = {
+    email: member.email,
+    user_metadata: {
+      team_id: teamId,
+      user_role: UserRole.STUDENT,
+      university: uni,
+      full_name: member.full_name,
+      major: member.major,
+    },
+  };
+
+  try {
+    const response = await fetch("/student_applications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(`${result.error}`);
+    }
+    if (returnResult) {
+      return result;
+    }
+  } catch (err) {
+    throw new Error(
+      `Error creating user ${member.email}: ${(err as Error).message}`
+    );
+  }
+}
+
 /**
  *
  * @param teamMembers The members of the team to create accounts for
@@ -83,55 +150,40 @@ export const rejectOtherApplications = async (
 export async function createStudentAccounts(
   teamMembers: Member[],
   projectId: number,
-  uni: string
+  uni: string,
+  team_name: string,
+  application_id: number
 ) {
   let errorMessages: string[] = [];
   const teamId = uuidv4();
+  // find team lead
+  const team_lead =
+    teamMembers.find((member) => member.role === "Team Manager") ||
+    teamMembers[0];
+  const team_lead_email = team_lead.email;
 
-  // initial payload
-  const basePayload = {
-    user_metadata: {
-      project_id: projectId,
-      team_id: teamId,
-      user_role: UserRole.STUDENT,
-      university: uni,
-    },
-  };
+  console.log("check name: ", team_name);
 
-  for (const member of teamMembers) {
-    try {
-      // create custom payload for each member
-      const payLoad = {
-        email: member.email,
-        ...basePayload,
-        user_metadata: {
-          ...basePayload.user_metadata,
-          full_name: member.full_name,
-          major: member.major,
-        },
-      };
+  // next create the team
+  await createTeam(
+    teamId,
+    projectId,
+    team_name,
+    team_lead_email,
+    application_id
+  );
 
-      // send the API request
-      const response = await fetch("/student_applications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payLoad),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        errorMessages.push(
-          `Error creating user ${member.email}: ${result.error}`
-        );
+  await Promise.all(
+    teamMembers.map(async (member) => {
+      try {
+        console.log(member);
+        await createStudent(member, teamId, uni);
+      } catch (err: any) {
+        errorMessages.push(err?.message);
       }
-    } catch (err) {
-      errorMessages.push(
-        `Error creating user ${member.email}: ${(err as Error).message}`
-      );
-    }
-  }
+    })
+  );
+
   if (errorMessages.length > 0) {
     throw new Error(errorMessages.join("\n"));
   }
@@ -188,7 +240,9 @@ export const deleteAllApps = async (project_id: number) => {
 const deleteResume = async (deletedApplicationData: Application) => {
   let resume_urls: string[] = [];
   deletedApplicationData.members.map((member) => {
-    resume_urls.push(member.resume);
+    if (member.resume) {
+      resume_urls.push(member.resume);
+    }
   });
 
   //check if there were any resumes urls
