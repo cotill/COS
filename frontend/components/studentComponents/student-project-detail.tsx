@@ -13,7 +13,10 @@ interface StudentProjectDetailProps {
   sponsorInfo: Employee | null;
 }
 
-export default function StudentProjectDetail({ project, sponsorInfo }: StudentProjectDetailProps) {
+export default function StudentProjectDetail({
+  project,
+  sponsorInfo,
+}: StudentProjectDetailProps) {
   const [isMessage, setMessage] = useState<string | null>(null);
   const timeoutLength = 1000;
 
@@ -27,13 +30,17 @@ export default function StudentProjectDetail({ project, sponsorInfo }: StudentPr
   }, [isMessage]);
 
   // need to store the original data so that we can revert back
-  const [originalProjectInfo, setOriginalProjectInfo] = useState<Project>(project);
+  const [originalProjectInfo, setOriginalProjectInfo] =
+    useState<Project>(project);
 
   // anything that is/ could be null or undefined is replaced
-  const [currentProjectInfo, setCurrentProjectInfo] = useState<Project>(project);
+  const [currentProjectInfo, setCurrentProjectInfo] =
+    useState<Project>(project);
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 3 }, (_, i) => (currentYear + i).toString());
+  const years = Array.from({ length: 3 }, (_, i) =>
+    (currentYear + i).toString()
+  );
 
   // modifies the current project object
   const onInputChange = (event: { target: { name: any; value: any } }) => {
@@ -49,9 +56,10 @@ export default function StudentProjectDetail({ project, sponsorInfo }: StudentPr
 
   const formatStartTerm = (term: string) => {
     if (!term) return "";
-    const year = term.substring(0,4);
-    const month = term.substring(4,6);
-    const displayMonth = month === "01" ? "Jan" : month === "05" ? "May" : "Sept";
+    const year = term.substring(0, 4);
+    const month = term.substring(4, 6);
+    const displayMonth =
+      month === "01" ? "Jan" : month === "05" ? "May" : "Sept";
     return `${displayMonth} ${year}`;
   };
 
@@ -59,29 +67,35 @@ export default function StudentProjectDetail({ project, sponsorInfo }: StudentPr
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
         <div className="flex flex-col space-y-2">
-            <h1 className="text-2xl underline font-bold text-white py-2">{currentProjectInfo.title}</h1>
+          <h1 className="text-2xl underline font-bold text-white py-2">
+            {currentProjectInfo.title}
+          </h1>
 
           <div className="flex items-center space-x-0.5">
-            <h2 className="text-xl font-bold text-white py-2">Project Description</h2>
+            <h2 className="text-xl font-bold text-white py-2">
+              Project Description
+            </h2>
           </div>
         </div>
         <div className="flex items-center gap-6 justify-center">
-
           {/* Project status button */}
           <ProjectStatusButton
             initial_status={originalProjectInfo.status}
             status={currentProjectInfo.status}
-            setProjStatus={(status) => onInputChange({ target: { name: "status", value: status } })}
+            setProjStatus={(status) =>
+              onInputChange({ target: { name: "status", value: status } })
+            }
             allowClick={false}
-            onEmployeePage={false}
           />
         </div>
       </div>
 
       <div>
-          <div className="relative bg-white p-4 rounded-xl text-sm max-h-48 h-48 overflow-y-auto text-black cursor-default">
-            <ReactMarkdown className="markdown-content">{currentProjectInfo.description}</ReactMarkdown>
-          </div>
+        <div className="relative bg-white p-4 rounded-xl text-sm max-h-48 h-48 overflow-y-auto text-black cursor-default">
+          <ReactMarkdown className="markdown-content">
+            {currentProjectInfo.description}
+          </ReactMarkdown>
+        </div>
       </div>
 
       {/* Budget and Start Term */}
@@ -107,7 +121,15 @@ export default function StudentProjectDetail({ project, sponsorInfo }: StudentPr
         <div className=" relative flex flex-col space-y-2 w-[50%]">
           <label className="text-base capitalize">Start Term</label>
           <div>
-            <input className={`p-1 pl-3 rounded-md text-black w-full outline-none cursor-default`} value={currentProjectInfo.start_term ? formatStartTerm(currentProjectInfo.start_term) : "N/A"} readOnly={true}/>
+            <input
+              className={`p-1 pl-3 rounded-md text-black w-full outline-none cursor-default`}
+              value={
+                currentProjectInfo.start_term
+                  ? formatStartTerm(currentProjectInfo.start_term)
+                  : "N/A"
+              }
+              readOnly={true}
+            />
           </div>
         </div>
       </div>
@@ -121,22 +143,42 @@ export default function StudentProjectDetail({ project, sponsorInfo }: StudentPr
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
           <div className="flex flex-col">
             <label className="text-white">Name:</label>
-            <input type="text" value={sponsorInfo?.full_name ?? ""} readOnly className="p-1 pl-3 rounded-md bg-white text-black outline-none cursor-default" />
+            <input
+              type="text"
+              value={sponsorInfo?.full_name ?? ""}
+              readOnly
+              className="p-1 pl-3 rounded-md bg-white text-black outline-none cursor-default"
+            />
           </div>
 
           <div className="flex flex-col">
             <label className="text-white">Email:</label>
-            <input type="text" value={sponsorInfo?.email || ""} readOnly className="p-1 pl-3 rounded-md bg-white text-black outline-none cursor-default" />
+            <input
+              type="text"
+              value={sponsorInfo?.email || ""}
+              readOnly
+              className="p-1 pl-3 rounded-md bg-white text-black outline-none cursor-default"
+            />
           </div>
 
           <div className="flex flex-col">
             <label className="text-white">Department:</label>
-            <input type="text" value={sponsorInfo?.department ?? ""} readOnly className="p-1 pl-3 rounded-md bg-white text-black outline-none cursor-default" />
+            <input
+              type="text"
+              value={sponsorInfo?.department ?? ""}
+              readOnly
+              className="p-1 pl-3 rounded-md bg-white text-black outline-none cursor-default"
+            />
           </div>
 
           <div className="flex flex-col">
             <label className="text-white">Title:</label>
-            <input type="text" value={sponsorInfo?.title ?? ""} readOnly className="p-1 pl-3 rounded-md bg-white text-black outline-none cursor-default" />
+            <input
+              type="text"
+              value={sponsorInfo?.title ?? ""}
+              readOnly
+              className="p-1 pl-3 rounded-md bg-white text-black outline-none cursor-default"
+            />
           </div>
         </div>
       </div>
@@ -144,7 +186,9 @@ export default function StudentProjectDetail({ project, sponsorInfo }: StudentPr
       {/* Dispatch Information */}
       <div>
         <div className="flex justify-between items-center mb-2 ">
-          <h2 className="text-xl font-bold text-white pt-4">Dispatch Information </h2>
+          <h2 className="text-xl font-bold text-white pt-4">
+            Dispatch Information{" "}
+          </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
           <div className="flex flex-col">

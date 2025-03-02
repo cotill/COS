@@ -93,6 +93,8 @@ export interface Project {
   dispatched_date: string | null;
   project_budget: number;
   start_term: string | null;
+  rejector_email: string | null;
+  rejector_date: string | null;
 }
 
 export enum Universities {

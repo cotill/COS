@@ -22,11 +22,18 @@ function formatDateTime(raw_date: string | null): string {
 }
 
 function ProjectInfoDialog({ currentProject }: ProjectInfoDialogProps) {
-  const [projectLog, setProjectLog] = useState<{ creatorName: string | null; approver: string | null; modifier: string | null; dispatcher: string | null }>({
+  const [projectLog, setProjectLog] = useState<{
+    creatorName: string | null;
+    approver: string | null;
+    modifier: string | null;
+    dispatcher: string | null;
+    rejector: string | null;
+  }>({
     creatorName: null,
     approver: null,
     modifier: null,
     dispatcher: null,
+    rejector: null,
   });
 
   const supabase = createClient();
@@ -36,7 +43,11 @@ function ProjectInfoDialog({ currentProject }: ProjectInfoDialogProps) {
   };
 
   const getEmployeeNameByEmail = useCallback(async (query_email: string): Promise<string> => {
-    const { data, error } = await supabase.from("Employees").select("*").eq("email", query_email).single();
+    const { data, error } = await supabase
+      .from("Employees")
+      .select("*")
+      .eq("email", query_email)
+      .single();
     const name: string | null | undefined = data?.full_name;
     if (name === null || name === undefined || error || name.length === 0) {
       return "N/A";
@@ -46,22 +57,36 @@ function ProjectInfoDialog({ currentProject }: ProjectInfoDialogProps) {
 
   useEffect(() => {
     const fetchProjectLogs = async () => {
-      console.log("Fetching project logs...");
-
       const promises = [
-        currentProject.creator_email ? getEmployeeNameByEmail(currentProject.creator_email) : Promise.resolve(null),
-        currentProject.approval_email ? getEmployeeNameByEmail(currentProject.approval_email) : Promise.resolve(null),
-        currentProject.last_modified_user ? getEmployeeNameByEmail(currentProject.last_modified_user) : Promise.resolve(null),
-        currentProject.dispatcher_email ? getEmployeeNameByEmail(currentProject.dispatcher_email) : Promise.resolve(null),
+        currentProject.creator_email
+          ? getEmployeeNameByEmail(currentProject.creator_email)
+          : Promise.resolve(null),
+        currentProject.approval_email
+          ? getEmployeeNameByEmail(currentProject.approval_email)
+          : Promise.resolve(null),
+        currentProject.last_modified_user
+          ? getEmployeeNameByEmail(currentProject.last_modified_user)
+          : Promise.resolve(null),
+        currentProject.dispatcher_email
+          ? getEmployeeNameByEmail(currentProject.dispatcher_email)
+          : Promise.resolve(null),
+        currentProject.rejector_email
+          ? getEmployeeNameByEmail(currentProject.rejector_email)
+          : Promise.resolve(null),
       ];
 
-      const [creatorName, approver, modifier, dispatcher] = await Promise.all(promises);
+      const [creatorName, approver, modifier, dispatcher, rejector] = await Promise.all(promises);
 
-      setProjectLog({ creatorName, approver, modifier, dispatcher });
+      setProjectLog({ creatorName, approver, modifier, dispatcher, rejector });
     };
 
     fetchProjectLogs();
-  }, [currentProject.creator_email, currentProject.approval_email, currentProject.last_modified_user, currentProject.dispatcher_email]);
+  }, [
+    currentProject.creator_email,
+    currentProject.approval_email,
+    currentProject.last_modified_user,
+    currentProject.dispatcher_email,
+  ]);
 
   return (
     <>
@@ -81,13 +106,22 @@ function ProjectInfoDialog({ currentProject }: ProjectInfoDialogProps) {
             )}
             {projectLog.dispatcher && (
               <p>
-                Dispatched by: {projectLog.dispatcher} on {formatDateTime(currentProject.dispatched_date)}
+                Dispatched by: {projectLog.dispatcher} on{" "}
+                {formatDateTime(currentProject.dispatched_date)}
               </p>
             )}
-            {currentProject.activation_date && <p>Project activated on: {currentProject.activation_date}</p>}
+            {currentProject.activation_date && (
+              <p>Project activated on: {currentProject.activation_date}</p>
+            )}
             {projectLog.modifier && (
               <p>
-                Last modified by: {projectLog.modifier} on {formatDateTime(currentProject.last_modified_date)}
+                Last modified by: {projectLog.modifier} on{" "}
+                {formatDateTime(currentProject.last_modified_date)}
+              </p>
+            )}
+            {projectLog.rejector && (
+              <p>
+                Rejected by: {projectLog.rejector} on {formatDateTime(currentProject.rejector_date)}
               </p>
             )}
           </div>
