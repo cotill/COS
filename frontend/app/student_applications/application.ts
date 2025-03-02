@@ -80,15 +80,13 @@ const createTeam = async (
   team_lead_email: string,
   application_id: number
 ) => {
-  const { error } = await supabase
-    .from("Teams")
-    .insert({
-      team_id,
-      project_id,
-      team_name,
-      team_lead_email,
-      application_id,
-    });
+  const { error } = await supabase.from("Teams").insert({
+    team_id,
+    project_id,
+    team_name,
+    team_lead_email,
+    application_id,
+  });
   if (error)
     throw new Error(
       `Error creating team for team_name ${team_name}: ${error.message}`
@@ -141,6 +139,7 @@ export async function createStudent(
     );
   }
 }
+
 /**
  *
  * @param teamMembers The members of the team to create accounts for

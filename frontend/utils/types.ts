@@ -11,6 +11,7 @@ export interface Employee {
   department: string;
 }
 export interface Student {
+  student_id: string;
   email: string;
   password: string;
   full_name: string;
@@ -28,6 +29,8 @@ export interface Team {
   nda_file: string;
   completed_onboarding: string;
   project_id: string;
+  supervisor_name: string | null;
+  supervisor_email: string | null;
 }
 
 export enum EmployeeLevel {
@@ -37,6 +40,12 @@ export enum EmployeeLevel {
   LEVEL_3 = 3,
 }
 
+export enum StudentPages {
+  TASKS = "Tasks",
+  TEAM = "Team",
+  PROJECT = "Project",
+  SETTINGS = "Student Settings",
+}
 export interface AuthResult {
   isAuthenticated: boolean;
   userRole: UserRole | null;
@@ -49,13 +58,6 @@ export enum EmployeePages {
   SPONSORED_PROJECTS = "Sponsored Projects",
   SETTINGS = "Employee Settings",
   CREATE_PROJECT = "Create Project",
-}
-
-export enum StudentPages {
-  TASKS = "Tasks",
-  TEAM = "Team",
-  PROJECT = "Project",
-  SETTINGS = "Student Settings",
 }
 
 export enum Department_Types {
@@ -127,7 +129,7 @@ export interface Member {
   email: string;
   role: string | null;
   major: string;
-  resume: string;
+  resume: string | null;
 }
 
 export interface Application {
