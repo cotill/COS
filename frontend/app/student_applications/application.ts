@@ -77,17 +77,70 @@ const createTeam = async (
   team_id: string,
   project_id: number,
   team_name: string,
-  team_lead_email: string
+  team_lead_email: string,
+  application_id: number
 ) => {
   const { error } = await supabase
     .from("Teams")
-    .insert({ team_id, project_id, team_name, team_lead_email });
+    .insert({
+      team_id,
+      project_id,
+      team_name,
+      team_lead_email,
+      application_id,
+    });
   if (error)
     throw new Error(
       `Error creating team for team_name ${team_name}: ${error.message}`
     );
 };
 
+/**
+ * Helper function to create a student account
+ * @param member The member object containing student details
+ * @param teamId The team ID to associate the student with
+ * @param uni The university of the student
+ * @returns void but throws an error if account creation fails
+ */
+export async function createStudent(
+  member: Member,
+  teamId: string,
+  uni: string,
+  returnResult?: boolean
+) {
+  const payload = {
+    email: member.email,
+    user_metadata: {
+      team_id: teamId,
+      user_role: UserRole.STUDENT,
+      university: uni,
+      full_name: member.full_name,
+      major: member.major,
+    },
+  };
+
+  try {
+    const response = await fetch("/student_applications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(`${result.error}`);
+    }
+    if (returnResult) {
+      return result;
+    }
+  } catch (err) {
+    throw new Error(
+      `Error creating user ${member.email}: ${(err as Error).message}`
+    );
+  }
+}
 /**
  *
  * @param teamMembers The members of the team to create accounts for
@@ -99,7 +152,8 @@ export async function createStudentAccounts(
   teamMembers: Member[],
   projectId: number,
   uni: string,
-  team_name: string
+  team_name: string,
+  application_id: number
 ) {
   let errorMessages: string[] = [];
   const teamId = uuidv4();
@@ -109,47 +163,22 @@ export async function createStudentAccounts(
     teamMembers[0];
   const team_lead_email = team_lead.email;
 
+  console.log("check name: ", team_name);
+
   // next create the team
-  await createTeam(teamId, projectId, team_name, team_lead_email);
-
-  // Helper function to create a student account
-  async function createStudent(member: Member) {
-    const payload = {
-      email: member.email,
-      user_metadata: {
-        team_id: teamId,
-        user_role: UserRole.STUDENT,
-        university: uni,
-        full_name: member.full_name,
-        major: member.major,
-      },
-    };
-
-    try {
-      const response = await fetch("/student_applications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(`Error creating user ${member.email}: ${result.error}`);
-      }
-    } catch (err) {
-      throw new Error(
-        `Error creating user ${member.email}: ${(err as Error).message}`
-      );
-    }
-  }
+  await createTeam(
+    teamId,
+    projectId,
+    team_name,
+    team_lead_email,
+    application_id
+  );
 
   await Promise.all(
     teamMembers.map(async (member) => {
       try {
         console.log(member);
-        await createStudent(member);
+        await createStudent(member, teamId, uni);
       } catch (err: any) {
         errorMessages.push(err?.message);
       }
@@ -212,7 +241,9 @@ export const deleteAllApps = async (project_id: number) => {
 const deleteResume = async (deletedApplicationData: Application) => {
   let resume_urls: string[] = [];
   deletedApplicationData.members.map((member) => {
-    resume_urls.push(member.resume);
+    if (member.resume) {
+      resume_urls.push(member.resume);
+    }
   });
 
   //check if there were any resumes urls
