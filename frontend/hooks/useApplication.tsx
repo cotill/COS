@@ -1,44 +1,24 @@
 "use client";
 /*Encapsulate all application-project related state, making the logic resuable and cleaner to follow*/
 import { useEffect, useState } from "react";
-import {
-  Application_Status,
-  Member,
-  Application,
-  Employee,
-  EmployeeLevel,
-  Project_Status,
-} from "@/utils/types";
+import { Application_Status, Member, Application, Employee, EmployeeLevel, Project_Status } from "@/utils/types";
 import * as applicationService from "@/app/student_applications/application";
 import { ConfirmationDialogProp } from "../components/confirmationPopup";
 
 interface UseApplicationProps {
   project_id: number;
   employeeInfo: Employee;
-  applicationPerPage: number;
 }
-export const useApplications = ({
-  project_id,
-  employeeInfo,
-  applicationPerPage,
-}: UseApplicationProps) => {
+export const useApplications = ({ project_id, employeeInfo }: UseApplicationProps) => {
   const [isLoading, setIsLoading] = useState(true); // shows the loading icon for the entire page
   const [isRefreshingTable, setRefreshingTable] = useState(false); // controls the loading icon for the table
   // const [currentPage, setCurrentPage] = useState(1);
-  const [all_applications, setAllApplications] = useState<Application[] | null>(
-    null
-  );
+  const [all_applications, setAllApplications] = useState<Application[] | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Application | null>(null);
-
-  // const totalPages = applications ? Math.ceil(applications.length / applicationPerPage) : 0
-  // const currentApplications = applications ? applications.slice((currentPage-1) * applicationPerPage, currentPage * applicationPerPage) : [];
-
-  // const isAnyApplicationApproved = applications?.some((application) => application.status === Application_Status.APPROVED);
 
   /*states that controls the alert dialog*/
   const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
-  const [alertDialogProps, setAlertDialogProps] =
-    useState<ConfirmationDialogProp | null>(null);
+  const [alertDialogProps, setAlertDialogProps] = useState<ConfirmationDialogProp | null>(null);
 
   /**
    * The function will load all applications for a project
@@ -49,8 +29,7 @@ export const useApplications = ({
     try {
       // if this is the first render, set the loading icon for the page,  else show the loading icon for the table
       isIntialLoad ? setIsLoading(true) : setRefreshingTable(true);
-      const application_result =
-        await applicationService.fetchApplications(project_id);
+      const application_result = await applicationService.fetchApplications(project_id);
       setAllApplications(application_result);
     } catch (err) {
       setAllApplications(null);
@@ -68,36 +47,20 @@ export const useApplications = ({
    * @param university The university of the team
    * @returns  void but the function will update the application status to approved, create student accounts for the approved team and reject all other applications for the same project.
    */
-  const handleApprove = async (
-    application_id: number,
-    project_id: number,
-    university: string
-  ) => {
-    if (
-      !applicationService.confirmEmployeeAuthorization(
-        employeeInfo.level,
-        EmployeeLevel.LEVEL_2
-      )
-    ) {
+  const handleApprove = async (application_id: number, project_id: number, university: string, team_name: string) => {
+    if (!applicationService.confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
       alert("Approval requires you to be level 2+");
       return;
     }
 
     try {
-      await applicationService.updateApplicationStatus(
-        application_id,
-        Application_Status.APPROVED,
-        selectedTeam?.team_name
-      );
+      await applicationService.updateApplicationStatus(application_id, Application_Status.APPROVED, selectedTeam?.team_name);
     } catch (error) {
       alert(error);
     }
 
     try {
-      await applicationService.rejectOtherApplications(
-        application_id,
-        project_id
-      );
+      await applicationService.rejectOtherApplications(application_id, project_id);
     } catch (error) {
       alert(error);
     }
@@ -106,22 +69,14 @@ export const useApplications = ({
 
     try {
       const teamMembers = selectedTeam?.members as Member[];
-      await applicationService.createStudentAccounts(
-        teamMembers,
-        project_id,
-        university
-      );
+      await applicationService.createStudentAccounts(teamMembers, project_id, university, team_name);
     } catch (error) {
       console.error(`Error creating student accounts:\n${error}`);
       alert(`Error creating student accounts please contact system admin`);
     }
 
     try {
-      await applicationService.updateProjectStatus(
-        project_id,
-        Project_Status.AWARDED,
-        application_id
-      );
+      await applicationService.updateProjectStatus(project_id, Project_Status.AWARDED, application_id);
     } catch (error) {
       alert(error);
     }
@@ -133,21 +88,12 @@ export const useApplications = ({
    */
   const handleReject = async (application_id: number) => {
     // Handle reject logic
-    if (
-      !applicationService.confirmEmployeeAuthorization(
-        employeeInfo.level,
-        EmployeeLevel.LEVEL_2
-      )
-    ) {
+    if (!applicationService.confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
       alert("Rejection requires you to be level 2+");
       return;
     }
     try {
-      await applicationService.updateApplicationStatus(
-        application_id,
-        Application_Status.REJECTED,
-        selectedTeam?.team_name
-      );
+      await applicationService.updateApplicationStatus(application_id, Application_Status.REJECTED, selectedTeam?.team_name);
     } catch (error) {
       alert(error);
     }
@@ -162,21 +108,12 @@ export const useApplications = ({
    */
   const handlePending = async (application_id: number) => {
     // Handle pending logic
-    if (
-      !applicationService.confirmEmployeeAuthorization(
-        employeeInfo.level,
-        EmployeeLevel.LEVEL_2
-      )
-    ) {
+    if (!applicationService.confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
       alert("Set application to pending requires you to be level 2+");
       return;
     }
     try {
-      await applicationService.updateApplicationStatus(
-        application_id,
-        Application_Status.PENDING,
-        selectedTeam?.team_name
-      );
+      await applicationService.updateApplicationStatus(application_id, Application_Status.PENDING, selectedTeam?.team_name);
     } catch (error) {
       alert(error);
     }
@@ -191,12 +128,7 @@ export const useApplications = ({
    */
   const handleDeleteApplication = async (application_id: number) => {
     // Handle delete logic
-    if (
-      !applicationService.confirmEmployeeAuthorization(
-        employeeInfo.level,
-        EmployeeLevel.LEVEL_2
-      )
-    ) {
+    if (!applicationService.confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
       alert("Deleting an application requires you to be level 2+");
       return;
     }
@@ -225,12 +157,7 @@ export const useApplications = ({
   };
 
   async function handleDeleteAllApps() {
-    if (
-      !applicationService.confirmEmployeeAuthorization(
-        employeeInfo.level,
-        EmployeeLevel.LEVEL_2
-      )
-    ) {
+    if (!applicationService.confirmEmployeeAuthorization(employeeInfo.level, EmployeeLevel.LEVEL_2)) {
       alert("Deleting all applications requires you to be level 2+");
       return;
     }
@@ -240,8 +167,7 @@ export const useApplications = ({
       title: "Confirm Delete All",
       description: (
         <>
-          Are you sure you want to <span className="underline">delete all</span>{" "}
-          unapproved applications? <br />
+          Are you sure you want to <span className="underline">delete all</span> unapproved applications? <br />
           This action cannot be undone.
         </>
       ),
@@ -263,13 +189,8 @@ export const useApplications = ({
     isLoading,
     isRefreshingTable,
     all_applications,
-    // currentPage,
-    // setCurrentPage,
-    // totalPages,
-    // currentApplications,
     selectedTeam,
     setSelectedTeam,
-    // isAnyApplicationApproved,
     handleApprove,
     handleReject,
     handlePending,

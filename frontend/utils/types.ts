@@ -18,7 +18,16 @@ export interface Student {
   major: string;
   github?: string;
   team_id: string;
-  ttg_email: string;
+  ttg_email: string | null;
+  changed_password: boolean;
+}
+export interface Team {
+  team_id: string;
+  team_name: string;
+  team_lead_email: string;
+  nda_file: string;
+  completed_onboarding: string;
+  project_id: string;
 }
 
 export enum EmployeeLevel {
@@ -132,4 +141,5 @@ export interface Application {
   about_us: string | null;
   submission_date: string | null;
   approval_date: string | null; // can be null because not every project will be approved
+  course: string;
 }
