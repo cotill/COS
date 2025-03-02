@@ -25,10 +25,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     switch (filter) {
       case 'name':
         return 'Search project name...';
-      // case 'department':
-      //   return 'Search department...';
-      // case 'status':
-      //   return 'Search status...';
+      case 'term':
+        return 'Search project start term...';
     }
   };
 
@@ -50,7 +48,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       >
         <option value="name">Project Name</option>
         <option value="date">Date</option>
-        <option value="term" disabled>Term</option>
+        <option value="term">Term</option>
       </select>
       
       {showDatePicker ? (

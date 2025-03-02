@@ -143,10 +143,16 @@ export function ProjectsList({
     const matchesSearchTerm =
       filter === "date"
         ? true
-        : project[filter as keyof Project]
+        : searchTerm === "" ? true : 
+          (searchTerm.toLowerCase() === "t" || searchTerm.toLowerCase() === "tb" || searchTerm.toLowerCase() === "tbd") && filter === "term" ? !project[filter as keyof Project] :
+          (project[filter as keyof Project]? 
+          project[filter as keyof Project]
             ?.toString()
             ?.toLowerCase()
-            ?.includes(searchTerm.toLowerCase());
+            ?.includes(searchTerm.toLowerCase()) : 
+          project[filter as keyof Project]
+            ?.toString()
+            ?.includes(searchTerm.toLowerCase()));
 
     const matchesSponsor = sponsorToggle ? project.sponsor === null : true;
 
@@ -245,7 +251,7 @@ export function ProjectsList({
                 <TableHead
                   onClick={() => handleSort("name")}
                   className="cursor-pointer text-white"
-                  style={{ width: '33%' }}
+                  style={{ width: '30.5%' }}
                 >
                   {sortColumn === "name"
                     ? `Project Name ${sortOrder === "asc" ? "▲" : "▼"}`
@@ -324,7 +330,7 @@ export function ProjectsList({
                   </DropdownMenu>
                 </TableHead>
                 <TableHead className="rounded-tr-2xl rounded-br-2xl"
-                  style={{ width: '16.5%' }}
+                  style={{ width: '19%' }}
                 >
                   <div className="flex justify-between">
                     <button
@@ -354,9 +360,9 @@ export function ProjectsList({
                     {userLevel >= 3 && <div>
                       <button
                         onClick={handleSetSponsorToggle}
-                        className={`${sponsorToggle === false ? "bg-[#1d1b23]" : "bg-gray-600"} outline rounded-lg p-1 ml-2 hover:bg-gray-600 `}
+                        className={`${sponsorToggle === false ? "bg-[#1d1b23] hover:bg-gray-500" : "bg-gray-500 hover:bg-gray-300"} outline rounded-lg p-1 ml-2 `}
                       >
-                        Sponsor
+                        Unsponsored
                       </button>
                     </div>}
                   </div>
@@ -396,11 +402,11 @@ export function ProjectsList({
                         padding: "10px",
                       }}
                     >
-                      {"20??/??"}
+                      {project.term? project.term : "TBD"}
                     </TableCell>
                     <TableCell
                       style={{
-                        width: '33%',
+                        width: '30.5%',
                         padding: '10px',
                         overflow: 'auto',
                         whiteSpace: 'nowrap'
@@ -448,7 +454,7 @@ export function ProjectsList({
                       style={{
                         borderTopRightRadius: "0.5rem",
                         borderBottomRightRadius: "0.5rem",
-                        width: '16.5%',
+                        width: '19%',
                         padding: '10px',
                         // paddingRight: '20px'
                       }}
