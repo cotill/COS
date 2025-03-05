@@ -599,7 +599,6 @@ export default function ProjectDetail({
               <label className="text-white">Download for Dispatch</label>
               <div className="flex justify-center items-center space-x-2">
                 <CreatePdf project={originalProjectInfo} />
-                <CreatePdf project={originalProjectInfo} />
               </div>
               {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
             </div>
