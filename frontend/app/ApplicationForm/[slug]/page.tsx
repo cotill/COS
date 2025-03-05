@@ -1,6 +1,6 @@
 import ApplicationForm from "@/components/studentComponents/application-form";
 import { createClient } from "@/utils/supabase/server";
-import { Application, Project } from "@/utils/types";
+import { Application, Member, Project } from "@/utils/types";
 import { encodedRedirect } from "@/utils/utils";
 
 export default async function ApplicationPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -12,8 +12,8 @@ export default async function ApplicationPage({ params }: { params: Promise<{ sl
     return <p className="text-white text-center">Couldn't find project. Please contact project sponsor{data}</p>;
   }
   const projectInfo = data as Project;
-  const deadline = projectInfo.application_deadline ? new Date(projectInfo.application_deadline).toLocaleDateString() : null;
-  const todayDate = new Date().toLocaleDateString();
+  const deadline = projectInfo.application_deadline ? new Date(projectInfo.application_deadline) : null;
+  const todayDate = new Date();
   if (projectInfo.applications_allowed === null || projectInfo.applications_allowed === false || deadline === null || todayDate > deadline || projectInfo.link_active === false) {
     return <p className="text-white text-center">Applications are closed for {projectInfo.title}</p>;
   }
@@ -34,10 +34,9 @@ export default async function ApplicationPage({ params }: { params: Promise<{ sl
 const handleSubmitApplication = async (application: Partial<Application>) => {
   "use server";
   const supabase = await createClient();
-  const { error } = await supabase.from("Applications").insert({ application });
+  const { error } = await supabase.from("Applications").insert({ ...application });
   if (error) {
-    return encodedRedirect("error", "/application-success", error.message);
-    // return encodedRedirect("error", "/sign-up", "Error submitting application. Please try again later or contact sponsor.");
+    return encodedRedirect("error", "/application-success", "Error submitting application. Please try again later or contact sponsor.");
   } else {
     return encodedRedirect("success", "/application-success", "Your application has been submitted successfully!");
   }

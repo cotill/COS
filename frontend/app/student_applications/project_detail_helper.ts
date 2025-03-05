@@ -23,25 +23,11 @@ export const ProjectStatusOrder: Project_Status[] = [
  * @returns A partial Project object
  */
 export const getChangedData = (originalProjectInfo: Project, currentProjectInfo: Project, user_email: string, user_level: number): Partial<Project> => {
+  handleProjectStatusChange(originalProjectInfo, currentProjectInfo, user_email, user_level);
+
   const changedData: Partial<Project> = {};
   Object.keys(originalProjectInfo).forEach((key) => {
     if (originalProjectInfo[key as keyof Project] !== currentProjectInfo[key as keyof Project]) {
-      if (currentProjectInfo[key as keyof Project] === Project_Status.APPROVED) {
-        if (!checkApproverInfo(originalProjectInfo.creator_email, user_email, user_level)) {
-          return;
-        }
-
-        // if the current status is approved the check
-        // check that the current status is less than original
-        // const applicationLinkAction: "create" | "delete" | "keep" = updateApplicationLink(originalProjectInfo.status, originalProjectInfo.application_link, currentProjectInfo.status);
-        // if (applicationLinkAction === "create") {
-        changedData.application_link = uuidv4();
-        console.log(`application_link was created -value: ${changedData.application_link}`);
-        // } else if (applicationLinkAction === "delete") {
-        // changedData.application_link = null;
-        // console.log(`application_link was 'deleted'-value: ${changedData.application_link}`);
-        // }
-      }
       const value = currentProjectInfo[key as keyof Project];
       (changedData as any)[key as keyof Project] = value;
       console.log(`Key: ${key} was modified to value: ${value}`);
@@ -63,45 +49,42 @@ export const onUpdateProject = async (updatedProject: Partial<Project>, project_
   }
   return data[0] as Project;
 };
-
-/**
- * This method compares the original status to the current status, and based on the business logic
- * either generates a create, delete, or keep the existing link.
- * @param originalStatus the original status of the project prior to user changes
- * @param currentStatus the new status the user is attempting to change the project to
- * @returns create, delete, or keep the link.
- */
-export const updateApplicationLink = (originalStatus: Project_Status, originalApplicationLink: string | null, currentStatus: Project_Status): "create" | "delete" | "keep" => {
-  const originalStatusIndex = ProjectStatusOrder.indexOf(originalStatus);
-  const currentStatusIndex = ProjectStatusOrder.indexOf(currentStatus);
-  console.log(`The original status is: ${originalStatusIndex} and ${currentStatusIndex}`);
-  // if original status is less than current status,and the current status is approved generate a new link
-  if (currentStatus == Project_Status.APPROVED && originalStatusIndex < currentStatusIndex) {
-    console.log("returning create application link");
-    return "create";
-  }
-
-  // If current status is APPROVED and the original status is greater than APPROVED, don't generate a new link
-  // basically if the user is trying to move the status back to approved, don't create a new link
-  if (currentStatus === Project_Status.APPROVED && originalStatusIndex > currentStatusIndex) {
-    if (originalApplicationLink !== null) {
-      return "keep";
+const handleProjectStatusChange = (originalProjectInfo: Project, currentProjectInfo: Project, user_email: string, user_level: number) => {
+  if (currentProjectInfo.status === Project_Status.APPROVED && (originalProjectInfo.status === Project_Status.REVIEW || originalProjectInfo.status === Project_Status.REJECTED)) {
+    if (!checkApproverInfo(originalProjectInfo.creator_email, user_email, user_level)) {
+      return;
     }
-    // if there's not existing link, create one
-    console.log("returning create application link");
+    if (originalProjectInfo.rejector_email || originalProjectInfo.rejector_date) {
+      console.log("set rejector details to null");
+      currentProjectInfo.rejector_date = null;
+      currentProjectInfo.rejector_email = null;
+    }
+    currentProjectInfo.application_link = uuidv4();
+    console.log(`application_link was created -value: ${currentProjectInfo.application_link}`);
+  } else if (originalProjectInfo.status === Project_Status.REVIEW && currentProjectInfo.status === Project_Status.REJECTED) {
+    console.log(`original status: ${originalProjectInfo.status} to current status: ${currentProjectInfo.status}`);
+    currentProjectInfo.rejector_date = new Date().toISOString();
+    currentProjectInfo.rejector_email = user_email;
+  } else if ((originalProjectInfo.status === Project_Status.REJECTED || originalProjectInfo.status === Project_Status.APPROVED) && currentProjectInfo.status === Project_Status.REVIEW) {
+    console.log("project status from rejected or approved to review");
+    if (originalProjectInfo.rejector_email || originalProjectInfo.rejector_date) {
+      currentProjectInfo.rejector_date = null;
+      currentProjectInfo.rejector_email = null;
+    }
+    if (originalProjectInfo.approval_email || originalProjectInfo.approved_date || originalProjectInfo.application_link) {
+      currentProjectInfo.approval_email = null;
+      currentProjectInfo.approved_date = null;
+      currentProjectInfo.application_link = null;
+    }
+  } else if (originalProjectInfo.status === Project_Status.APPROVED && currentProjectInfo.status === Project_Status.REJECTED) {
+    console.log("status went from approved to rejected");
+    currentProjectInfo.approval_email = null;
+    currentProjectInfo.approved_date = null;
+    currentProjectInfo.application_link = null;
 
-    return "create";
+    currentProjectInfo.rejector_date = new Date().toISOString();
+    currentProjectInfo.rejector_email = user_email;
   }
-
-  // If the current status is less than the original status, delete the link
-  // if the original status is approved(or higher) and the user moves it back to delete, review, draft or new. Then delete the original link
-  if (originalStatus >= Project_Status.APPROVED && currentStatusIndex < originalStatusIndex) {
-    console.log("returning delete application link");
-    return "delete";
-  }
-
-  // Default to existing if none of the above conditions are met
-  return "keep";
 };
 
 /**
