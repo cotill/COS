@@ -12,8 +12,8 @@ export default async function ApplicationPage({ params }: { params: Promise<{ sl
     return <p className="text-white text-center">Couldn't find project. Please contact project sponsor{data}</p>;
   }
   const projectInfo = data as Project;
-  const deadline = projectInfo.application_deadline ? new Date(projectInfo.application_deadline).toLocaleDateString() : null;
-  const todayDate = new Date().toLocaleDateString();
+  const deadline = projectInfo.application_deadline ? new Date(projectInfo.application_deadline) : null;
+  const todayDate = new Date();
   if (projectInfo.applications_allowed === null || projectInfo.applications_allowed === false || deadline === null || todayDate > deadline || projectInfo.link_active === false) {
     return <p className="text-white text-center">Applications are closed for {projectInfo.title}</p>;
   }

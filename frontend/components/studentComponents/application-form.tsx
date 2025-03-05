@@ -174,6 +174,11 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
 
     await Promise.all(uploadResumePromises); //upload all in parallel
   };
+  const getDate = () => {
+    return extendedProject.application_deadline
+      ? new Date(extendedProject.application_deadline).toLocaleDateString("en-US")
+      : "No deadline specified";
+  };
   return (
     <>
       <div className="mb-8 text-center text-white">
@@ -197,7 +202,7 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
                 </div>
                 {extendedProject.application_deadline && (
                   <div>
-                    <span className="font-medium">Application Deadline:</span> {new Date(extendedProject.application_deadline).toLocaleDateString()}
+                    <span className="font-medium">Application Deadline:</span> {getDate()}
                   </div>
                 )}
                 <div>
