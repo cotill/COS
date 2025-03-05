@@ -47,7 +47,7 @@ export default async function taskspage() {
   // Compute Task Counters
   const hasNDA = studentInfo.Teams.nda_file !== null;
   const projectHasGithub = studentInfo.Teams.Projects.github !== null;
-  const githubCount = teamMembers.filter((member) => member.github !== null).length;
+  const githubCount = teamMembers ? teamMembers.filter((member) => member.github !== null).length : 0;
 
   const totalTasks = 1 + (projectHasGithub ? githubCount : 0);
   const doneTasks = (hasNDA ? 1 : 0) + (projectHasGithub ? githubCount : 0);
