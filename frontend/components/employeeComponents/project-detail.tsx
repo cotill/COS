@@ -121,7 +121,7 @@ export default function ProjectDetail({
         }
         if (currentProjectInfo.status === Project_Status.DISPATCHED) {
           updatedData.dispatcher_email = employeeInfo.email;
-          updatedData.dispatched_date = updatedData.dispatched_date;
+          updatedData.dispatched_date = dateNow;
         }
       }
 

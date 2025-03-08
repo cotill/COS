@@ -45,6 +45,12 @@ const checkStatusSelectable = (
       targetStatus === Project_Status.APPROVED)
   )
     return true;
+  if (
+    initial_status === Project_Status.APPROVED &&
+    targetStatus === Project_Status.REJECTED
+  ) {
+    return true;
+  }
 
   // if rejected, you can set it back to review
   if (
