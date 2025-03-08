@@ -48,7 +48,6 @@ export default function ProjectDetail({
   );
   const [originalSponsorData, setOriginalSponsorData] =
     useState<Employee | null>(initialSponsorInfo);
-  const [error, setError] = useState<string | null>(null);
   const [isMessage, setMessage] = useState<string | null>(null);
   const [awardedTeam, setAwardedTeam] = useState(null);
   const timeoutLength = 1000;
@@ -109,8 +108,6 @@ export default function ProjectDetail({
       // update last modified by to the time and the current user
       const dateNow = new Date().toISOString();
       updatedData.last_modified_date = dateNow; // include the date the data was last modified
-      // currentProjectInfo.last_modified_date = dateNow;
-      // currentProjectInfo.last_modified_user = employeeInfo.email;
       updatedData.last_modified_user = employeeInfo.email;
 
       // if the current status is APPROVED, set approve detail
