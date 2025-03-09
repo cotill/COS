@@ -26,7 +26,7 @@ export interface Team {
   team_id: string;
   team_name: string;
   team_lead_email: string;
-  nda_file: string;
+  nda_file: string | null;
   completed_onboarding: string;
   project_id: string;
   supervisor_name: string | null;

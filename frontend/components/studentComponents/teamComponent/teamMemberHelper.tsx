@@ -3,6 +3,7 @@ import { Member, Student, UserRole } from "@/utils/types";
 import { createClient } from "@/utils/supabase/client"; // Adjust the import path as needed
 
 const supabase = createClient();
+type ResponseMessage = { type: "error" | "warning" | "success" | "partial-success"; text: JSX.Element[] | string };
 
 export const loadTeamData = async (teamId: string): Promise<Student[] | []> => {
   const { data: studentsData, error } = await supabase.from("Students").select("*").eq("team_id", teamId);
@@ -15,27 +16,7 @@ export const loadTeamData = async (teamId: string): Promise<Student[] | []> => {
 
   return studentsInfo || [];
 };
-export const validateStudents = (students: Partial<Student>[]): string | null => {
-  for (const student of students) {
-    if (!student.full_name || student.full_name.trim() === "") {
-      return "Full name is required for all team members";
-    }
-    if (!student.email || student.email.trim() === "") {
-      return "Email is required for all team members";
-    }
-    if (!student.major || student.major.trim() === "") {
-      return "Major is required for all team members";
-    }
-    // Optional: Add email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(student.email)) {
-      return "Please enter a valid email address for all team members";
-    }
-  }
-  return null;
-};
-
-export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[], teamId: string, uni: string): Promise<{ type: string; text: JSX.Element[] }> => {
+export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[], teamId: string, uni: string): Promise<ResponseMessage> => {
   // console.log(`Create student! Passed email: ${newStudents[0].email} student(temp) id: ${newStudents[0].student_id}`);
 
   const newMembers: Member[] = newStudents.map((student) => ({
@@ -147,9 +128,9 @@ export const updateStudentInformation = async (students: Partial<Student>[]) => 
 
   return results;
 };
-export const handleUpdateStudentInformation = async (students: Partial<Student>[]): Promise<{ type: string; text: JSX.Element[] }> => {
+
+export const handleUpdateStudentInformation = async (students: Partial<Student>[]): Promise<ResponseMessage> => {
   let success_count = 0;
-  let failedUpdates: string[] = [];
   let message: JSX.Element[] = [];
 
   const results = await updateStudentInformation(students);
@@ -162,14 +143,6 @@ export const handleUpdateStudentInformation = async (students: Partial<Student>[
 
   if (success_count === students.length) {
     message = [<p className="text-green-600 font-bold">All student information updated successfully.</p>];
-    // successUpdates.forEach((student, index) => {
-    //   message.push(
-    //     <p key={index} className="text-white">
-    //       For {student.full_name}:<br />
-    //       Email: <u>{student.email}</u> Major: <u>{student.major}</u>
-    //     </p>
-    //   );
-    // });
     return { type: "success", text: message };
   } else if (success_count === 0) {
     message.unshift(<p className="text-red-600 font-bold">Failed to update student information. Please contact the sponsor.</p>);
@@ -180,14 +153,76 @@ export const handleUpdateStudentInformation = async (students: Partial<Student>[
         <span className="text-green-600">Some information was updated successfully</span> but there were errors.
       </p>
     );
-    // successUpdates.forEach((student, index) => {
-    //   message.push(
-    //     <p key={index} className="text-white">
-    //       For {student.full_name}:<br />
-    //       Email: <u>{student.email}</u> Major: <u>{student.major}</u>
-    //     </p>
-    //   );
-    // });
     return { type: "partial-success", text: message };
   }
 };
+
+/**
+ * Update or set the team nda file name
+ * upload nda
+ * @param ndaFile
+ * @param ndaFileName
+ * @param team_id
+ */
+export const handleNdaUpload = async (oldNdaFileName: string | undefined | null, ndaFile: File, ndaFileName: string | undefined, team_id: string | undefined): Promise<ResponseMessage> => {
+  let message: JSX.Element[] = [];
+  if (!ndaFileName || !ndaFile || !team_id) {
+    return { type: "error", text: "Missing required information for upload" };
+  }
+  if (oldNdaFileName) {
+    //delete the current nda file
+    const { error: delete_error } = await supabase.storage.from("ndas").remove([oldNdaFileName]);
+    if (delete_error) {
+      console.log("Failed to delete old nda", delete_error.message);
+      message.push(
+        <p key="delete_error" className="text-red-600">
+          Failed to delete the old NDA file, <span className="font-bold">{oldNdaFileName}</span>. Please contact the project sponsor.
+        </p>
+      );
+    }
+  }
+
+  const { error: upload_error } = await supabase.storage.from("ndas").upload(ndaFileName, ndaFile);
+  if (upload_error) {
+    console.log("Failed to upload nda", upload_error.message);
+
+    message.push(
+      <p key="delete_error" className="text-red-600">
+        Failed to upload the NDA. Please try again or contact the project sponsor
+      </p>
+    );
+    return { type: "error", text: message };
+  }
+  // update the filename if upload is successful
+  const { error: update_error } = await supabase.from("Teams").update({ nda_file: ndaFileName }).eq("team_id", team_id);
+  if (update_error) {
+    console.log("Failed to update filename", update_error.message);
+
+    message.push(
+      <p key="delete_error" className="text-red-600">
+        Failed to upload the NDA filename, <span className="font-bold">{oldNdaFileName}</span>. Please contact project sponsor
+      </p>
+    );
+    return { type: "error", text: message };
+  }
+  message.push(
+    <p key="success" className="text-green-600">
+      NDA file uploaded and updated successfully.
+    </p>
+  );
+
+  return { type: "success", text: message };
+};
+
+/**
+ * Create a signed url for the nda file and open it in a new tab
+ * @param resume_filepath The path to the nda file
+ */
+export async function openNDA(filepath: string) {
+  const { data, error } = await supabase.storage.from("ndas").createSignedUrl(filepath, 600); // this link is valid for 10mins
+  if (data?.signedUrl) {
+    window.open(data.signedUrl, "_blank");
+  } else {
+    alert("Unable to fetch the nda. Please try again.");
+  }
+}

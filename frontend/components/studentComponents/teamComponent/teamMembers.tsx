@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, MinusCircle, Crown } from "lucide-react";
+import { PlusCircle, MinusCircle, Crown, FileText, Upload } from "lucide-react";
 import { Student, Team } from "@/utils/types";
-import { handleCreateStudentAccounts, modifiedStudents, loadTeamData, handleUpdateStudentInformation } from "./teamMemberHelper";
+import { handleCreateStudentAccounts, modifiedStudents, loadTeamData, handleUpdateStudentInformation, handleNdaUpload, openNDA } from "./teamMemberHelper";
 import dynamic from "next/dynamic";
 import { ConfirmationDialog, ConfirmationDialogProp } from "@/components/confirmationPopup";
 import { AlertDialog } from "@/components/ui/alert-dialog";
@@ -16,7 +16,9 @@ import useNotifications from "@/hooks/notification/useNotifications"; // import 
 import { RoundSpinner } from "@/components/ui/spinner";
 
 const CustomNotification = dynamic(() => import("../../../hooks/notification/custom-notification"), { ssr: false });
-const CancelSaveBtn = dynamic(() => import("./cancel-save-btn"), { ssr: false });
+const CancelSaveBtn = dynamic(() => import("./cancel-save-btn"), {
+  ssr: false,
+});
 
 interface TeamMembersProp {
   userInfo: Student;
@@ -24,11 +26,11 @@ interface TeamMembersProp {
   setTeamNameOnSave: (new_team_name: string) => Promise<{ type: "success" | "error"; text: JSX.Element[] }>; // used to update the teamName when the user saves
   teamName: string; //pass down the current team name
   disableButtons: boolean;
+  fetchTeam: () => Promise<void>;
 }
-const minTeamSize = 3;
 const maxTeamSize = 10;
 
-export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons }: TeamMembersProp) {
+export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons, fetchTeam }: TeamMembersProp) {
   //loading state
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
@@ -42,7 +44,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
   // UI states
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [currentOperation, setCurrentOperation] = useState<"none" | "save" | "delete" | "create">("none"); //state to track which operation is in progress (save, delete, create)
+  const [currentOperation, setCurrentOperation] = useState<"none" | "save" | "delete" | "create" | "upload">("none"); //state to track which operation is in progress (save, delete, create)
 
   //Dialog states
   const [alertDialogOpen, setAlertDialogOpen] = useState<boolean>(false);
@@ -57,6 +59,9 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
   // notification hook
   const { notifications, addNotification, removeNotification, clearAllNotifications } = useNotifications();
 
+  //NDA states
+  const [ndaFile, setNdaFile] = useState<File | null>(null);
+  const [ndaFileName, setNdaFileName] = useState<string | undefined>(originalTeamInfo.nda_file ? originalTeamInfo.nda_file.split("/").pop() : undefined);
   // Initial data loading
   const fetchStudents = async () => {
     try {
@@ -79,9 +84,11 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     loadInitialData();
   }, []);
 
-  const hasChanges = () => {
-    return JSON.stringify(initialStudents) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0 || teamName !== localTeamName;
-  };
+  // memoizes a calculated value, preventing recalculation unless dependencies change:
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(initialStudents) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0 || teamName !== localTeamName || ndaFile !== null;
+  }, [initialStudents, students, newStudents, deleteStudents, teamName, localTeamName, ndaFile]);
+
 
   // State reset functions
   const resetAllStates = async () => {
@@ -94,7 +101,8 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     setCurrentOperation("none");
   };
 
-  const addMember = () => {
+  //memoize function. If didn't dependencies changed, returns the previously stored function, else create a new function
+  const addMember = useCallback(() => {
     if (students.length < maxTeamSize) {
       const newStudent: Partial<Student> = {
         full_name: "",
@@ -110,9 +118,10 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
       setStudents([...students, newStudent]);
       setNewStudents((prevNewStudents) => [...prevNewStudents, newStudent]);
     }
-  };
+  },[students.length, originalTeamInfo.team_id]);
 
-  const removeMember = (index: number) => {
+  //only create a new function when students object and newStudent array changes
+  const removeMember = useCallback((index: number) => {
     if (students.length - 1 === 1) {
       // they are deleting everyone except the team lead
       addNotification("warning", "You will have deleted everyone on the team except yourself");
@@ -129,13 +138,14 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     }
 
     //if the student was a newly created student, remove from newStudents
-    setNewStudents((prevStudent) => prevStudent.filter((stu, i) => studentToRemove.student_id !== stu.student_id));
+    setNewStudents((prevStudent) => prevStudent.filter((stu) => studentToRemove.student_id !== stu.student_id));
 
     // remove from students array
-    setStudents((prevStudents) => prevStudents.filter((stu, i) => stu.student_id !== studentToRemove.student_id));
-  };
+    setStudents((prevStudents) => prevStudents.filter((stu) => stu.student_id !== studentToRemove.student_id));
+  }, [students, newStudents]);
 
-  const updateMember = (index: number, field: keyof Student, value: string | null) => {
+  //only create a new function when students object and newStudent array changes
+  const updateMember = useCallback((index: number, field: keyof Student, value: string | null) => {
     const tempStudents = [...students];
     tempStudents[index] = { ...tempStudents[index], [field]: value }; // update the data
     setStudents(tempStudents); // set the students array to the tempStudent
@@ -147,7 +157,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
       // if the two arrays don't match update the students array with the new dataset
       setNewStudents(updatedNewStudents);
     }
-  };
+  }, [students, newStudents]);
 
   /**
    * Handles when the save button is clicked
@@ -157,13 +167,15 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
   const startSaveProcess = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!hasChanges() && teamName === localTeamName) {
+    if (!hasChanges && teamName === localTeamName) {
       addNotification("error", "No changes were made.");
       return;
     }
     setIsSaving(true);
     setCurrentOperation("save");
-
+    if (ndaFile) {
+      await proccessNdaUpload();
+    }
     // process operations in sequence
     await processTeamNameChange();
     await processStudentUpdates();
@@ -178,7 +190,32 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
       completeSaveProcess();
     }
   };
+  //handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.type !== "application/pdf" && file.type !== "application/msword" && file.type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        addNotification("error", "Please upload a PDF file for the NDA");
+        return;
+      }
+      setNdaFile(file);
+      setNdaFileName(file.name);
+    }
+  };
 
+  const proccessNdaUpload = async () => {
+    setCurrentOperation("upload");
+
+    if (!ndaFile) return false;
+
+    const id = Math.floor(100 + Math.random() * 900); // Generate a number between 100 and 999
+    const constructFileName = `${id}_${ndaFileName}`;
+    const result = await handleNdaUpload(originalTeamInfo.nda_file, ndaFile, constructFileName, originalTeamInfo.team_id);
+    addNotification(result.type, result.text);
+    setNdaFile(null);
+    setNdaFileName(undefined);
+    await fetchTeam();
+  };
   const processTeamNameChange = async () => {
     if (teamName === localTeamName) return;
     //Team name changed
@@ -334,22 +371,53 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
   }
   return (
     <form onSubmit={startSaveProcess}>
-      <div className="mt-4">
-        {!isEditing ? (
-          <h2 className="text-xl font-semibold">{localTeamName}</h2>
-        ) : (
-          <Input
-            className="max-w-md text-wrap px-2"
-            style={{ width: `${localTeamName ? localTeamName.length + 2 : 10}ch` }}
-            id={`team_name`}
-            value={localTeamName}
-            onChange={(e) => {
-              setLocalTeamName(e.target.value);
-            }}
-            required
-          />
-        )}
-        <p className="text-gray-300 text-lg">University: {userInfo.university}</p>
+      <div className="mt-4 flex justify-between items-center transition-all duration-300 ease-in-out">
+        <div>
+          {!isEditing ? (
+            <h2 className="text-xl font-semibold">{localTeamName}</h2>
+          ) : (
+            <Input
+              className="max-w-md text-wrap px-2"
+              style={{
+                width: `${localTeamName ? localTeamName.length + 2 : 10}ch`,
+              }}
+              id={`team_name`}
+              value={localTeamName}
+              onChange={(e) => {
+                setLocalTeamName(e.target.value);
+              }}
+              required
+            />
+          )}
+          <p className="text-gray-300 text-lg">University: {userInfo.university}</p>
+        </div>
+        {/* NDA Section */}
+        <div>
+          {!isEditing ? (
+            originalTeamInfo.nda_file ? (
+              <div
+                className="cursor-pointer flex items-center text-blue-400 hover:text-blue-300"
+                onClick={() => {
+                  if (originalTeamInfo.nda_file) openNDA(originalTeamInfo.nda_file);
+                }}
+              >
+                <FileText className="mr-2" size={18} />
+                <span>View NDA</span>
+              </div>
+            ) : (
+              <span className="text-gray-400">Please upload an NDA</span>
+            )
+          ) : (
+            <div className="flex flex-col items-end">
+              <label htmlFor="nda-upload" className="cursor-pointer flex items-center text-blue-400 hover:text-blue-300">
+                <Upload className="mr-2" size={18} />
+                {originalTeamInfo.nda_file || ndaFile ? "Replace NDA" : "Upload NDA"}
+              </label>
+              <Input id={`nda-upload`} type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className="hidden" />
+              {ndaFileName && <span className="text-sm text-gray-300 mt-1">{ndaFileName}</span>}
+            </div>
+          )}
+        </div>
       </div>
       <Card className="mx-auto max-w-full [_&]: text-white my-4 pt-4">
         <CardContent>
@@ -385,7 +453,9 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
                               value={stu.full_name}
                               onChange={(e) => updateMember(index, "full_name", e.target.value)}
                               required
-                              style={{ width: `${stu.full_name ? stu.full_name.length + 2 : 10}ch` }}
+                              style={{
+                                width: `${stu.full_name ? stu.full_name.length + 2 : 10}ch`,
+                              }}
                               placeholder="Full Name"
                             />
                             {originalTeamInfo.team_lead_email === stu.email && <Crown className="ml-2 text-yellow-500" size={18} />}
@@ -433,7 +503,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
             </div>
 
             {isEditing && (
-              <div className="flex items-center justify-between w-full">
+              <div className="flex items-center justify-between w-full max-md:flex-col max-md: gap-y-6">
                 <div className="w-1/3"></div>
 
                 <div className="w-1/3">
