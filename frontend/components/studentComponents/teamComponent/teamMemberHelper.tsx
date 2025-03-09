@@ -131,7 +131,6 @@ export const updateStudentInformation = async (students: Partial<Student>[]) => 
 
 export const handleUpdateStudentInformation = async (students: Partial<Student>[]): Promise<ResponseMessage> => {
   let success_count = 0;
-  let failedUpdates: string[] = [];
   let message: JSX.Element[] = [];
 
   const results = await updateStudentInformation(students);
