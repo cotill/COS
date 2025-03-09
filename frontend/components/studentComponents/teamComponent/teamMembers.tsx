@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -84,9 +84,11 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     loadInitialData();
   }, []);
 
-  const hasChanges = () => {
+  // memoizes a calculated value, preventing recalculation unless dependencies change:
+  const hasChanges = useMemo(() => {
     return JSON.stringify(initialStudents) !== JSON.stringify(students) || newStudents.length > 0 || deleteStudents.length > 0 || teamName !== localTeamName || ndaFile !== null;
-  };
+  }, [initialStudents, students, newStudents, deleteStudents, teamName, localTeamName, ndaFile]);
+
 
   // State reset functions
   const resetAllStates = async () => {
@@ -99,7 +101,8 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     setCurrentOperation("none");
   };
 
-  const addMember = () => {
+  //memoize function. If didn't dependencies changed, returns the previously stored function, else create a new function
+  const addMember = useCallback(() => {
     if (students.length < maxTeamSize) {
       const newStudent: Partial<Student> = {
         full_name: "",
@@ -115,9 +118,10 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
       setStudents([...students, newStudent]);
       setNewStudents((prevNewStudents) => [...prevNewStudents, newStudent]);
     }
-  };
+  },[students.length, originalTeamInfo.team_id]);
 
-  const removeMember = (index: number) => {
+  //only create a new function when students object and newStudent array changes
+  const removeMember = useCallback((index: number) => {
     if (students.length - 1 === 1) {
       // they are deleting everyone except the team lead
       addNotification("warning", "You will have deleted everyone on the team except yourself");
@@ -134,13 +138,14 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
     }
 
     //if the student was a newly created student, remove from newStudents
-    setNewStudents((prevStudent) => prevStudent.filter((stu, i) => studentToRemove.student_id !== stu.student_id));
+    setNewStudents((prevStudent) => prevStudent.filter((stu) => studentToRemove.student_id !== stu.student_id));
 
     // remove from students array
-    setStudents((prevStudents) => prevStudents.filter((stu, i) => stu.student_id !== studentToRemove.student_id));
-  };
+    setStudents((prevStudents) => prevStudents.filter((stu) => stu.student_id !== studentToRemove.student_id));
+  }, [students, newStudents]);
 
-  const updateMember = (index: number, field: keyof Student, value: string | null) => {
+  //only create a new function when students object and newStudent array changes
+  const updateMember = useCallback((index: number, field: keyof Student, value: string | null) => {
     const tempStudents = [...students];
     tempStudents[index] = { ...tempStudents[index], [field]: value }; // update the data
     setStudents(tempStudents); // set the students array to the tempStudent
@@ -152,7 +157,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
       // if the two arrays don't match update the students array with the new dataset
       setNewStudents(updatedNewStudents);
     }
-  };
+  }, [students, newStudents]);
 
   /**
    * Handles when the save button is clicked
@@ -162,7 +167,7 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
   const startSaveProcess = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!hasChanges() && teamName === localTeamName) {
+    if (!hasChanges && teamName === localTeamName) {
       addNotification("error", "No changes were made.");
       return;
     }

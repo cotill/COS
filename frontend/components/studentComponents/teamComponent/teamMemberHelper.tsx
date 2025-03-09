@@ -16,26 +16,6 @@ export const loadTeamData = async (teamId: string): Promise<Student[] | []> => {
 
   return studentsInfo || [];
 };
-export const validateStudents = (students: Partial<Student>[]): string | null => {
-  for (const student of students) {
-    if (!student.full_name || student.full_name.trim() === "") {
-      return "Full name is required for all team members";
-    }
-    if (!student.email || student.email.trim() === "") {
-      return "Email is required for all team members";
-    }
-    if (!student.major || student.major.trim() === "") {
-      return "Major is required for all team members";
-    }
-    // Optional: Add email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(student.email)) {
-      return "Please enter a valid email address for all team members";
-    }
-  }
-  return null;
-};
-
 export const handleCreateStudentAccounts = async (newStudents: Partial<Student>[], teamId: string, uni: string): Promise<ResponseMessage> => {
   // console.log(`Create student! Passed email: ${newStudents[0].email} student(temp) id: ${newStudents[0].student_id}`);
 
@@ -187,7 +167,9 @@ export const handleUpdateStudentInformation = async (students: Partial<Student>[
  */
 export const handleNdaUpload = async (oldNdaFileName: string | undefined | null, ndaFile: File, ndaFileName: string | undefined, team_id: string | undefined): Promise<ResponseMessage> => {
   let message: JSX.Element[] = [];
-  if (!ndaFileName || !ndaFile) return { type: "error", text: "No file uploaded" };
+  if (!ndaFileName || !ndaFile || !team_id) {
+    return { type: "error", text: "Missing required information for upload" };
+  }
   if (oldNdaFileName) {
     //delete the current nda file
     const { error: delete_error } = await supabase.storage.from("ndas").remove([oldNdaFileName]);
@@ -238,7 +220,6 @@ export const handleNdaUpload = async (oldNdaFileName: string | undefined | null,
  * @param resume_filepath The path to the nda file
  */
 export async function openNDA(filepath: string) {
-  const supabase = createClient();
   const { data, error } = await supabase.storage.from("ndas").createSignedUrl(filepath, 600); // this link is valid for 10mins
   if (data?.signedUrl) {
     window.open(data.signedUrl, "_blank");
