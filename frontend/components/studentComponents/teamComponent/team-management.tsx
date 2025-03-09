@@ -124,7 +124,7 @@ export default function TeamManagement({ userInfo, teamInfo }: TeamManagementPro
     <>
       <Headingbar text={teamName} />
       <div>
-        <TeamMembers userInfo={userInfo} originalTeamInfo={currentTeamInfo} teamName={teamName} setTeamNameOnSave={handleTeamName} disableButtons={disableButtons} />
+        <TeamMembers userInfo={userInfo} originalTeamInfo={currentTeamInfo} teamName={teamName} setTeamNameOnSave={handleTeamName} disableButtons={disableButtons} fetchTeam={fetchTeam} />
         <TeamSupervisor disableButtons={disableButtons} originalTeamInfo={currentTeamInfo} fetchTeam={fetchTeam} handleUpdateTeam={handleUpdateTeam} />
       </div>
     </>
