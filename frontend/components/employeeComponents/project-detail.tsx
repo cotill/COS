@@ -24,6 +24,7 @@ import "./project-details.css";
 import CreatePdf from "@/app/student_applications/createPdf";
 import dynamic from "next/dynamic";
 import SaveCancelButtons from "../save_cancel_btns";
+import TeamMenu from "@/components/employeeComponents/team-menu";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
@@ -50,6 +51,7 @@ export default function ProjectDetail({
     useState<Employee | null>(initialSponsorInfo);
   const [isMessage, setMessage] = useState<string | null>(null);
   const [awardedTeam, setAwardedTeam] = useState(null);
+  const [isMenuOpen, setMenuOpen] = useState(false);
   const timeoutLength = 1000;
 
   useEffect(() => {
@@ -104,6 +106,23 @@ export default function ProjectDetail({
         setMessage("Cannot save without any changes");
         setCurrentProjectInfo(originalProjectInfo);
         return;
+      }
+      if (currentProjectInfo.status === Project_Status.DISPATCHED) {
+        if (currentProjectInfo.sponsor_email === null && currentProjectInfo.university === null) {
+          setMessage("Cannot dispatch project without sponsor or university");
+          setCurrentProjectInfo(originalProjectInfo);
+          return;
+        }
+        if (currentProjectInfo.sponsor_email === null) {
+          setMessage("Cannot dispatch project without sponsor");
+          setCurrentProjectInfo(originalProjectInfo);
+          return;
+        }
+        if (currentProjectInfo.university === null) {
+          setMessage("Cannot dispatch project without university");
+          setCurrentProjectInfo(originalProjectInfo);
+          return;
+        }
       }
       // update last modified by to the time and the current user
       const dateNow = new Date().toISOString();
@@ -191,14 +210,19 @@ export default function ProjectDetail({
   };
 
   const onViewDetails = async () => {
-    if (!currentProjectInfo.awarded_application_id) return;
+    if (!currentProjectInfo.awarded_team_id) return;
 
     // Fetch the awarded application from Supabase
     const { data, error } = await supabase
-      .from("Applications")
-      .select("*") // Fetch all application fields
-      .eq("application_id", currentProjectInfo.awarded_application_id)
+      .from("Teams")
+      .select(`
+        *,
+        members:Students(team_id, full_name, role, email, ttg:ttg_email)
+      `)
+      .eq("team_id", currentProjectInfo.awarded_team_id)
       .single();
+
+    console.log("TEST: ", data)
 
     if (error) {
       console.error("Error fetching team details:", error);
@@ -206,6 +230,7 @@ export default function ProjectDetail({
     }
 
     setAwardedTeam(data); // Store the fetched team data
+    setMenuOpen(true);
   };
 
   const formatStartTerm = (term: string) => {
@@ -286,6 +311,8 @@ export default function ProjectDetail({
               onInputChange({ target: { name: "status", value: status } })
             }
             allowClick={isEditing}
+            projectSponsor={currentProjectInfo.sponsor_email}
+            dispatchUniversity={currentProjectInfo.university}
           />
         </div>
       </div>
@@ -309,7 +336,7 @@ export default function ProjectDetail({
               name="description"
               value={currentProjectInfo.description}
               onChange={onInputChange}
-              className="w-full h-48  text-sm max-h-48 p-2 rounded-md text-black focus:outline-none bg-gray-300 "
+              className="w-full h-48  text-sm max-h-48 p-4 rounded-xl text-black focus:outline-none bg-gray-300 "
               placeholder="Enter project description"
               readOnly={!isEditing}
             />
@@ -387,7 +414,7 @@ export default function ProjectDetail({
         </div>
 
         {/* Start Term */}
-        <div className=" relative flex flex-col space-y-2 w-[50%]">
+        <div className=" relative flex flex-col space-y-2">
           <label className="text-base capitalize">Start Term</label>
           <select
             value={currentProjectInfo.start_term ?? ""}
@@ -612,10 +639,9 @@ export default function ProjectDetail({
             <Button
               asChild
               variant="outline"
-              className={`text-md space-x-1 ${originalProjectInfo.application_link === null ? "text-gray-500 border border-gray-400 cursor-not-allowed" : ""}`}
-              disabled={originalProjectInfo.application_link === null}
+              className={`text-md space-x-1 ${originalProjectInfo.application_link === null || ["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? "text-gray-500 border border-gray-400 cursor-default" : ""}`}
             >
-              {originalProjectInfo.application_link ? (
+              {originalProjectInfo.application_link && !["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? (
                 <Link
                   href={`/ApplicationForm/${originalProjectInfo.application_link}/`}
                 >
@@ -626,40 +652,63 @@ export default function ProjectDetail({
                 <span>Application Link</span>
               )}
             </Button>
-            <Button asChild variant="outline" className="text-md space-x-1">
-              <Link
+            <Button 
+              asChild
+              variant="outline"
+              className={`text-md space-x-1 ${originalProjectInfo.application_link === null || ["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? "text-gray-500 border border-gray-400 cursor-default" : ""}`}
+            >
+              {originalProjectInfo.application_link && !["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? (
+                <Link
+                  href={`/Employee/Projects/${project.project_id}/Applicants`}
+                >
+                  <span>View Applicants</span>
+                  <ArrowUpRight />
+                </Link>
+              ) : (
+                <span>View Applicants</span>
+              )}
+              {/* <Link
                 href={`/Employee/Projects/${project.project_id}/Applicants`}
               >
                 <span>View Applicants</span>
                 <ChevronRight />
-              </Link>
+              </Link> */}
             </Button>
           </div>
         </div>
 
         {/* Team Awarded */}
-        {currentProjectInfo.awarded_application_id && (
+        {currentProjectInfo.awarded_team_id && (
           <div>
             <h2 className="text-xl font-bold text-white py-2">Team Awarded</h2>
-            <Dialog
+            {/* <Dialog
               open={!!awardedTeam}
               onOpenChange={() => setAwardedTeam(null)}
-            >
-              <DialogTrigger asChild>
+            > */}
+              {/* <DialogTrigger asChild> */}
                 <Button variant="outline" onClick={onViewDetails}>
                   View Team Details
                   <ChevronRight />
                 </Button>
-              </DialogTrigger>
+              {/* </DialogTrigger> */}
 
-              <TeamDetailsDialog
-                team={awardedTeam}
-                onClose={() => setAwardedTeam(null)}
-                onApprove={undefined}
-                onReject={undefined}
-                onPending={undefined}
-              />
-            </Dialog>
+              {isMenuOpen && (
+                <>
+                {/* Backdrop */}
+                <div
+                    className="fixed inset-0 bg-black opacity-10 z-40"
+                    onClick={() => setMenuOpen(false)} // Close modal when clicking backdrop
+                />
+                <div className="fixed top-0 right-0 z-50">
+                <TeamMenu
+                  onClose={() => setMenuOpen(false)}
+                  teamsData={awardedTeam ?? null} // Pass null if teams is null
+                  title={currentProjectInfo.title ?? 'Unknown Title'}
+                />
+                </div>
+                </>
+              )}
+            {/* </Dialog> */}
           </div>
         )}
         {/* Application Link */}
