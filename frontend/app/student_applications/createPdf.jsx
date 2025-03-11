@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 8,
   },
   text: {
@@ -47,6 +47,26 @@ const styles = StyleSheet.create({
   },
 });
 
+const convertMDtoPlain = (markdown) => {
+  const parts = markdown.split(/\*\*(.*?)\*\*/g);
+  
+  return (
+    <Text style={{ fontSize: 12 }}>
+      {parts.map((part, index) => {
+        // If the index is odd, it's a bolded part
+        if (index % 2 === 1) {
+          return (
+            <Text key={index} style={{ fontFamily: 'Helvetica-Bold' }}>
+              {part}
+            </Text>
+          );
+        }
+        // Otherwise, it's regular text
+        return part;
+      })}
+    </Text>
+  );
+};
 const MyDocument = ({ project }) => (
   <Document>
     <Page size="A4" style={styles.page}>
@@ -57,7 +77,7 @@ const MyDocument = ({ project }) => (
       <View style={styles.section}>
         <Text style={styles.text}>Project ID: {project.project_id}</Text>
         <Text style={styles.text}>Sponsor: {project.sponsor_email}</Text>
-        <Text style={styles.text}>{project.description}</Text>
+        <View style={styles.section}>{convertMDtoPlain(project.description)}</View>
       </View>
     </Page>
   </Document>
