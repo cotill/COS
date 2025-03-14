@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { useState, useEffect, Suspense } from "react";
 import { Project, Project_Status, Employee, Universities } from "@/utils/types";
 import { Info, Pencil, ArrowUpRight, ChevronRight } from "lucide-react";
@@ -24,6 +24,7 @@ import "./project-details.css";
 import CreatePdf from "@/app/student_applications/createPdf";
 import dynamic from "next/dynamic";
 import SaveCancelButtons from "../save_cancel_btns";
+import { cn } from "@/utils/cn";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
@@ -217,6 +218,40 @@ export default function ProjectDetail({
     return `${displayMonth} ${year}`;
   };
 
+  const handleApplicationStatus = useCallback(() => {
+    const todayDate = new Date();
+    const deadline = originalProjectInfo.application_deadline
+      ? new Date(originalProjectInfo.application_deadline)
+      : null;
+
+    if (
+      deadline &&
+      todayDate > deadline &&
+      originalProjectInfo.awarded_application_id === null
+    ) {
+      return {
+        status: "CLOSED",
+        message:
+          "Applications Closed - Deadline passed on " +
+          deadline.toLocaleDateString(),
+      };
+    } else if (originalProjectInfo.awarded_application_id !== null) {
+      return {
+        status: "CLOSED",
+        message: "Applications Closed - Project has been awarded",
+      };
+    } else if (deadline && todayDate <= deadline) {
+      return {
+        status: "OPEN",
+        message: "Applications open until " + deadline.toLocaleDateString(),
+      };
+    } else {
+      return {
+        status: "UNKNOWN",
+        message: "Application status is unknown",
+      };
+    }
+  }, [originalProjectInfo.application_deadline]);
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
@@ -664,55 +699,32 @@ export default function ProjectDetail({
         )}
         {/* Application Link */}
         {currentProjectInfo.application_link && (
-          <div className="flex gap-2 items-start py-2 [&_label]:text-white [&_h2]:text-white">
+          <div className="border border-1">
             <h2
               className="text-xl font-normal"
               hidden={!project.application_link}
             >
-              Link Status:
+              Application Status:
             </h2>
             <div
-              className="flex flex-col gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5"
               hidden={!project.application_link}
+              className="ml-5 mt-2 space-x-2 flex items-center"
             >
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                  id="project_link_open"
-                  name="link_active"
-                  checked={currentProjectInfo.link_active === true}
-                  onChange={() => {
-                    isEditing &&
-                      onInputChange({
-                        target: {
-                          name: "link_active",
-                          value: true,
-                        },
-                      });
-                  }}
-                />
-                <label htmlFor="project_link_open">Open</label>
-              </div>
-              <div className="flex items-center space-x-2 py-2">
-                <input
-                  type="radio"
-                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                  id="project_link_closed"
-                  name="link_active"
-                  checked={currentProjectInfo.link_active === false}
-                  onChange={() => {
-                    isEditing &&
-                      onInputChange({
-                        target: {
-                          name: "link_active",
-                          value: false,
-                        },
-                      });
-                  }}
-                />
-                <label htmlFor="project_link_closed">Closed</label>
-              </div>
+              {(() => {
+                const { status, message } = handleApplicationStatus();
+                const statusColor =
+                  status === "OPEN" ? "bg-green-500" : "bg-red-500";
+                return (
+                  <>
+                    <div
+                      className={cn(
+                        `w-3 h-3 rounded-full shrink-0 ${statusColor}`
+                      )}
+                    />
+                    <span className="">{message}</span>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
