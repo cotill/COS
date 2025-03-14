@@ -716,55 +716,6 @@ export default function ProjectDetail({
             </div>
           </div>
         )}
-        {/* Applications Allowed */}
-        {currentProjectInfo.applications_allowed !== null && (
-          <div className="flex gap-2 items-start [&_label]:text-white [&_h2]:text-white">
-            <h2 className="text-xl font-normal">Applications Allowed:</h2>
-            <div
-              className="flex flex-col gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5"
-              hidden={!project.application_link}
-            >
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                  id="project_link_true"
-                  name="applications_allowed"
-                  checked={currentProjectInfo.applications_allowed === true}
-                  onChange={() => {
-                    isEditing &&
-                      onInputChange({
-                        target: {
-                          name: "applications_allowed",
-                          value: true,
-                        },
-                      });
-                  }}
-                />
-                <label htmlFor="project_link_open">True</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                  id="project_link_false"
-                  name="applications_allowed"
-                  checked={currentProjectInfo.applications_allowed === false}
-                  onChange={() => {
-                    isEditing &&
-                      onInputChange({
-                        target: {
-                          name: "applications_allowed",
-                          value: false,
-                        },
-                      });
-                  }}
-                />
-                <label htmlFor="project_link_closed">False</label>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* error message */}

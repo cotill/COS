@@ -88,7 +88,6 @@ export interface Project {
   application_link: string | null;
   link_active: boolean;
   application_deadline: string | null;
-  applications_allowed: boolean | null;
   dispatcher_email: string | null;
   dispatched_date: string | null;
   project_budget: number;

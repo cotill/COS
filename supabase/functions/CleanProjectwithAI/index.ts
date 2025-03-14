@@ -34,7 +34,15 @@ export interface Project {
   application_link: string | null;
   link_active: boolean | null;
   application_deadline: string | null;
-  applications_allowed: boolean | null;
+  last_modified_date: string | null;
+  last_modified_user: string | null; // email of the person who last modified the project
+  activation_date: string | null;
+  dispatcher_email: string | null;
+  dispatched_date: string | null;
+  project_budget: number;
+  start_term: string | null;
+  rejector_email: string | null;
+  rejector_date: string | null;
 }
 
 interface WebhookPayload {

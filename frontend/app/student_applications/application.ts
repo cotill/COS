@@ -286,7 +286,6 @@ export const updateProjectStatus = async (
       .from("Projects")
       .update({
         status: status,
-        applications_allowed: false,
         awarded_application_id: application_id,
       })
       .eq('"project_id"', project_id)
