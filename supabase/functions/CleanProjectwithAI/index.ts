@@ -32,7 +32,6 @@ export interface Project {
   status: "APPROVED" | "REJECTED" | "DRAFT" | "NEW" | "REVIEW" | "DISPATCHED" | "ACTIVE" | "COMPLETED" | "CANCELLED" | "AWARDED";
   university: "University of Calgary" | "University of British Columbia" | null;
   application_link: string | null;
-  link_active: boolean | null;
   application_deadline: string | null;
   last_modified_date: string | null;
   last_modified_user: string | null; // email of the person who last modified the project
