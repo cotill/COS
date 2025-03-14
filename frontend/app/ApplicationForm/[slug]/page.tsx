@@ -14,8 +14,11 @@ export default async function ApplicationPage({ params }: { params: Promise<{ sl
   const projectInfo = data as Project;
   const deadline = projectInfo.application_deadline ? new Date(projectInfo.application_deadline) : null;
   const todayDate = new Date();
-  if (projectInfo.applications_allowed === null || projectInfo.applications_allowed === false || deadline === null || todayDate > deadline || projectInfo.link_active === false) {
-    return <p className="text-white text-center">Applications are closed for {projectInfo.title}</p>;
+  if (deadline === null || todayDate > deadline) {
+    return <p className="text-white text-center mt-10">Applications are closed for {projectInfo.title} - Project deadline has passed</p>;
+  }
+  if (projectInfo.awarded_application_id !== null){
+    return <p className="text-white text-center mt-10">Applications are closed - {projectInfo.title} has been awarded</p>;
   }
   const sponsor = projectInfo.sponsor_email ? await supabase.from("Employees").select("full_name").eq("email", projectInfo.sponsor_email).single() : null;
   if (!sponsor || sponsor.error || !sponsor.data || projectInfo.sponsor_email === null) {
