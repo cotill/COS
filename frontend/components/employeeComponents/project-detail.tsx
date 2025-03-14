@@ -245,6 +245,11 @@ export default function ProjectDetail({
         status: "OPEN",
         message: "Applications open until " + deadline.toLocaleDateString(),
       };
+    } else if (deadline === null) {
+      return {
+        status: "CLOSED",
+        message: "Applications Closed - Deadline has not been set",
+      };
     } else {
       return {
         status: "UNKNOWN",
@@ -699,16 +704,16 @@ export default function ProjectDetail({
         )}
         {/* Application Link */}
         {currentProjectInfo.application_link && (
-          <div className="border border-1">
+          <div className="">
             <h2
-              className="text-xl font-normal"
+              className="text-xl font-bold text-white py-2"
               hidden={!project.application_link}
             >
               Application Status:
             </h2>
             <div
               hidden={!project.application_link}
-              className="ml-5 mt-2 space-x-2 flex items-center"
+              className="space-x-2 flex items-center"
             >
               {(() => {
                 const { status, message } = handleApplicationStatus();
