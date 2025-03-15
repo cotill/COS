@@ -138,17 +138,6 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
       setError("All team members must upload a resume");
       return;
     }
-    if (typeof extendedProject !== "string") {
-      console.log({
-        teamName,
-        course,
-        members,
-        projectId: extendedProject.project_id,
-        teamDescription,
-      });
-    } else {
-      console.error("Invalid project data");
-    }
 
     const id = Math.floor(100 + Math.random() * 900); // Generate a number between 100 and 999
 
