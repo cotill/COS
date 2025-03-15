@@ -7,11 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, MinusCircle } from "lucide-react";
+import { PlusCircle, MinusCircle, Loader } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Application, Member, Project } from "@/utils/types";
+import { Application, Application_Status, Member, Project } from "@/utils/types";
 import ReactMarkdown from "react-markdown";
 import { createClient } from "@/utils/supabase/client";
 
@@ -45,7 +45,13 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
     },
   ]);
   const [error, setError] = useState<string | null>(null);
-  const [teamDescription, setTeamDescription] = useState({ value: "", charCount: 0 });
+  const [teamDescription, setTeamDescription] = useState({
+    value: "",
+    charCount: 0,
+  });
+
+  //manage button
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0] || null;
@@ -118,6 +124,8 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true); // Set submitting state to true
+
     if (members.length < minTeamSize) {
       setError(`Team must have at least ${minTeamSize} members`);
       return;
@@ -131,7 +139,13 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
       return;
     }
     if (typeof extendedProject !== "string") {
-      console.log({ teamName, course, members, projectId: extendedProject.project_id, teamDescription });
+      console.log({
+        teamName,
+        course,
+        members,
+        projectId: extendedProject.project_id,
+        teamDescription,
+      });
     } else {
       console.error("Invalid project data");
     }
@@ -142,8 +156,7 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
       project_id: extendedProject.project_id,
       team_name: teamName,
       size: members.length,
-      // incomplete
-      university: extendedProject.university || "",
+      university: extendedProject.university || null,
       members: members.map((member, index) => ({
         full_name: member.full_name,
         email: member.email,
@@ -156,7 +169,8 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
     };
     await uploadResumes(id);
 
-    handleSubmitApplication(application);
+    await handleSubmitApplication(application);
+    setIsSubmitting(false); // Reset submitting state regardless of outcome
   };
 
   const uploadResumes = async (id: number) => {
@@ -175,9 +189,7 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
     await Promise.all(uploadResumePromises); //upload all in parallel
   };
   const getDate = () => {
-    return extendedProject.application_deadline
-      ? new Date(extendedProject.application_deadline).toLocaleDateString("en-US")
-      : "No deadline specified";
+    return extendedProject.application_deadline ? new Date(extendedProject.application_deadline).toLocaleDateString("en-US") : "No deadline specified";
   };
   return (
     <>
@@ -309,8 +321,15 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
               </Alert>
             )}
 
-            <Button type="submit" className="w-full bg-white text-black hover:bg-gray-300 hover:border border-white">
-              Submit Application
+            <Button type="submit" className="w-full bg-white text-black hover:bg-gray-300 hover:border border-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader className="w-3 h-3 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>Submit Application</>
+              )}
             </Button>
           </form>
         </CardContent>
