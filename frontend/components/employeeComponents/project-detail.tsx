@@ -36,6 +36,23 @@ const ProjectLogInfo = dynamic(
   {}
 );
 
+type Members = {
+  full_name: string;
+  role: string;
+  email: string;
+  ttg: string;
+};
+
+type Team = {
+  team_name: string;
+  university: string;
+  members: Members[];
+  supervisor_name: string;
+  supervisor_email: string;
+  nda: string;
+  team_lead: string;
+}
+
 export default function ProjectDetail({
   employeeInfo,
   project,
@@ -50,7 +67,7 @@ export default function ProjectDetail({
   const [originalSponsorData, setOriginalSponsorData] =
     useState<Employee | null>(initialSponsorInfo);
   const [isMessage, setMessage] = useState<string | null>(null);
-  const [awardedTeam, setAwardedTeam] = useState(null);
+  const [awardedTeam, setTeam] = useState<Team | null>(null);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const timeoutLength = 1000;
 
@@ -214,22 +231,54 @@ export default function ProjectDetail({
 
     // Fetch the awarded application from Supabase
     const { data, error } = await supabase
-      .from("Teams")
-      .select(`
-        *,
-        members:Students(team_id, full_name, role, email, ttg:ttg_email)
-      `)
-      .eq("team_id", currentProjectInfo.awarded_team_id)
-      .single();
+      .from('Teams')
+          .select(`
+            team_name,
+            supervisor_name,
+            supervisor_email,
+            Students(full_name, role, email, ttg_email),
+            Projects!Teams_project_id_fkey(university),
+            nda_file,
+            team_lead_email
+          `)
+          .eq("team_id", currentProjectInfo.awarded_team_id)
+          .single();
 
     console.log("TEST: ", data)
+
+    if (!data) {
+      console.warn("No approved team found for this project.");
+      setTeam(null);
+      return;
+    } else if (error) {
+      console.error("Error fetching teams: ", error);
+      setTeam(null);
+      return;
+    } else if (data) {
+      console.log("Teams data: ", data)
+      const members = data.Students || [];
+      const memberDetails = members.map((member: any) => ({
+        full_name: member.full_name,
+        role: member.role,
+        email: member.email,
+        ttg: member.ttg_email,
+  }));
+      setTeam({
+        team_name: data.team_name,
+        university: (data.Projects as unknown as { university: string } | null)?.university ?? 'N/A',
+        members: memberDetails,
+        supervisor_name: data.supervisor_name ?? "N/A",
+        supervisor_email: data.supervisor_email ?? "N/A",
+        nda: data.nda_file,
+        team_lead: data.team_lead_email
+      });
+    }
 
     if (error) {
       console.error("Error fetching team details:", error);
       return;
     }
 
-    setAwardedTeam(data); // Store the fetched team data
     setMenuOpen(true);
   };
 
@@ -619,14 +668,43 @@ export default function ProjectDetail({
             Project_Status.REVIEW,
             Project_Status.REJECTED,
           ].includes(originalProjectInfo.status) && (
-            <div className="flex flex-col">
-              <label className="text-white">Download for Dispatch</label>
-              <div className="flex justify-center items-center space-x-2">
-                <CreatePdf project={originalProjectInfo} />
+            <div className="grid grid-cols-2">
+              <div className = "flex flex-col">
+                <label className="text-white">Download for Dispatch</label>
+                <div className="flex items-center space-x-2">
+                  <CreatePdf project={originalProjectInfo} />
+                </div>
               </div>
-              {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
+              <div className = "flex flex-col">
+                <label className="text-white">Team Awarded</label>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" onClick={onViewDetails}>
+                    View Team Details
+                    <ChevronRight />
+                  </Button>
+
+                  {isMenuOpen && (
+                    <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black opacity-10 z-40"
+                        onClick={() => setMenuOpen(false)} // Close modal when clicking backdrop
+                    />
+                    <div className="fixed top-0 right-0 z-50">
+                    <TeamMenu
+                      onClose={() => setMenuOpen(false)}
+                      teamsData={awardedTeam ?? null} // Pass null if teams is null
+                      title={currentProjectInfo.title ?? 'Unknown Title'}
+                    />
+                    </div>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           )}
+          <div>
+          </div>
         </div>
       </div>
 
@@ -639,7 +717,7 @@ export default function ProjectDetail({
             <Button
               asChild
               variant="outline"
-              className={`text-md space-x-1 ${originalProjectInfo.application_link === null || ["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? "text-gray-500 border border-gray-400 cursor-default" : ""}`}
+              className={`text-sm space-x-1 ${originalProjectInfo.application_link === null || ["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? "text-gray-500 border border-gray-400 cursor-default" : ""}`}
             >
               {originalProjectInfo.application_link && !["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? (
                 <Link
@@ -655,7 +733,7 @@ export default function ProjectDetail({
             <Button 
               asChild
               variant="outline"
-              className={`text-md space-x-1 ${originalProjectInfo.application_link === null || ["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? "text-gray-500 border border-gray-400 cursor-default" : ""}`}
+              className={`text-sm space-x-1 ${originalProjectInfo.application_link === null || ["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? "text-gray-500 border border-gray-400 cursor-default" : ""}`}
             >
               {originalProjectInfo.application_link && !["NEW", "DRAFT", "APPROVED", "REJECTED", "REVIEW"].includes(originalProjectInfo.status) ? (
                 <Link
@@ -677,51 +755,17 @@ export default function ProjectDetail({
           </div>
         </div>
 
-        {/* Team Awarded */}
-        {currentProjectInfo.awarded_team_id && (
-          <div>
-            <h2 className="text-xl font-bold text-white py-2">Team Awarded</h2>
-            {/* <Dialog
-              open={!!awardedTeam}
-              onOpenChange={() => setAwardedTeam(null)}
-            > */}
-              {/* <DialogTrigger asChild> */}
-                <Button variant="outline" onClick={onViewDetails}>
-                  View Team Details
-                  <ChevronRight />
-                </Button>
-              {/* </DialogTrigger> */}
-
-              {isMenuOpen && (
-                <>
-                {/* Backdrop */}
-                <div
-                    className="fixed inset-0 bg-black opacity-10 z-40"
-                    onClick={() => setMenuOpen(false)} // Close modal when clicking backdrop
-                />
-                <div className="fixed top-0 right-0 z-50">
-                <TeamMenu
-                  onClose={() => setMenuOpen(false)}
-                  teamsData={awardedTeam ?? null} // Pass null if teams is null
-                  title={currentProjectInfo.title ?? 'Unknown Title'}
-                />
-                </div>
-                </>
-              )}
-            {/* </Dialog> */}
-          </div>
-        )}
         {/* Application Link */}
         {currentProjectInfo.application_link && (
-          <div className="flex gap-2 items-start py-2 [&_label]:text-white [&_h2]:text-white">
+          <div className="flex flex-col gap-2 items-start [&_label]:text-white [&_h2]:text-white">
             <h2
-              className="text-xl font-normal"
+              className="text-xl font-normal py-2"
               hidden={!project.application_link}
             >
               Link Status:
             </h2>
             <div
-              className="flex flex-col gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5"
+              className="flex gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5"
               hidden={!project.application_link}
             >
               <div className="flex items-center space-x-2">
@@ -743,7 +787,7 @@ export default function ProjectDetail({
                 />
                 <label htmlFor="project_link_open">Open</label>
               </div>
-              <div className="flex items-center space-x-2 py-2">
+              <div className="flex items-center space-x-2">
                 <input
                   type="radio"
                   className={`${isEditing ? "enabledinput" : "disabledinput"}`}
@@ -767,10 +811,10 @@ export default function ProjectDetail({
         )}
         {/* Applications Allowed */}
         {currentProjectInfo.applications_allowed !== null && (
-          <div className="flex gap-2 items-start [&_label]:text-white [&_h2]:text-white">
-            <h2 className="text-xl font-normal">Applications Allowed:</h2>
+          <div className="flex flex-col gap-2 items-start [&_label]:text-white [&_h2]:text-white">
+            <h2 className="text-xl font-normal py-2">Applications Allowed:</h2>
             <div
-              className="flex flex-col gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5"
+              className="flex gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5"
               hidden={!project.application_link}
             >
               <div className="flex items-center space-x-2">
