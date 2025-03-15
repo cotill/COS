@@ -136,7 +136,7 @@ export interface Application {
   application_id: number;
   project_id: number;
   team_name: string;
-  university: string;
+  university: string | null;
   status: Application_Status | null;
   members: Member[]; // jsonb
   size: number;
