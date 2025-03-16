@@ -57,7 +57,7 @@ const checkStatusSelectable = (
     initial_status === Project_Status.REJECTED &&
     targetStatus === Project_Status.REVIEW
   )
-    true;
+    return true;
   return false;
 };
 
