@@ -48,25 +48,44 @@ const styles = StyleSheet.create({
 });
 
 const convertMDtoPlain = (markdown) => {
-  const parts = markdown.split(/\*\*(.*?)\*\*/g);
-  
-  return (
-    <Text style={{ fontSize: 12 }}>
-      {parts.map((part, index) => {
-        // If the index is odd, it's a bolded part
-        if (index % 2 === 1) {
-          return (
-            <Text key={index} style={{ fontFamily: 'Helvetica-Bold' }}>
+  const lines = markdown.split("\n");
+
+  return lines.map((line, index) => {
+    let textStyle = { fontSize: 12, marginBottom: 6 }; // Default text style
+    let content = line.trim(); // Trim spaces but keep empty lines
+
+    if (content.startsWith("### ")) {
+      textStyle = { fontSize: 14, fontFamily: "Helvetica-Bold", marginBottom: 8 };
+      content = content.replace(/^### /, "");
+    } else if (content.startsWith("## ")) {
+      textStyle = { fontSize: 16, fontFamily: "Helvetica-Bold", marginBottom: 10 };
+      content = content.replace(/^## /, "");
+    } else if (content.startsWith("# ")) {
+      textStyle = { fontSize: 18, fontFamily: "Helvetica-Bold", marginBottom: 12 };
+      content = content.replace(/^# /, "");
+    }
+
+    // Handle **bold** text inside lines
+    const parts = content.split(/\*\*(.*?)\*\*/g);
+
+    return (
+      <Text key={index} style={textStyle}>
+        {parts.map((part, i) =>
+          i % 2 === 1 ? (
+            <Text key={i} style={{ fontFamily: "Helvetica-Bold" }}>
               {part}
             </Text>
-          );
-        }
-        // Otherwise, it's regular text
-        return part;
-      })}
-    </Text>
-  );
+          ) : (
+            part
+          )
+        )}
+      </Text>
+    );
+  });
 };
+
+
+
 const MyDocument = ({ project }) => (
   <Document>
     <Page size="A4" style={styles.page}>
