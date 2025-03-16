@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { useState, useEffect, Suspense } from "react";
 import { Project, Project_Status, Employee, Universities } from "@/utils/types";
 import { Info, Pencil, ArrowUpRight, ChevronRight } from "lucide-react";
@@ -10,7 +10,7 @@ import "./customDatePickerWidth.css";
 import ReactMarkdown from "react-markdown";
 import { Button } from "../ui/button";
 import Link from "next/link";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 import {
   getChangedData,
   onUpdateProject,
@@ -19,12 +19,12 @@ import {
 import { ProjectStatusButton } from "../project-status-button";
 import { createClient } from "@/utils/supabase/client";
 import { FaGithub, FaGoogleDrive } from "react-icons/fa";
-import { TeamDetailsDialog } from "./team-detail";
+import TeamMenu from "@/components/employeeComponents/team-menu";
 import "./project-details.css";
 import CreatePdf from "@/app/student_applications/createPdf";
 import dynamic from "next/dynamic";
 import SaveCancelButtons from "../save_cancel_btns";
-import TeamMenu from "@/components/employeeComponents/team-menu";
+import { cn } from "@/utils/cn";
 interface ProjectDetailProps {
   employeeInfo: Employee;
   project: Project;
@@ -291,6 +291,45 @@ export default function ProjectDetail({
     return `${displayMonth} ${year}`;
   };
 
+  const handleApplicationStatus = useCallback(() => {
+    const todayDate = new Date();
+    const deadline = originalProjectInfo.application_deadline
+      ? new Date(originalProjectInfo.application_deadline)
+      : null;
+
+    if (
+      deadline &&
+      todayDate > deadline &&
+      originalProjectInfo.awarded_application_id === null
+    ) {
+      return {
+        status: "CLOSED",
+        message:
+          "Applications Closed - Deadline passed on " +
+          deadline.toLocaleDateString(),
+      };
+    } else if (originalProjectInfo.awarded_application_id !== null) {
+      return {
+        status: "CLOSED",
+        message: "Applications Closed - Project has been awarded",
+      };
+    } else if (deadline && todayDate <= deadline) {
+      return {
+        status: "OPEN",
+        message: "Applications open until " + deadline.toLocaleDateString(),
+      };
+    } else if (deadline === null) {
+      return {
+        status: "CLOSED",
+        message: "Applications Closed - Deadline has not been set",
+      };
+    } else {
+      return {
+        status: "UNKNOWN",
+        message: "Application status is unknown",
+      };
+    }
+  }, [originalProjectInfo.application_deadline]);
   return (
     <div className="relative">
       <div className="flex items-center justify-between mb-3 py-2">
@@ -668,43 +707,14 @@ export default function ProjectDetail({
             Project_Status.REVIEW,
             Project_Status.REJECTED,
           ].includes(originalProjectInfo.status) && (
-            <div className="grid grid-cols-2">
-              <div className = "flex flex-col">
-                <label className="text-white">Download for Dispatch</label>
-                <div className="flex items-center space-x-2">
-                  <CreatePdf project={originalProjectInfo} />
-                </div>
+            <div className="flex flex-col">
+              <label className="text-white">Download for Dispatch</label>
+              <div className="flex justify-center items-center space-x-2">
+                <CreatePdf project={originalProjectInfo} />
               </div>
-              <div className = "flex flex-col">
-                <label className="text-white">Team Awarded</label>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" onClick={onViewDetails}>
-                    View Team Details
-                    <ChevronRight />
-                  </Button>
-
-                  {isMenuOpen && (
-                    <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 bg-black opacity-10 z-40"
-                        onClick={() => setMenuOpen(false)} // Close modal when clicking backdrop
-                    />
-                    <div className="fixed top-0 right-0 z-50">
-                    <TeamMenu
-                      onClose={() => setMenuOpen(false)}
-                      teamsData={awardedTeam ?? null} // Pass null if teams is null
-                      title={currentProjectInfo.title ?? 'Unknown Title'}
-                    />
-                    </div>
-                    </>
-                  )}
-                </div>
-              </div>
+              {/* <Button onClick={handleDownloadPdf}> Download as PDF </Button> */}
             </div>
           )}
-          <div>
-          </div>
         </div>
       </div>
 
@@ -755,106 +765,63 @@ export default function ProjectDetail({
           </div>
         </div>
 
-        {/* Application Link */}
-        {currentProjectInfo.application_link && (
-          <div className="flex flex-col gap-2 items-start [&_label]:text-white [&_h2]:text-white">
-            <h2
-              className="text-xl font-normal py-2"
-              hidden={!project.application_link}
-            >
-              Link Status:
-            </h2>
-            <div
-              className="flex gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5"
-              hidden={!project.application_link}
-            >
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                  id="project_link_open"
-                  name="link_active"
-                  checked={currentProjectInfo.link_active === true}
-                  onChange={() => {
-                    isEditing &&
-                      onInputChange({
-                        target: {
-                          name: "link_active",
-                          value: true,
-                        },
-                      });
-                  }}
-                />
-                <label htmlFor="project_link_open">Open</label>
+        {/* Team Awarded */}
+        {currentProjectInfo.awarded_application_id && (
+          <div>
+            <h2 className="text-xl font-bold text-white py-2">Team Awarded</h2>
+            <div className="flex items-center space-x-2">
+            <Button variant="outline" onClick={onViewDetails}>
+              View Team Details
+              <ChevronRight />
+            </Button>
+
+            {isMenuOpen && (
+              <>
+              {/* Backdrop */}
+              <div
+                  className="fixed inset-0 bg-black opacity-10 z-40"
+                  onClick={() => setMenuOpen(false)} // Close modal when clicking backdrop
+              />
+              <div className="fixed top-0 right-0 z-50">
+              <TeamMenu
+                onClose={() => setMenuOpen(false)}
+                teamsData={awardedTeam ?? null} // Pass null if teams is null
+                title={currentProjectInfo.title ?? 'Unknown Title'}
+              />
               </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                  id="project_link_closed"
-                  name="link_active"
-                  checked={currentProjectInfo.link_active === false}
-                  onChange={() => {
-                    isEditing &&
-                      onInputChange({
-                        target: {
-                          name: "link_active",
-                          value: false,
-                        },
-                      });
-                  }}
-                />
-                <label htmlFor="project_link_closed">Closed</label>
-              </div>
-            </div>
+              </>
+            )}
+          </div>
           </div>
         )}
-        {/* Applications Allowed */}
-        {currentProjectInfo.applications_allowed !== null && (
-          <div className="flex flex-col gap-2 items-start [&_label]:text-white [&_h2]:text-white">
-            <h2 className="text-xl font-normal py-2">Applications Allowed:</h2>
-            <div
-              className="flex gap-2 text-base [&_label]:font-medium [&_input]:w-5 [&_input]:h-5"
+        {/* Application Link */}
+        {currentProjectInfo.application_link && (
+          <div className="">
+            <h2
+              className="text-xl font-bold text-white py-2"
               hidden={!project.application_link}
             >
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                  id="project_link_true"
-                  name="applications_allowed"
-                  checked={currentProjectInfo.applications_allowed === true}
-                  onChange={() => {
-                    isEditing &&
-                      onInputChange({
-                        target: {
-                          name: "applications_allowed",
-                          value: true,
-                        },
-                      });
-                  }}
-                />
-                <label htmlFor="project_link_open">True</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  className={`${isEditing ? "enabledinput" : "disabledinput"}`}
-                  id="project_link_false"
-                  name="applications_allowed"
-                  checked={currentProjectInfo.applications_allowed === false}
-                  onChange={() => {
-                    isEditing &&
-                      onInputChange({
-                        target: {
-                          name: "applications_allowed",
-                          value: false,
-                        },
-                      });
-                  }}
-                />
-                <label htmlFor="project_link_closed">False</label>
-              </div>
+              Application Status:
+            </h2>
+            <div
+              hidden={!project.application_link}
+              className="space-x-2 flex items-center"
+            >
+              {(() => {
+                const { status, message } = handleApplicationStatus();
+                const statusColor =
+                  status === "OPEN" ? "bg-green-500" : "bg-red-500";
+                return (
+                  <>
+                    <div
+                      className={cn(
+                        `w-3 h-3 rounded-full shrink-0 ${statusColor}`
+                      )}
+                    />
+                    <span className="">{message}</span>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
