@@ -36,8 +36,8 @@ const checkStatusSelectable = (
   const initialIndex = ProjectStatusOrder.indexOf(initial_status);
   const targetIndex = ProjectStatusOrder.indexOf(targetStatus);
 
-  // the status  in front is selectable
-  if (targetIndex === initialIndex + 1) return true;
+  // the status  in front is selectable only if the initial is not Rejected
+  if (targetIndex === initialIndex + 1 && initial_status !==  Project_Status.REJECTED) return true;
   if (initialIndex === targetIndex) return true; // if the user want to set the status to original status, allow them to
   if (
     initial_status === Project_Status.REVIEW &&
