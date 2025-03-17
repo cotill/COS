@@ -40,8 +40,10 @@ const checkStatusSelectable = (
   const initialIndex = ProjectStatusOrder.indexOf(initial_status);
   const targetIndex = ProjectStatusOrder.indexOf(targetStatus);
 
-  if (targetIndex === initialIndex + 1) return true;
-  if (initialIndex === targetIndex) return true;
+
+  // the status  in front is selectable only if the initial is not Rejected
+  if (targetIndex === initialIndex + 1 && initial_status !==  Project_Status.REJECTED) return true;
+  if (initialIndex === targetIndex) return true; // if the user want to set the status to original status, allow them to
 
   if (
     initial_status === Project_Status.REVIEW &&
@@ -62,13 +64,10 @@ const checkStatusSelectable = (
 
   // NEW CONDITION: Prevent moving from APPROVED → DISPATCHED if no sponsor or university
   if (
-    initial_status === Project_Status.APPROVED &&
-    targetStatus === Project_Status.DISPATCHED &&
-    (!projectSponsor || !dispatchUniversity)
-  ) {
-    return false;
-  }
-
+    initial_status === Project_Status.REJECTED &&
+    targetStatus === Project_Status.REVIEW
+  )
+    return true;
   return false;
 };
 
