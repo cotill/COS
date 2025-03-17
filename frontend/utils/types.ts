@@ -86,9 +86,7 @@ export interface Project {
   status: Project_Status;
   university: Universities | null;
   application_link: string | null;
-  link_active: boolean;
   application_deadline: string | null;
-  applications_allowed: boolean | null;
   dispatcher_email: string | null;
   dispatched_date: string | null;
   project_budget: number;
@@ -138,7 +136,7 @@ export interface Application {
   application_id: number;
   project_id: number;
   team_name: string;
-  university: string;
+  university: string | null;
   status: Application_Status | null;
   members: Member[]; // jsonb
   size: number;
