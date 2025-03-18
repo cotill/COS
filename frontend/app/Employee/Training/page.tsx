@@ -191,128 +191,128 @@ export default function TrainingPage() {
     return (
       <>
         <Headingbar text="Training" />
-        <div className="text-center mt-16 mb-16 text-3xl text-white">
-          Youre Max level!
+        <div className="bg-gray-300 p-6 m-8 rounded-lg">
+          <div className="mb-4 flex justify-center">
+            <TrainingTracker active={level} />
+          </div>
+          <div className="bg-gray-100 p-8 rounded-lg shadow-lg mt-4 max-w-md mx-auto text-center">
+            <h2 className="text-2xl font-semibold text-gray-800">Congratulations!</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              You have reached the max level.
+            </p>
+          </div>
         </div>
       </>
     );
 
-  return (
-    <>
-      <Headingbar text="Training" />
-      <div className="pt-4 space-y-4 text-black">
-        <div className="flex justify-center mb-4">
-          <TrainingTracker active={level} />
+    return (
+      <>
+        <Headingbar text="Training" />
+        <div className="bg-gray-300 p-6 m-8 rounded-lg">
+          <div className="mb-4 flex justify-center">
+            <TrainingTracker active={level} />
+          </div>
+    
+          {view === "training" && (
+            <div>
+              <div className="text-center text-3xl text-black font-bold">
+                Training Material for Level {level}
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
+                <h2 className="text-xl font-semibold text-black">
+                  Welcome, {email}! <br />Your Current Level: {level}
+                </h2>
+                <ul className="mt-2 text-black text-sm space-y-2">
+                  {trainingMaterials[level]?.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="flex items-center justify-center mt-4">
+                <Button variant="outline" onClick={() => setView("quiz")}>
+                  Start Quiz
+                </Button>
+              </div>
+            </div>
+          )}
+    
+          {view === "quiz" && (
+            <div>
+              <div className="text-center text-3xl text-black font-bold">
+                Quiz for Level {level}
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
+                <form>
+                  {quizzes[level]?.questions.map((question, index) => (
+                    <div key={index} className="mb-4">
+                      <p className="text-black font-medium">{question.question}</p>
+                      {question.choices.map((choice, choiceIndex) => (
+                        <label key={choiceIndex} className="block text-black text-sm mt-2">
+                          <input
+                            className="mr-2"
+                            type="radio"
+                            name={`question-${index}`}
+                            value={choice}
+                            checked={answers[index] === choice}
+                            onChange={(e) => {
+                              const newAnswers = [...answers];
+                              newAnswers[index] = e.target.value;
+                              setAnswers(newAnswers);
+                            }}
+                          />
+                          {choice}
+                        </label>
+                      ))}
+                    </div>
+                  ))}
+                </form>
+              </div>
+              <div className="flex items-center justify-center mt-4">
+                <Button variant="outline" onClick={handleSubmit}>
+                  Submit Quiz
+                </Button>
+              </div>
+            </div>
+          )}
+    
+          {view === "success" && (
+            <div>
+              <div className="text-center text-3xl text-black font-bold">
+                Training Material for Level {level}
+              </div>
+              <div className="bg-gray-100 p-8 rounded-lg shadow-lg mt-4 max-w-md mx-auto text-center">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  Congratulations!
+                </h2>
+                <p className="mt-2 text-sm text-gray-600">
+                  Review materials or move on to the next level
+                </p>
+              </div>
+              <div className="flex items-center justify-center mt-4">
+                <Button variant="outline" onClick={() => setView("training")}>
+                  Continue
+                </Button>
+              </div>
+            </div>
+          )}
+    
+          {view === "failure" && (
+            <div>
+              <div className="bg-gray-100 p-8 rounded-lg shadow-lg mt-4 max-w-md mx-auto text-center">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  Try Again
+                </h2>
+                <p className="mt-2 mb-4 text-sm text-gray-600">{message}</p>
+                <div className="flex items-center justify-center">
+                  <Button variant="outline" onClick={handleRetry}>
+                    Retry Quiz
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-
-        {view === "training" && (
-          <div>
-            <div className="text-center text-3xl text-white">
-              Training Material for Level {level}
-            </div>
-            <div
-              className="space-y-4 rounded-3xl mt-4 p-4"
-              style={{ backgroundColor: "#c9c7ce" }}
-            >
-              <h2>
-                Welcome, {email}! Your Current Level: {level}
-              </h2>
-
-              <ul>
-                {trainingMaterials[level]?.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex items-center justify-center mt-4 p-4">
-              <Button variant="outline" onClick={() => setView("quiz")}>
-                Start Quiz
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {view === "quiz" && (
-          <div className="quiz ">
-            <div className="text-center text-3xl text-white ">
-              Quiz for Level {level}
-            </div>
-            <div
-              className="space-y-4 rounded-3xl mt-4 p-4"
-              style={{ backgroundColor: "#c9c7ce" }}
-            >
-              <form>
-                {quizzes[level]?.questions.map((question, index) => (
-                  <div key={index}>
-                    <p className="ml-4 mt-4">{question.question}</p>
-                    {question.choices.map((choice, choiceIndex) => (
-                      <label key={choiceIndex} style={{ display: "block" }}>
-                        <input
-                          className="ml-4"
-                          type="radio"
-                          name={`question-${index}`}
-                          value={choice}
-                          checked={answers[index] === choice}
-                          onChange={(e) => {
-                            const newAnswers = [...answers];
-                            newAnswers[index] = e.target.value;
-                            setAnswers(newAnswers);
-                          }}
-                        />
-                        {choice}
-                      </label>
-                    ))}
-                  </div>
-                ))}
-              </form>
-            </div>
-            <div className="flex items-center justify-center mt-4 p-4">
-              <Button variant="outline" onClick={handleSubmit}>
-                Submit Quiz
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {view === "success" && (
-          <div>
-            <div className="text-center text-3xl text-white">
-              Training Material for Level {level}
-            </div>
-
-            <div className="flex flex-col items-center justify-center bg-gray-100 rounded-xl shadow-lg mt-4 pt-4 p-8 w-full max-w-md mx-auto">
-              {/* Congratulations Text */}
-              <h2 className="mt-6 text-2xl font-semibold text-gray-800">
-                Congratulations!
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Review materials or move on to the next level
-              </p>
-
-              {/* Button */}
-            </div>
-            <div className="flex items-center justify-center mt-4 p-4">
-              <Button variant="outline" onClick={() => setView("training")}>
-                Continue
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {view === "failure" && (
-          <div className="failure">
-            <div className="flex flex-col items-center justify-center bg-gray-100 rounded-xl shadow-lg mt-4 pt-4 p-8 w-full max-w-md mx-auto">
-              <h2 className="mt-6 text-2xl font-semibold text-gray-800">
-                Try Again
-              </h2>
-              <p className="mt-10 mb-10 text-sm text-gray-600">{message}</p>
-              <Button variant="outline" onClick={handleRetry}>
-                Retry Quiz
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
+      </>
+    );
+    
 }
