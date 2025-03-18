@@ -1,4 +1,4 @@
-version: '3.5'
+version: '3.8'
 
 services:
   app:
@@ -8,6 +8,15 @@ services:
     container_name: CapstoneOnboarding
     ports:
       - '3000:3000'
-    volumes:
-      - /frontend:/app
-      - /frontend/app/node_modules
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - production-network
+
+networks:
+  production-network:
+    driver: bridge

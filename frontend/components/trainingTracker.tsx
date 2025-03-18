@@ -14,9 +14,9 @@ const trainingTracker: React.FC<trainingTrackerProps> = ({ active }) => {
           <div
             className={`flex items-center justify-center w-16 h-16 rounded-full text-white font-bold ${
               active === level
-                ? "bg-green-500"
+                ? "bg-mantis"
                 : active === level - 1
-                ? "bg-yellow-500"
+                ? "bg-[#e9ed66]"
                 : "bg-gray-400"
             }`}
           >

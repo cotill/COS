@@ -1,23 +1,61 @@
-# gives us the lastest version of NodeJS
-FROM node:latest
+# syntax=docker/dockerfile:1
 
-# within our image everything is in the app directory
-WORKDIR /frontend/app
+FROM node:18-alpine AS base
 
-# copy the package.json 
-COPY /frontend/package.json .
-COPY /frontend/package-lock.json .
+# Stage 1 - Install dependencies
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
 
-# install the independices from package.json
-RUN npm ci
+# Copy package management files
+COPY frontend/package.json .
+COPY frontend/package-lock.json .
 
-# copy of our code (i.e the src folder)
-COPY /frontend .
+# Install exact versions (production only)
+RUN npm ci --omit=dev
 
-#build the Next JS application
+# Stage 2 - Build application
+FROM base AS builder
+WORKDIR /app
+
+# Copy dependencies from previous stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy application source
+COPY frontend .
+
+# Disable Next.js telemetry
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build application (ensure output: 'standalone' in next.config.js)
 RUN npm run build
 
+# Stage 3 - Production runtime
+FROM base AS runner
+WORKDIR /app
 
-CMD ["npm", "run", "dev"]
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# To build the image: In terminal run, "docker build -t<<anyName you want>> ."
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S -u 1001 -G nodejs nextjs
+
+# Copy static assets
+COPY --from=builder /app/public ./public
+
+# Copy built application (with proper permissions)
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Use non-privileged user
+USER nextjs
+
+# Network settings
+EXPOSE 3000
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
+# Start the application
+CMD ["node", "server.js"]
