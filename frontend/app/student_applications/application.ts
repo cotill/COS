@@ -91,6 +91,12 @@ const createTeam = async (
     throw new Error(
       `Error creating team for team_name ${team_name}: ${error.message}`
     );
+  const { error: updateError } = await supabase
+    .from("Projects")
+    .update({awarded_team_id: team_id})
+    .eq("project_id", project_id)
+  if (updateError)
+    throw new Error(`Error updating awarded_team_id: ${updateError.message}`);
 };
 
 /**
