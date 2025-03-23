@@ -21,13 +21,7 @@ export const signUpAction = async (formData: FormData) => {
   let password = formData.get("password")?.toString();
   let title = formData.get("title")?.toString();
   let department = formData.get("department")?.toString();
-  console.log("user sign up data", {
-    first_name,
-    last_name,
-    email,
-    password,
-    department,
-  });
+
   const emailRegex = /^[^\s@]+@ttgteams\.com$/i;
 
   if (!first_name || first_name.trim().length == 0) {
@@ -87,7 +81,7 @@ export const signUpAction = async (formData: FormData) => {
   if (error) {
     return encodedRedirect("error", "/sign-up", error.message);
   } else {
-    return encodedRedirect("success", "/sign-up", "Thanks for signing up! Please check your email for a verification link.");
+    return redirect("/Employee/Projects");
   }
 };
 
