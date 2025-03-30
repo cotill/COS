@@ -28,54 +28,7 @@ const handleUpdateTeam = async (team: Partial<Team>): Promise<{ status: string; 
 };
 
 export default function TeamManagement({ userInfo, teamInfo }: TeamManagementProps) {
-  //   {
-  //     student_id: "012029",
-  //     email: "john@example.com",
-  //     password: "password123",
-  //     full_name: "John Doe",
-  //     university: "University A",
-  //     major: "CS",
-  //     github: "https://github.com/johndoe",
-  //     team_id: "21623653532sdhsdh",
-  //     ttg_email: null,
-  //     changed_password: false,
-  //   },
-  //   {
-  //     student_id: "dsjds73",
-  //     email: "jane@example.com",
-  //     password: "password123",
-  //     full_name: "Jane Smith",
-  //     university: "University B",
-  //     major: "SE",
-  //     github: "https://github.com/janesmith",
-  //     team_id: "21623653532sdhsdh",
-  //     ttg_email: "JaneSmike@ttg.com",
-  //     changed_password: false,
-  //   },
-  //   {
-  //     student_id: "dsh32623",
-  //     email: "mike@example.com",
-  //     password: "password123",
-  //     full_name: "Mike Ross",
-  //     university: "University C",
-  //     major: "IT",
-  //     github: "https://github.com/mikeross",
-  //     team_id: "21623653532sdhsdh",
-  //     ttg_email: null,
-  //     changed_password: false,
-  //   },
-  // ]);
 
-  // const [team, setTeam] = useState<Team>({
-  //   team_id: "21623653532sdhsdh",
-  //   team_name: "Team Alpha",
-  //   team_lead_email: "mike@example.com",
-  //   nda_file: "nda.pdf",
-  //   completed_onboarding: "2023-01-01",
-  //   project_id: "project123",
-  //   supervisor_name: "Dr. Smith",
-  //   supervisor_email: "dr.smith@example.com",
-  // });
   const [teamName, setTeamName] = useState<string>(teamInfo.team_name); // used to update the teamName when the user saves
 
   const [currentTeamInfo, setCurrentTeamInfo] = useState<Partial<Team>>(teamInfo);
