@@ -57,13 +57,13 @@ export default async function taskspage() {
   const progress = totalTasks === 0 ? 100 : (doneTasks / totalTasks) * 100;
 
   // Console log results
-  console.log("Student Info:", studentInfo);
+{/*  console.log("Student Info:", studentInfo);
   console.log("Team Members:", teamMembers);
   console.log("Total Team Members:", githubCount);
   console.log("Members with GitHub:", membersWithGithub);
   console.log("Total Tasks:", totalTasks);
   console.log("Done Tasks:", doneTasks);
-  console.log("Progress:", progress);
+  console.log("Progress:", progress);*/}
 
   return (
     <>
