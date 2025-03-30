@@ -27,10 +27,11 @@ interface TeamMembersProp {
   teamName: string; //pass down the current team name
   disableButtons: boolean;
   fetchTeam: () => Promise<void>;
+  handleLeaderChange: () => Promise<void>; // callback function to update the 
 }
 const maxTeamSize = 10;
 
-export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons, fetchTeam }: TeamMembersProp) {
+export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnSave, teamName, disableButtons, fetchTeam, handleLeaderChange }: TeamMembersProp) {
   //loading state
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
@@ -255,6 +256,9 @@ export default function TeamMembers({ userInfo, originalTeamInfo, setTeamNameOnS
       const updateResults = await handleUpdateLead(localLead, originalTeamInfo.team_id||"")
       if (updateResults.type === "error") {
         await resetAllStates();
+      } else{
+        // if there was no error call the callback function
+        handleLeaderChange();
       }
       addNotification(updateResults.type as "error" | "warning" | "success" | "partial-success", updateResults.text);
     } catch (error) {

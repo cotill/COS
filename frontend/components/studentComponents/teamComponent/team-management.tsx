@@ -28,7 +28,6 @@ const handleUpdateTeam = async (team: Partial<Team>): Promise<{ status: string; 
 };
 
 export default function TeamManagement({ userInfo, teamInfo }: TeamManagementProps) {
-  // const [student, setStudent] = useState<Partial<Student>[]>([
   //   {
   //     student_id: "012029",
   //     email: "john@example.com",
@@ -80,11 +79,13 @@ export default function TeamManagement({ userInfo, teamInfo }: TeamManagementPro
   const [teamName, setTeamName] = useState<string>(teamInfo.team_name); // used to update the teamName when the user saves
 
   const [currentTeamInfo, setCurrentTeamInfo] = useState<Partial<Team>>(teamInfo);
+  const [disableButtons, setDisableButtons] = useState<boolean>(userInfo.email !== (teamInfo?.team_lead_email ?? "") ? true : false); //state to manage  disabling Buttons
+
 
   const fetchTeam = async () => {
     const { data: teamData, error: teamError } = await supabase.from("Teams").select("*").eq("team_id", userInfo.team_id).single();
     if (!teamData || teamError) {
-      console.log(`Error retrieving team info for student ${userInfo.full_name}. Here is more detail: ${teamError?.message}`);
+      // console.log(`Error retrieving team info for student ${userInfo.full_name}. Here is more detail: ${teamError?.message}`);
       setCurrentTeamInfo({});
       setTeamName("");
     } else {
@@ -99,7 +100,7 @@ export default function TeamManagement({ userInfo, teamInfo }: TeamManagementPro
   }, []);
 
   const handleTeamName = async (new_team_name: string): Promise<{ type: "success" | "error"; text: JSX.Element[] }> => {
-    console.log("teamMgm file, Team name was changed");
+    // console.log("teamMgm file, Team name was changed");
 
     let message: JSX.Element[] = [];
     try {
@@ -119,12 +120,21 @@ export default function TeamManagement({ userInfo, teamInfo }: TeamManagementPro
       await fetchTeam();
     }
   };
-  const disableButtons = userInfo.email !== (currentTeamInfo?.team_lead_email ?? "") ? true : false;
+
+  //callback func to handle the leader change
+  const handleLeaderChange = async() => {
+   await fetchTeam();// this will ensure that the code will have the latest team info (particularly the team lead email)
+  }
+  
+  // use effect will run wherever the currentTeamInfo.team_lead_email changes
+  useEffect(() => {
+    setDisableButtons(userInfo.email !== (currentTeamInfo?.team_lead_email ?? "") ? true : false);
+  },[currentTeamInfo.team_lead_email]);
   return (
     <>
       <Headingbar text={teamName} />
       <div>
-        <TeamMembers userInfo={userInfo} originalTeamInfo={currentTeamInfo} teamName={teamName} setTeamNameOnSave={handleTeamName} disableButtons={disableButtons} fetchTeam={fetchTeam} />
+        <TeamMembers userInfo={userInfo} originalTeamInfo={currentTeamInfo} teamName={teamName} setTeamNameOnSave={handleTeamName} disableButtons={disableButtons} fetchTeam={fetchTeam} handleLeaderChange={handleLeaderChange}/>
         <TeamSupervisor disableButtons={disableButtons} originalTeamInfo={currentTeamInfo} fetchTeam={fetchTeam} handleUpdateTeam={handleUpdateTeam} />
       </div>
     </>
