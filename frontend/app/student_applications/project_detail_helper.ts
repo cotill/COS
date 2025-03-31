@@ -144,6 +144,20 @@ const handleProjectStatusChange = (
 
     currentProjectInfo.rejector_date = new Date().toISOString();
     currentProjectInfo.rejector_email = user_email;
+  } else if (
+    ((originalProjectInfo.status === Project_Status.AWARDED && currentProjectInfo.status == Project_Status.ACTIVE) ||
+    (originalProjectInfo.status === Project_Status.ACTIVE && currentProjectInfo.status == Project_Status.COMPLETED)) &&
+    currentProjectInfo.sponsor_email
+  ) {
+    if (
+      !checkActiveCompleteInfo(
+        user_email,
+        currentProjectInfo.sponsor_email,
+        currentProjectInfo.status
+      )
+    ) {
+      return false;
+    }
   }
 };
 
@@ -172,12 +186,33 @@ const checkApproverInfo = (
 ) => {
   if (user_level < 2) {
     alert(
-      "You're are not authorized to approve this project! \n Only employees lvl 2+ can"
+      "You are not authorized to approve this project! \n Only employees lvl 2+ can"
     );
     return false;
   }
   if (user_email === creator_email) {
-    alert("You're are not authorized to approve a project you created");
+    alert("You are not authorized to approve a project you created");
+    return false;
+  }
+  return true;
+};
+
+const checkActiveCompleteInfo = (
+  user_email: string,
+  sponsor_email: string,
+  status: string
+) => {
+  if (user_email != sponsor_email) {
+    if (status == Project_Status.AWARDED) {
+      alert(
+        "You are not authorized to activate this project! \n Only the project sponsor can"
+      );
+    }
+    if (status == Project_Status.ACTIVE) {
+      alert(
+        "You are not authorized to conclude this project! \n Only the project sponsor can"
+      );
+    }
     return false;
   }
   return true;

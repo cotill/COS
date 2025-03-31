@@ -51,6 +51,7 @@ type Team = {
   supervisor_email: string;
   nda: string;
   team_lead: string;
+  onboarding: boolean;
 }
 
 export default function ProjectDetail({
@@ -239,7 +240,8 @@ export default function ProjectDetail({
             Students(full_name, role, email, ttg_email),
             Projects!Teams_project_id_fkey(university),
             nda_file,
-            team_lead_email
+            team_lead_email,
+            completed_onboarding
           `)
           .eq("team_id", currentProjectInfo.awarded_team_id)
           .single();
@@ -270,7 +272,8 @@ export default function ProjectDetail({
         supervisor_name: data.supervisor_name ?? "N/A",
         supervisor_email: data.supervisor_email ?? "N/A",
         nda: data.nda_file,
-        team_lead: data.team_lead_email
+        team_lead: data.team_lead_email,
+        onboarding: data.completed_onboarding
       });
     }
 

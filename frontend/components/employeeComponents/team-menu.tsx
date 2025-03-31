@@ -23,6 +23,7 @@ type Team = {
   supervisor_email: string;
   nda: string;
   team_lead: string;
+  onboarding: boolean;
 };
 
 interface TeamMenuProps {
@@ -34,7 +35,7 @@ interface TeamMenuProps {
 const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 text-white rounded-lg shadow-lg max-w-[450px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gray-900 text-white rounded-lg shadow-lg max-w-[450px] max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
         </DialogHeader>
@@ -125,6 +126,27 @@ const TeamMenu: React.FC<TeamMenuProps> = ({ onClose, teamsData, title }) => {
                         >
                           <FileText className="mr-2" size={18} />
                           <span>No NDA</span>
+                        </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+              </div>
+              <div className='flex flex-col'>
+                <span className="text-gray-400">Onboarding Status: </span>
+                  <div
+                    className="flex flex-col bg-gray-800 p-2 rounded-md"
+                  >
+                    <div className='flex'>
+                      <div>
+                        {teamsData.onboarding ? (
+                        <div className="flex items-center space-x-3 px-1">
+                          <div className="h-2.5 w-2.5 rounded-full bg-[#81C26C]"/>
+                          <span>Complete</span>
+                        </div>) : (
+                        <div className="flex items-center space-x-3 px-1">
+                          <div className="h-2.5 w-2.5 rounded-full bg-[#D7B634]"/>
+                          <span>In Progress...</span>
                         </div>
                         )}
                       </div>

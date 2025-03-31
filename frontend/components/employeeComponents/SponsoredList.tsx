@@ -60,6 +60,7 @@ type Team = {
   supervisor_email: string;
   nda: string;
   team_lead: string;
+  onboarding: boolean;
 }
 
 export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filter: string;}) {
@@ -209,7 +210,8 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
             Students(full_name, role, email, ttg_email),
             Projects!Teams_project_id_fkey(university),
             nda_file,
-            team_lead_email
+            team_lead_email,
+            completed_onboarding
           `)
           .eq('project_id', projectId)
           .single();
@@ -238,7 +240,8 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
             supervisor_name: teamsData.supervisor_name ?? "N/A",
             supervisor_email: teamsData.supervisor_email ?? "N/A",
             nda: teamsData.nda_file,
-            team_lead: teamsData.team_lead_email
+            team_lead: teamsData.team_lead_email,
+            onboarding: teamsData.completed_onboarding
           });
         }
     } catch (err) {

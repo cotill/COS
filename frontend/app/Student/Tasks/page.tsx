@@ -56,6 +56,17 @@ export default async function taskspage() {
 
   const progress = totalTasks === 0 ? 100 : (doneTasks / totalTasks) * 100;
 
+  if (progress == 100) {
+    const { error: taskError } = await supabase
+    .from("Teams")
+    .update({completed_onboarding: true})
+    .eq("team_id", studentInfo.team_id);
+
+    if (taskError) {
+      console.error("Error updating onboarding completion status:", taskError);
+    }
+  }
+
   // Console log results
 {/*  console.log("Student Info:", studentInfo);
   console.log("Team Members:", teamMembers);
