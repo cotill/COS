@@ -157,6 +157,14 @@ export default function ProjectDetail({
           updatedData.dispatcher_email = employeeInfo.email;
           updatedData.dispatched_date = dateNow;
         }
+        if (currentProjectInfo.status === Project_Status.ACTIVE) {
+          updatedData.activation_email = employeeInfo.email;
+          updatedData.activation_date = dateNow;
+        }
+        if (currentProjectInfo.status === Project_Status.COMPLETED) {
+          updatedData.completion_email = employeeInfo.email;
+          updatedData.completion_date = dateNow;
+        }
       }
 
       await onUpdateProject(updatedData, project.project_id).then(

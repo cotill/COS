@@ -28,12 +28,16 @@ function ProjectInfoDialog({ currentProject }: ProjectInfoDialogProps) {
     modifier: string | null;
     dispatcher: string | null;
     rejector: string | null;
+    activator: string | null;
+    concluder: string | null;
   }>({
     creatorName: null,
     approver: null,
     modifier: null,
     dispatcher: null,
     rejector: null,
+    activator: null,
+    concluder: null,
   });
 
   const supabase = createClient();
@@ -73,11 +77,17 @@ function ProjectInfoDialog({ currentProject }: ProjectInfoDialogProps) {
         currentProject.rejector_email
           ? getEmployeeNameByEmail(currentProject.rejector_email)
           : Promise.resolve(null),
+        currentProject.activation_email
+          ? getEmployeeNameByEmail(currentProject.activation_email)
+          : Promise.resolve(null),
+        currentProject.completion_email
+          ? getEmployeeNameByEmail(currentProject.completion_email)
+          : Promise.resolve(null),
       ];
 
-      const [creatorName, approver, modifier, dispatcher, rejector] = await Promise.all(promises);
+      const [creatorName, approver, modifier, dispatcher, rejector, activator, concluder] = await Promise.all(promises);
 
-      setProjectLog({ creatorName, approver, modifier, dispatcher, rejector });
+      setProjectLog({ creatorName, approver, modifier, dispatcher, rejector, activator, concluder });
     };
 
     fetchProjectLogs();
@@ -86,6 +96,8 @@ function ProjectInfoDialog({ currentProject }: ProjectInfoDialogProps) {
     currentProject.approval_email,
     currentProject.last_modified_user,
     currentProject.dispatcher_email,
+    currentProject.activation_email,
+    currentProject.completion_email,
   ]);
 
   return (

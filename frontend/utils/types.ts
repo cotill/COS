@@ -81,7 +81,6 @@ export interface Project {
   approved_date: string | null;
   last_modified_date: string | null;
   last_modified_user: string | null; // email of the person who last modified the project
-  activation_date: string | null;
   github: string | null;
   google_link: string | null;
   status: Project_Status;
@@ -94,6 +93,10 @@ export interface Project {
   start_term: string | null;
   rejector_email: string | null;
   rejector_date: string | null;
+  activation_email: string | null;
+  activation_date: string | null;
+  completion_email: string | null;
+  completion_date: string | null;
 }
 
 export enum Universities {
