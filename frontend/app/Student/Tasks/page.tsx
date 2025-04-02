@@ -48,11 +48,13 @@ export default async function taskspage() {
   const hasNDA = studentInfo.Teams.nda_file !== null;
   const projectHasGithub = studentInfo.Teams.Projects.github !== null;
   
-  const githubCount = teamMembers ? teamMembers.length : 0;
+  const memberCount = teamMembers ? teamMembers.length : 0;
   const membersWithGithub = teamMembers ? teamMembers.filter(member => member.github !== null).length : 0;
+  const membersChangedPassword = teamMembers ? teamMembers.filter(member => member.changed_password == true).length : 0;
 
-  const totalTasks = 1 + (projectHasGithub ? githubCount : 0);
-  const doneTasks = (hasNDA ? 1 : 0) + (projectHasGithub ? membersWithGithub : 0);
+
+  const totalTasks = 1 + (projectHasGithub ? memberCount : 0) + memberCount;
+  const doneTasks = (hasNDA ? 1 : 0) + (projectHasGithub ? membersWithGithub : 0) + membersChangedPassword;
 
   const progress = totalTasks === 0 ? 100 : (doneTasks / totalTasks) * 100;
 
@@ -100,23 +102,20 @@ export default async function taskspage() {
               • NDA Task: {hasNDA ? "✅ Completed" : "❌ Not Done"}
             </li>
   
-            <li className={projectHasGithub ? "text-green-500" : "text-red-500"}>
-              • Project Has GitHub: {projectHasGithub ? "✅ Yes" : "❌ No"}
+            <li className={projectHasGithub ? "text-green-500" : "text-gray-600"}>
+              • Project Has GitHub: {projectHasGithub ? "✅ Yes" : "✖️ No"}
             </li>
   
             <div className="bg-white p-3 rounded-lg shadow">
               <p className="text-black">
-                <span className="font-semibold">Total Team Members:</span> {githubCount}
+                <span className="font-bold">Members</span>
               </p>
               <p className="text-black">
-                <span className="font-semibold">Members with GitHub:</span> {membersWithGithub}
+                <span className="font-semibold">Changed Password:</span> {membersChangedPassword} {"/"} {memberCount}
               </p>
-              <p className="text-black">
-                <span className="font-semibold">Total Tasks:</span> {totalTasks}
-              </p>
-              <p className="text-black">
-                <span className="font-semibold">Done Tasks:</span> {doneTasks}
-              </p>
+              {projectHasGithub && <p className="text-black">
+                <span className="font-semibold">GitHub:</span> {membersWithGithub} {"/"} {memberCount}
+              </p>}
             </div>
           </ul>
   
