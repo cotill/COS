@@ -123,7 +123,16 @@ function ProjectInfoDialog({ currentProject }: ProjectInfoDialogProps) {
               </p>
             )}
             {currentProject.activation_date && (
-              <p>Project activated on: {currentProject.activation_date}</p>
+              <p>
+                Project activated by: {projectLog.activator} on{" "}
+                {formatDateTime(currentProject.activation_date)}
+              </p>
+            )}
+            {currentProject.completion_date && (
+              <p>
+                Project concluded by: {projectLog.concluder} on{" "}
+                {formatDateTime(currentProject.completion_date)}
+              </p>
             )}
             {projectLog.modifier && (
               <p>
