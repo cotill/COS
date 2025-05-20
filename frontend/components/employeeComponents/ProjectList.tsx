@@ -106,7 +106,7 @@ export function ProjectsList({
     fetchProjects();
   }, []);
 
-  const projectsPerPage = 6;
+  const projectsPerPage = 10;
 
   const handleSort = (column: "date" | "name" | "term") => {
     if (sortColumn === column) {

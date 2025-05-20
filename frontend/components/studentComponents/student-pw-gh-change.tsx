@@ -30,8 +30,11 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [githubUser, setGithubUser] = useState("");
   const [OGgithubUser, setOGgithubUser] = useState("");
+  const [phone, setPhone] = useState("");
+  const [OGphone, setOGphone] = useState("");
   const [changedPassword, setChangedPassword] = useState<boolean | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  
 
   
   const toggleVisibility = () => setIsVisible(prevState => !prevState);
@@ -45,7 +48,7 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
     const fetchUserData = async () => {
         const { data: userInfo, error: userError } = await supabase
             .from("Students")
-            .select("github, changed_password")
+            .select("github, changed_password, Phone")
             .eq("student_id", userId)  // match userid with the employee id
             .single(); // only 1 record returned
 
@@ -54,6 +57,8 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
         } else {
             setGithubUser(userInfo.github || "");
             setOGgithubUser(userInfo.github || "");
+            setPhone(userInfo.Phone || "");
+            setOGphone(userInfo.Phone || "");
             setChangedPassword(userInfo.changed_password ?? false)
         }
     };
@@ -82,6 +87,30 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
       alert("GitHub username updated successfully!");
       setOGgithubUser(githubUser);
     }
+  };
+
+  const handlePhoneSave = async () => {
+  if (!userId) {
+    console.error("User ID not found.");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("Students")
+    .update({ Phone: phone })
+    .eq("student_id", userId);
+
+  if (error) {
+    console.error("Error updating phone number:", error);
+    alert("Failed to update phone number.");
+  } else {
+    alert("Phone number updated successfully!");
+    setOGphone(phone);
+    }
+  };
+
+  const handleCancelPhone = () => {
+    setPhone(OGphone);
   };
 
   const handleCancel = () => {
@@ -135,9 +164,10 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
   return (
     <div className="flex justify-center">
       <Tabs defaultValue="password" className="w-[400px] justify-center">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="password">Password</TabsTrigger>
           <TabsTrigger value="github">GitHub</TabsTrigger>
+          <TabsTrigger value="phone">Phone</TabsTrigger>
         </TabsList>
         <TabsContent value="password">
           <Card>
@@ -229,6 +259,38 @@ const StudentChanges = ({ userId }: StudentChangesProps) => {
             </CardFooter>
           </Card>
         </TabsContent>
+        <TabsContent value="phone">
+          <Card>
+            <CardHeader>
+              <CardTitle>Phone Number</CardTitle>
+              <CardDescription>
+                Update your phone number here. Please enter a valid number.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="space-y-1">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter your phone number"
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <div className="flex justify-end gap-4">
+                <Button className="bg-[#E75973] text-white px-8 py-2 mb-6 rounded hover:bg-red-600" onClick={() => handleCancelPhone()}>
+                  Cancel
+                </Button>
+                <Button className="bg-[#81C26C] text-white px-8 py-2 mb-6 rounded hover:bg-green-600" onClick={() => handlePhoneSave()}>
+                  Save
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </div>
 

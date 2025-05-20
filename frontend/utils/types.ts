@@ -45,6 +45,7 @@ export enum StudentPages {
   TEAM = "Team",
   PROJECT = "Project",
   SETTINGS = "Student Settings",
+  PROFILE = "Profile",
 }
 export interface AuthResult {
   isAuthenticated: boolean;
