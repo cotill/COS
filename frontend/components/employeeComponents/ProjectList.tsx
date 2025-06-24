@@ -193,9 +193,9 @@ export function ProjectsList({
           <Table>
             <TableHeader>
               <TableRow style={{ backgroundColor: "#1d1b23" }}>
-                <TableHead className="text-white cursor-pointer" onClick={() => handleSort("date")}>Date</TableHead>
-                <TableHead className="text-white cursor-pointer" onClick={() => handleSort("term")}>Term</TableHead>
-                <TableHead className="text-white cursor-pointer" onClick={() => handleSort("name")}>Project Name</TableHead>
+                <TableHead className="text-white cursor-pointer rounded-tl-2xl rounded-bl-2xl" onClick={() => handleSort("date")}>Date</TableHead>
+                <TableHead className="text-white cursor-pointer rounded-tl-2xl rounded-bl-2xl" onClick={() => handleSort("term")}>Term</TableHead>
+                <TableHead className="text-white cursor-pointer rounded-tl-2xl rounded-bl-2xl" onClick={() => handleSort("name")}>Project Name</TableHead>
 
                 <TableHead>
                   <DropdownMenu open={isOpenD} onOpenChange={setIsOpenD}>
@@ -269,8 +269,8 @@ export function ProjectsList({
 
             <TableBody>
               {currentProjects.map((project) => (
-                <TableRow key={project.id} style={{ backgroundColor: "#413F46", color: "white" }}>
-                  <TableCell>{new Date(project.date).toLocaleDateString()}</TableCell>
+                <TableRow className="rounded-tr-2xl rounded-br-2xl rounded-tr-2xl rounded-br-2xl" key={project.id} style={{ backgroundColor: "#413F46", color: "white" }}>
+                  <TableCell className="rounded-tl-[1rem] rounded-bl-[1rem]">{new Date(project.date).toLocaleDateString()}</TableCell>
                   <TableCell>{project.term || "TBD"}</TableCell>
                   <TableCell>{project.name}</TableCell>
                   <TableCell>
@@ -292,13 +292,15 @@ export function ProjectsList({
                     }}>{project.status}</div>
                   </TableCell>
                   <TableCell>{project.company}</TableCell>
-                  <TableCell>
-                    <Link href={`/Employee/Projects/${project.id}`} className="text-blue-400 underline">Project Details</Link>
+                  <TableCell className="rounded-tr-[1rem] rounded-br-[1rem]">
+                    <button className="outline rounded-lg p-0.5 px-2 bg-[#1D1B23]">
+                    <Link href={`/Employee/Projects/${project.id}`} >Project Details</Link>
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}
               {currentProjects.length === 0 && (
-                <TableRow>
+                <TableRow className="rounded-tr-[1rem] rounded-br-[1rem]">
                   <TableCell colSpan={7} className="text-center text-gray-400 py-4">No matching projects</TableCell>
                 </TableRow>
               )}
