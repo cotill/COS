@@ -134,10 +134,6 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
       setError("Please enter your course");
       return;
     }
-    if (members.some((member) => !member.resume)) {
-      setError("All team members must upload a resume");
-      return;
-    }
 
     const id = Math.floor(100 + Math.random() * 900); // Generate a number between 100 and 999
 
@@ -276,7 +272,6 @@ export default function ApplicationForm({ extendedProject, handleSubmitApplicati
                             accept=".pdf,.doc,.docx"
                             onChange={(e) => handleFileChange(e, index)}
                             className=" text-white file:border-0 file:bg-white file:text-black file:hover:bg-gray-100"
-                            required
                           />
                           {member.resume && <p className="text-sm text-muted-foreground">{member.resume.name}</p>}
                         </div>

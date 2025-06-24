@@ -712,6 +712,29 @@ export default function ProjectDetail({
               ))}
             </select>
           </div>
+          <div className="flex flex-col">
+            <label className="text-white">Company:</label>
+            <select
+              value={currentProjectInfo.Company ?? ""}
+              onChange={(event) =>
+                onInputChange({
+                  target: {
+                    name: "Company",
+                    value: event.target.value,
+                  },
+                })
+              }
+              disabled={!isEditing}
+              className="p-2 rounded-md bg-white text-black outline-none"
+              required
+            >
+              <option value="" disabled>
+                Select a company
+              </option>
+              <option value="TTG">TTG</option>
+              <option value="FEC">FEC</option>
+            </select>
+          </div>
           {![
             Project_Status.NEW,
             Project_Status.DRAFT,

@@ -98,6 +98,7 @@ export interface Project {
   activation_date: string | null;
   completion_email: string | null;
   completion_date: string | null;
+  Company: string | null; // Name of the company sponsoring the project
 }
 
 export enum Universities {
