@@ -45,6 +45,7 @@ export enum StudentPages {
   TEAM = "Team",
   PROJECT = "Project",
   SETTINGS = "Student Settings",
+  PROFILE = "Profile",
 }
 export interface AuthResult {
   isAuthenticated: boolean;
@@ -97,6 +98,7 @@ export interface Project {
   activation_date: string | null;
   completion_email: string | null;
   completion_date: string | null;
+  Company: string | null; // Name of the company sponsoring the project
 }
 
 export enum Universities {

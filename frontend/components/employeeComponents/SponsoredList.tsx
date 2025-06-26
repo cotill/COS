@@ -124,8 +124,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
             team_name, 
             Students(team_id, full_name, role, email, ttg:ttg_email)
           )
-        `)
-        .eq('sponsor_email', userEmail);
+        `);
 
         if (error) {
             console.error('Error fetching projects:', error);
@@ -253,7 +252,7 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
     fetchProjects();
   }, []);
 
-  const projectsPerPage = 6;
+  const projectsPerPage = 10;
 
   const handleSort = (column: 'team' | 'name') => {
     if (sortColumn === column) {

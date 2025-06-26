@@ -37,7 +37,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
   const activePage = pathToPageMap[pathname as keyof typeof pathToPageMap];
 
   return (
-    <div className="">
+    <div className="h-full">
        <Navbar
         initials={
           layoutProps.firstName.charAt(0) + layoutProps.lastName.charAt(0)
