@@ -62,7 +62,7 @@ export const signUpAction = async (formData: FormData) => {
   }
 
   const full_name = `${first_name.charAt(0).toUpperCase() + first_name.slice(1)} ${last_name.charAt(0).toUpperCase() + last_name.slice(1)}`;
-  const origin = (await headers()).get("origin");
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const { error } = await supabase.auth.signUp({
     email,
     password,
