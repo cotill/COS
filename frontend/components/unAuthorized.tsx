@@ -4,7 +4,7 @@
 import { signOutAction } from "@/app/actions";
 import { useTransition } from "react";
 
-export default default function UnauthorizedPage() {
+export default function UnauthorizedPage() {
   const [isPending, startTransition] = useTransition();
 
   const handleSignOut = () => {
