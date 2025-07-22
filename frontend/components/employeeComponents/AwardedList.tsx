@@ -63,7 +63,7 @@ type Team = {
   onboarding: boolean;
 }
 
-export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filter: string;}) {
+export function AwardedList({ searchTerm, filter }: { searchTerm: string; filter: string;}) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<'team' | 'name'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -120,13 +120,12 @@ export function SponsoredList({ searchTerm, filter }: { searchTerm: string; filt
           github, 
           google_link, 
           university, 
-          sponsor_email,
           Teams!Projects_awarded_team_id_fkey(
             team_name, 
             Students(team_id, full_name, role, email, ttg:ttg_email)
           )
         `)
-        .eq('sponsor_email', userEmail);
+        .eq('status', 'AWARDED');
 
 
         if (error) {

@@ -20,7 +20,7 @@ export default function Sidebar(sideBarProp: SidebarProps) {
             name: EmployeePages.PROJECTS,
             path: "/Employee/Projects",
             svg: (
-              <svg
+              <svg  
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-7 w-7"
                 viewBox="0 0 24 24"
@@ -50,23 +50,38 @@ export default function Sidebar(sideBarProp: SidebarProps) {
             ),
           },
           ...(sideBarProp.employeeLevel === 3
-            ? [
-                {
-                  name: EmployeePages.SPONSORED_PROJECTS,
-                  path: "/Employee/SponsoredProjects",
-                  svg: (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-7 w-7"
-                      viewBox="0 0 384 512"
-                      fill="currentColor"
-                    >
-                      <path d="M336 0H48C21.49 0 0 21.49 0 48v464l192-112 192 112V48c0-26.51-21.49-48-48-48zm0 428.43l-144-84-144 84V54a6 6 0 0 1 6-6h276c3.314 0 6 2.683 6 5.996V428.43z" />
-                    </svg>
-                  ),
-                },
-              ]
-            : []),
+  ? [
+      {
+        name: EmployeePages.SPONSORED_PROJECTS,
+        path: "/Employee/SponsoredProjects",
+        svg: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-7 w-7"
+            viewBox="0 0 384 512"
+            fill="currentColor"
+          >
+            <path d="M336 0H48C21.49 0 0 21.49 0 48v464l192-112 192 112V48c0-26.51-21.49-48-48-48zm0 428.43l-144-84-144 84V54a6 6 0 0 1 6-6h276c3.314 0 6 2.683 6 5.996V428.43z" />
+          </svg>
+        ),
+      },
+      {
+        name: EmployeePages.AWARDED_PROJECTS,
+        path: "/Employee/AwardedProjects",
+        svg: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-7 w-7"
+            viewBox="0 0 512 512"
+            fill="currentColor"
+          >
+            <path d="M256 0C114.6 0 0 114.6 0 256c0 114.9 76.9 211.9 182.1 245.1 13.3 2.4 18.2-5.8 18.2-12.9 0-6.4-.2-23.3-.3-45.7-74.1 16.1-89.8-35.7-89.8-35.7-12.1-30.7-29.6-38.9-29.6-38.9-24.2-16.5 1.8-16.2 1.8-16.2 26.7 1.9 40.8 27.5 40.8 27.5 23.8 40.7 62.5 28.9 77.7 22.1 2.4-17.3 9.3-28.9 16.9-35.6-59.2-6.7-121.5-29.6-121.5-131.7 0-29.1 10.4-52.9 27.4-71.5-2.8-6.7-11.9-33.6 2.6-70.1 0 0 22.3-7.1 73.1 27.3 21.2-5.9 43.9-8.8 66.5-8.9 22.6.1 45.3 3 66.5 8.9 50.8-34.4 73.1-27.3 73.1-27.3 14.6 36.5 5.5 63.4 2.6 70.1 17 18.6 27.4 42.4 27.4 71.5 0ß"/>
+          </svg>
+        ),
+      },
+    ]
+  : []),
+
         ]
       : [
           {
