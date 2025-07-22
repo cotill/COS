@@ -2,23 +2,35 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  // The `/auth/callback` route is required for the server-side auth flow implemented
-  // by the SSR package. It exchanges an auth code for the user's session.
-  // https://supabase.com/docs/guides/auth/server-side/nextjs
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const origin = requestUrl.origin;
   const redirectTo = requestUrl.searchParams.get("redirect_to")?.toString();
 
+  const supabase = await createClient();
+
   if (code) {
-    const supabase = await createClient();
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  if (redirectTo) {
-    return NextResponse.redirect(`${origin}${redirectTo}`);
+  // After exchanging the session, get the user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    console.error("Auth callback: failed to get user", userError?.message);
+    return NextResponse.redirect(`${origin}/sign-in`);
   }
 
-  // URL to redirect to after sign up process completes
-  return NextResponse.redirect(`${origin}/`);
+  // Check if user is in Employees table
+  const { data: employeeInfo, error: empError } = await supabase
+    .from("Employees")
+    .select("*")
+    .eq("email", user.email)
+    .single();
+
+  if (empError || !employeeInfo) {
+    return NextResponse.redirect(`${origin}/Student/Tasks`);
+  } else {
+    return NextResponse.redirect(`${origin}/Employee/Projects`);
+  }
 }
