@@ -13,24 +13,39 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // After exchanging the session, get the user
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError || !user) {
     console.error("Auth callback: failed to get user", userError?.message);
     return NextResponse.redirect(`${origin}/sign-in`);
   }
 
-  // Check if user is in Employees table
-  const { data: employeeInfo, error: empError } = await supabase
+
+  const { data: employeeInfo } = await supabase
     .from("Employees")
     .select("*")
     .eq("email", user.email)
-    .single();
+    .maybeSingle();
 
-  if (empError || !employeeInfo) {
-    return NextResponse.redirect(`${origin}/Student/Tasks`);
-  } else {
+  if (employeeInfo) {
     return NextResponse.redirect(`${origin}/Employee/Projects`);
   }
+
+ 
+  const { data: studentInfo } = await supabase
+    .from("Students")
+    .select("*")
+    .eq("email", user.email)
+    .maybeSingle();
+
+  if (studentInfo) {
+    return NextResponse.redirect(`${origin}/Student/Tasks`);
+  }
+
+
+  return NextResponse.redirect(`${origin}/sign-up`);
 }

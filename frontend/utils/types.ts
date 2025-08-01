@@ -57,9 +57,9 @@ export enum EmployeePages {
   PROJECTS = "Projects",
   TRAINING = "Training",
   SPONSORED_PROJECTS = "Sponsored Projects",
-  SETTINGS = "Employee Settings",
-  CREATE_PROJECT = "Create Project",
   AWARDED_PROJECTS = "Awarded Projects",
+  SETTINGS = "Employee Settings",
+  CREATE_PROJECT = "Create Project"
 }
 
 export enum Department_Types {

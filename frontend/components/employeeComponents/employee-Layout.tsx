@@ -30,6 +30,7 @@ export default function EmpLayout(layoutProps: EmpLayoutProps) {
     "/Employee/Projects": EmployeePages.PROJECTS,
     "/Employee/Training": EmployeePages.TRAINING,
     "/Employee/SponsoredProjects": EmployeePages.SPONSORED_PROJECTS,
+    "/Employee/AwardedProjects": EmployeePages.AWARDED_PROJECTS,
     "/Employee/Settings": EmployeePages.SETTINGS,
     "/Employee/CreateProject": EmployeePages.CREATE_PROJECT,
   };
