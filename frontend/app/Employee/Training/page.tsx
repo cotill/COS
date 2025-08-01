@@ -107,23 +107,50 @@ export default function TrainingPage() {
         }
 
         // Fetch training content from TrainingData table
-        console.log("Fetching training data for level:", userLevel);
+        console.log("Fetching training data for level:", userLevel, "type:", typeof userLevel);
+        
+        // First, let's try to fetch ALL training data to see what's in the table
+        const { data: allTrainingData, error: allDataError } = await supabase
+          .from("TrainingData")
+          .select("*");
+        
+        console.log("All training data in table:", { allTrainingData, allDataError });
+        
+        // Now try the specific query
         const { data: trainingData, error: trainingError } = await supabase
           .from("TrainingData")
           .select("*")
           .eq("level", userLevel);
 
-        console.log("Training data response:", { trainingData, trainingError });
+        console.log("Training data response for level", userLevel, ":", { trainingData, trainingError });
+        
+        // Also try querying with level as string
+        const { data: trainingDataString, error: trainingErrorString } = await supabase
+          .from("TrainingData")
+          .select("*")
+          .eq("level", userLevel.toString());
 
-        if (trainingError) {
-          console.error("Error fetching training content:", trainingError);
-          setTrainingContent([`Failed to load training content: ${trainingError.message}`]);
-        } else if (!trainingData || trainingData.length === 0) {
+        console.log("Training data response for level as string", userLevel.toString(), ":", { trainingDataString, trainingErrorString });
+
+        // Use whichever query returned data
+        let finalTrainingData = trainingData;
+        let finalTrainingError = trainingError;
+        
+        if ((!trainingData || trainingData.length === 0) && trainingDataString && trainingDataString.length > 0) {
+          finalTrainingData = trainingDataString;
+          finalTrainingError = trainingErrorString;
+          console.log("Using string-based query result");
+        }
+
+        if (finalTrainingError) {
+          console.error("Error fetching training content:", finalTrainingError);
+          setTrainingContent([`Failed to load training content: ${finalTrainingError.message}`]);
+        } else if (!finalTrainingData || finalTrainingData.length === 0) {
           console.log("No training data found for level:", userLevel);
           setTrainingContent([`No training content available for level ${userLevel}.`]);
         } else {
           // Handle both single record and array of records
-          const contentData = Array.isArray(trainingData) ? trainingData[0] : trainingData;
+          const contentData = Array.isArray(finalTrainingData) ? finalTrainingData[0] : finalTrainingData;
           console.log("Processing content data:", contentData);
           
           if (contentData?.content) {
