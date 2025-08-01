@@ -1,3 +1,4 @@
+import { signOutAction } from "@/app/actions";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -46,6 +47,8 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/Student/Tasks`);
   }
 
-
-  return NextResponse.redirect(`${origin}/sign-up`);
+  else{
+    await signOutAction();
+    return NextResponse.redirect(`${origin}/sign-up`);
+  }
 }

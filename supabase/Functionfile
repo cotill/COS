@@ -1,0 +1,50 @@
+begin
+  if new.raw_user_meta_data->>'user_role' = 'employee' then
+    insert into public."Employees" (Employee_id,email, full_name, level, title, department)
+    values (new.id,new.email, new.raw_user_meta_data ->> 'full_name',(new.raw_user_meta_data ->'level')::int4, new.raw_user_meta_data ->> 'title', (new.raw_user_meta_data ->> 'department')::public."Department_Types");
+  elsif new.raw_user_meta_data->>'user_role' = 'student' then
+    insert into public."Students"(student_id, email, full_name,team_id, major, university)
+    values (new.id, new.email, new.raw_user_meta_data ->>'full_name',(new.raw_user_meta_data->>'team_id')::uuid, new.raw_user_meta_data ->>'major',(new.raw_user_meta_data ->>'university')::public."Universities");
+  else 
+    insert into public."Employees" (Employee_id,email, full_name, level)
+    values (new.id,new.email, 'New User',0);
+  end if;
+  return new;
+end;
+
+Name of function
+handle_new_employee_user
+Name will also be used for the function name in postgres
+Schema
+
+schema
+
+public
+
+Tables made in the table editor will be in 'public'
+Arguments
+Arguments can be referenced in the function body using either names or numbers.
+
+No argument for this function
+
+
+
+
+-- -- https://supabase.com/docs/guides/auth/managing-user-data
+-- -- inserts a row into public.profiles
+-- create function public.handle_new_employee_user()
+-- returns trigger
+-- language plpgsql
+-- security definer set search_path = ''
+-- as $$
+-- begin
+--   insert into public."Employees" (Employee_id,email, full_name, level)
+--   values (new.id,new.email, new.raw_user_meta_data ->> 'full_name', 0);
+--   return new;
+-- end;
+-- $$;
+
+-- trigger the function(handle_new_employee_user) every time a user is created
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_employee_user();
