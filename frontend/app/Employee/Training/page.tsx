@@ -72,53 +72,76 @@ export default function TrainingPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-      if (sessionError || !session) {
-        console.error("Error fetching session:", sessionError);
-        return;
+        if (sessionError || !session) {
+          console.error("Error fetching session:", sessionError);
+          return;
+        }
+
+        const userId = session.user.id;
+        console.log("Current user ID:", userId);
+        
+        const { data, error } = await supabase
+          .from("Employees")
+          .select("email, level")
+          .eq("employee_id", userId)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user data:", error);
+          return;
+        }
+
+        console.log("Employee data:", data);
+        setEmail(data.email);
+        const userLevel = data.level as Level;
+        setLevel(userLevel);
+
+        if (userLevel <= 2) {
+          setAnswers(new Array(quizzes[userLevel].questions.length).fill(""));
+        }
+
+        // Fetch training content from TrainingData table
+        console.log("Fetching training data for level:", userLevel);
+        const { data: trainingData, error: trainingError } = await supabase
+          .from("TrainingData")
+          .select("*")
+          .eq("level", userLevel);
+
+        console.log("Training data response:", { trainingData, trainingError });
+
+        if (trainingError) {
+          console.error("Error fetching training content:", trainingError);
+          setTrainingContent([`Failed to load training content: ${trainingError.message}`]);
+        } else if (!trainingData || trainingData.length === 0) {
+          console.log("No training data found for level:", userLevel);
+          setTrainingContent([`No training content available for level ${userLevel}.`]);
+        } else {
+          // Handle both single record and array of records
+          const contentData = Array.isArray(trainingData) ? trainingData[0] : trainingData;
+          console.log("Processing content data:", contentData);
+          
+          if (contentData?.content) {
+            const parsed = contentData.content
+              .split("\n")
+              .filter((line: string) => line.trim() !== "");
+            setTrainingContent(parsed);
+          } else {
+            setTrainingContent([`Training content is empty for level ${userLevel}.`]);
+          }
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Unexpected error in fetchData:", err);
+        setTrainingContent(["An unexpected error occurred while loading training content."]);
+        setLoading(false);
       }
-
-      const userId = session.user.id;
-      const { data, error } = await supabase
-        .from("Employees")
-        .select("email, level")
-        .eq("employee_id", userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching user data:", error);
-        return;
-      }
-
-      setEmail(data.email);
-      const userLevel = data.level as Level;
-      setLevel(userLevel);
-
-      if (userLevel <= 2) {
-        setAnswers(new Array(quizzes[userLevel].questions.length).fill(""));
-      }
-
-      // Fetch training content from TrainingData table
-      const { data: trainingData, error: trainingError } = await supabase
-        .from("TrainingData")
-        .select("content")
-        .eq("level", userLevel)
-        .single();
-
-      if (trainingError) {
-        console.error("Error fetching training content:", trainingError);
-        setTrainingContent(["Failed to load training content."]);
-      } else {
-        const parsed =
-          trainingData?.content?.split("\n").filter((line: string) => line.trim() !== "") ?? [];
-        setTrainingContent(parsed);
-      }
-
-      setLoading(false);
     };
 
     fetchData();
