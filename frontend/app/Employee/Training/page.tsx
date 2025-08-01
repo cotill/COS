@@ -127,8 +127,8 @@ export default function TrainingPage() {
           const levelData = trainingData.find(item => item.level === userLevel);
           console.log("Level data for", userLevel, ":", levelData);
           
-          if (levelData && levelData.content) {
-            const parsed = levelData.content
+          if (levelData && levelData.Content) {
+            const parsed = levelData.Content
               .split("\n")
               .filter((line: string) => line.trim() !== "");
             setTrainingContent(parsed);
