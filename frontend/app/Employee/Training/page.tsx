@@ -113,29 +113,11 @@ export default function TrainingPage() {
           .from("TrainingData")
           .select("*");
 
+       
         console.log("Training data response:", { trainingData, trainingError });
 
         // Use the training data result
-        if (trainingError) {
-          console.error("Error fetching training content:", trainingError);
-          setTrainingContent([`Failed to load training content: ${trainingError.message}`]);
-        } else if (!trainingData || trainingData.length === 0) {
-          console.log("No training data found for level:", userLevel);
-          setTrainingContent([`No training content available for level ${userLevel}.`]);
-        } else {
-          // Handle both single record and array of records
-          const contentData = Array.isArray(trainingData) ? trainingData[0] : trainingData;
-          console.log("Processing content data:", contentData);
-          
-          if (contentData?.content) {
-            const parsed = contentData.content
-              .split("\n")
-              .filter((line: string) => line.trim() !== "");
-            setTrainingContent(parsed);
-          } else {
-            setTrainingContent([`Training content is empty for level ${userLevel}.`]);
-          }
-        }
+        
 
         setLoading(false);
       } catch (err) {
