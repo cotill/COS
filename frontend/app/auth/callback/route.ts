@@ -49,6 +49,6 @@ export async function GET(request: Request) {
 
   else{
     await signOutAction();
-    return NextResponse.redirect(`${origin}/sign-up`);
+    return NextResponse.redirect(`${origin}/unauthorized`);
   }
 }
