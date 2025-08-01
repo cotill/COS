@@ -113,10 +113,29 @@ export default function TrainingPage() {
           .from("TrainingData")
           .select("*");
 
-       
         console.log("Training data response:", { trainingData, trainingError });
 
-        // Use the training data result
+        // Use the training data result and filter by user level
+        if (trainingError) {
+          console.error("Error fetching training content:", trainingError);
+          setTrainingContent([`Failed to load training content: ${trainingError.message}`]);
+        } else if (!trainingData || trainingData.length === 0) {
+          console.log("No training data found in table");
+          setTrainingContent(["No training content available."]);
+        } else {
+          // Filter the data for the specific user level
+          const levelData = trainingData.find(item => item.level === userLevel);
+          console.log("Level data for", userLevel, ":", levelData);
+          
+          if (levelData && levelData.content) {
+            const parsed = levelData.content
+              .split("\n")
+              .filter((line: string) => line.trim() !== "");
+            setTrainingContent(parsed);
+          } else {
+            setTrainingContent([`No training content available for level ${userLevel}.`]);
+          }
+        }
         
 
         setLoading(false);
