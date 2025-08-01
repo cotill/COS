@@ -24,7 +24,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
         </div>
 
         <div className="w-[400px]">
-          <form className="flex flex-col space-y-4">
+          {/* <form className="flex flex-col space-y-4">
             <div className="space-y-6">
               <div className="space-y-1">
                 <Label htmlFor="email" className="text-white text-sm">
@@ -74,10 +74,12 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
               Login
             </SubmitButton>
 
-            < OauthSignin />
+            
 
             <FormMessage message={searchParams} />
-          </form>
+
+          </form> */}
+          <OauthSignin />
         </div>
       </div>
     </div>
