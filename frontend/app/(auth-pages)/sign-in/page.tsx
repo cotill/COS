@@ -23,7 +23,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           </div>
         </div>
 
-        <div className="w-[400px]items-center">
+        <div className="w-[400px] flex items-center justify-center">
           {/* <form className="flex flex-col space-y-4">
             <div className="space-y-6">
               <div className="space-y-1">
