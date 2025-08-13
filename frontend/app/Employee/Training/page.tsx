@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import TrainingTracker from "@/components/trainingTracker";
+import ReactMarkdown from 'react-markdown';
 
 type Level = 0 | 1 | 2;
 
@@ -224,11 +225,13 @@ export default function TrainingPage() {
               <h2 className="text-xl font-semibold text-black">
                 Welcome, {email}! <br />Your Current Level: {level}
               </h2>
-              <ul className="mt-2 text-black text-sm space-y-2">
+              <div className="mt-4 text-black text-sm prose prose-sm max-w-none">
                 {trainingContent.map((item, index) => (
-                  <li key={index}>{item}</li>
+                  <ReactMarkdown key={index} className="mb-4">
+                    {item}
+                  </ReactMarkdown>
                 ))}
-              </ul>
+              </div>
             </div>
             <div className="flex items-center justify-center mt-4">
               <Button variant="outline" onClick={() => setView("quiz")}>
