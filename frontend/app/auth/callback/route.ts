@@ -1,4 +1,3 @@
-import { signOutAction } from "@/app/actions";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -27,7 +26,6 @@ export async function GET(request: Request) {
     console.log("⚠️ No auth code found in callback");
   }
 
-
   const {
     data: { user },
     error: userError,
@@ -45,7 +43,6 @@ export async function GET(request: Request) {
     console.log("🔄 Redirecting to sign-in page");
     return NextResponse.redirect(`${origin}/sign-in`);
   }
-
 
   console.log("🔍 Checking if user is an employee...");
   const { data: employeeInfo } = await supabase
@@ -81,9 +78,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/Student/Tasks`);
   }
 
-  else{
-    console.log("❌ User not found in Employees or Students tables");
-    console.log("🚪 Signing out user and redirecting to unauthorized");
-    return NextResponse.redirect(`${origin}/unauthorized`);
-  }
+  // User not found in either table - sign them out and redirect to unauthorized
+  console.log("❌ User not found in Employees or Students tables");
+  console.log("🚪 Signing out user and redirecting to unauthorized");
+  
+  // Sign out the user directly using supabase client instead of calling signOutAction
+  await supabase.auth.signOut();
+  
+  return NextResponse.redirect(`${origin}/unauthorized`);
 }
