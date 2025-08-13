@@ -84,7 +84,6 @@ export async function GET(request: Request) {
   else{
     console.log("❌ User not found in Employees or Students tables");
     console.log("🚪 Signing out user and redirecting to unauthorized");
-    await signOutAction();
     return NextResponse.redirect(`${origin}/unauthorized`);
   }
 }
