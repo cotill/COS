@@ -29,6 +29,7 @@ export default function StuLayout(layoutProps: StuLayoutProps) {
     "/Student/Team": StudentPages.TEAM,
     "/Student/Project": StudentPages.PROJECT,
     "/Student/Settings": StudentPages.SETTINGS,
+    "/Student/Profile": StudentPages.PROFILE,
   };
 
   const activePage = pathToPageMap[pathname as keyof typeof pathToPageMap];
