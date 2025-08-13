@@ -1,15 +1,17 @@
-// components/unAuthorized.tsx
 "use client";
 
-import { signOutAction } from "@/app/actions";
 import { useTransition } from "react";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { signOutAction } from "@/app/actions";
 
 export default function UnauthorizedPage() {
   const [isPending, startTransition] = useTransition();
+  const supabase = createClientComponentClient();
 
   const handleSignOut = () => {
-    startTransition(() => {
-      signOutAction(); // Server action to sign out and redirect
+    startTransition(async () => {
+      await supabase.auth.signOut(); 
+      await signOutAction();         
     });
   };
 
